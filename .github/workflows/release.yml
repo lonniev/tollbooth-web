@@ -1,0 +1,32 @@
+name: Release
+# On a version tag: check the tag matches package.json, publish to npm with
+# provenance through npm trusted publishing (OIDC — no token secret), then cut
+# the GitHub Release with the fleet's shared workflow.
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+  id-token: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
+      - name: Tag matches package.json
+        run: |
+          want="v$(node -p "require('./package.json').version")"
+          [ "$GITHUB_REF_NAME" = "$want" ] || { echo "tag $GITHUB_REF_NAME != $want"; exit 1; }
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npm publish --provenance --access public
+
+  github-release:
+    needs: publish
+    uses: lonniev/dpyc-community/.github/workflows/github-release.yml@main
