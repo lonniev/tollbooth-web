@@ -1,7 +1,7 @@
 name: Release
 # On a version tag: check the tag matches package.json, publish to npm with
-# provenance through npm trusted publishing (OIDC — no token secret), and cut
-# a GitHub Release from the CHANGELOG section.
+# provenance through npm trusted publishing (OIDC — no token secret), then cut
+# the GitHub Release with the fleet's shared workflow.
 on:
   push:
     tags: ["v*"]
@@ -12,8 +12,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
@@ -26,10 +26,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm publish --provenance --access public
-      - name: GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          version="${GITHUB_REF_NAME#v}"
-          awk -v v="$version" '$0 ~ "^## \\[" v "\\]" {on=1; next} /^## \[/ && on {exit} on' CHANGELOG.md > notes.md
-          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md
+
+  github-release:
+    needs: publish
+    uses: lonniev/dpyc-community/.github/workflows/github-release.yml@main

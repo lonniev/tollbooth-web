@@ -6,7 +6,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { Camera, ChevronDown, Loader2, X } from "lucide-react";
-import { isAvatarUrl, setStoredAvatar, shortNpub } from "../avatar.ts";
+import { avatarFor, isAvatarUrl, setStoredAvatar, shortNpub } from "../avatar.ts";
 import { tollboothConfig } from "../config.ts";
 import { canSignProfile, fetchProfile, publishProfile } from "../nostrProfile.ts";
 import {
@@ -122,7 +122,7 @@ export default function NostrProfilePanel({ npub }: { npub: string }) {
     <div className={`${card} p-4`}>
       <div className="flex items-start gap-3">
         <div className="relative flex-none">
-          <Avatar value={profile.picture} size={56} />
+          <Avatar value={profile.picture || avatarFor(npub)} size={56} />
           <button
             type="button"
             onClick={() => {
