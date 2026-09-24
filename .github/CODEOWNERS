@@ -1,0 +1,27 @@
+# CODEOWNERS — the human gate for the agentic pipeline.
+#
+# Files covered here require @lonniev's review before merge (enforced by branch
+# protection: "Require review from Code Owners"). Files left UNCOVERED are eligible for
+# path-gated auto-merge once CI is green and QA applies qa/pass.
+#
+# Default-deny, then carve out: CODEOWNERS is LAST-MATCH-WINS, so the catch-all comes
+# first and anything not imagined yet lands under review.
+
+# Everything needs review …
+* @lonniev
+
+# … except the paths the pipeline is trusted to land on its own. These match
+# auto-merge.yml's low-risk allowlist, so what CODEOWNERS releases is exactly what
+# auto-merge will take.
+/tests/
+*.md
+
+# WHAT A PLAUSIBLE EDIT COULD BREAK HERE: every operator front end in the fleet signs in
+# and proves identity through this package, and each paid call carries its proof. Review
+# with that in mind:
+# - client.ts: the npub/dpop_token envelope, the bootstrap-tool list, and the proof bounce
+#   that clears a refused token;
+# - identity.ts and signedIn.ts: an npub is proven only by a cached DM proof or a session key
+#   that derives to it — never by being typed;
+# - inlineProof.ts and sessionNsec.ts: the kind-27235 proof and the key that signs it;
+# - pagesProxy.ts: the header allowlist that keeps cookies from reaching an operator.
