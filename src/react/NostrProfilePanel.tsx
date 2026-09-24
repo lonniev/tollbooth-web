@@ -29,7 +29,14 @@ const FIELDS: { key: keyof Kind0; label: string; placeholder: string }[] = [
   { key: "about", label: "About", placeholder: "A short bio…" },
 ];
 
-export default function NostrProfilePanel({ npub }: { npub: string }) {
+export default function NostrProfilePanel({
+  npub,
+  onPublished,
+}: {
+  npub: string;
+  /** After relays accept the kind-0 — for a site that mirrors the name or avatar elsewhere. */
+  onPublished?: (profile: Kind0) => void;
+}) {
   const { appName } = tollboothConfig();
   const [profile, setProfile] = useState<Kind0>({});
   const [loading, setLoading] = useState(true);
@@ -48,6 +55,9 @@ export default function NostrProfilePanel({ npub }: { npub: string }) {
 
   useEffect(() => {
     let live = true;
+    // A new npub starts empty, so no field of the last patron's survives
+    // into theirs while the relays are read.
+    setProfile({});
     setLoading(true);
     fetchProfile(npub)
       .then((p) => {
@@ -101,7 +111,7 @@ export default function NostrProfilePanel({ npub }: { npub: string }) {
     const picture = profile.picture ?? "";
     const glyph = picture !== "" && !isAvatarUrl(picture);
     try {
-      const r = await publishProfile({
+      const r = await publishProfile(npub, {
         ...profile,
         name: profile.display_name,
         // kind-0 picture is a URL; a glyph stays local to this site.
@@ -109,7 +119,10 @@ export default function NostrProfilePanel({ npub }: { npub: string }) {
       });
       const tail = glyph ? " (Emoji avatar kept local — a Nostr picture must be a URL.)" : "";
       if (r.error) setMsg({ ok: false, text: r.error });
-      else if ((r.ok ?? 0) > 0) setMsg({ ok: true, text: `Published to ${r.ok}/${r.total} relays.${tail}` });
+      else if ((r.ok ?? 0) > 0) {
+        setMsg({ ok: true, text: `Published to ${r.ok}/${r.total} relays.${tail}` });
+        onPublished?.(profile);
+      }
       else setMsg({ ok: false, text: `No relay accepted the event.${tail}` });
     } catch (e) {
       setMsg({ ok: false, text: (e as Error).message });
@@ -119,7 +132,7 @@ export default function NostrProfilePanel({ npub }: { npub: string }) {
   }
 
   return (
-    <div className={`${card} p-4`}>
+    <div className={`${card} px-4 py-3`}>
       <div className="flex items-start gap-3">
         <div className="relative flex-none">
           <Avatar value={profile.picture || avatarFor(npub)} size={56} />
@@ -172,9 +185,9 @@ export default function NostrProfilePanel({ npub }: { npub: string }) {
           <Loader2 className="h-3.5 w-3.5 animate-spin" /> Reading from relays…
         </div>
       ) : (
-        <div id={fieldsId} hidden={!expanded} className={expanded ? "mt-4 space-y-3" : undefined}>
+        <div id={fieldsId} hidden={!expanded} className={expanded ? "mt-3 grid gap-x-3 gap-y-2 sm:grid-cols-2" : undefined}>
           {FIELDS.map((f) => (
-            <label key={f.key} className={`block text-xs ${muted}`}>
+            <label key={f.key} className={`block text-xs ${muted} ${f.key === "about" ? "sm:col-span-2" : ""}`}>
               {f.label}
               {f.key === "about" ? (
                 <textarea
@@ -198,10 +211,10 @@ export default function NostrProfilePanel({ npub }: { npub: string }) {
           ))}
 
           {msg && (
-            <div className={`text-xs ${msg.ok ? "text-[var(--tb-ok)]" : "text-[var(--tb-err-ink)]"}`}>{msg.text}</div>
+            <div className={`text-xs sm:col-span-2 ${msg.ok ? "text-[var(--tb-ok)]" : "text-[var(--tb-err-ink)]"}`}>{msg.text}</div>
           )}
 
-          <div className="relative flex items-center gap-3" ref={howToRef}>
+          <div className="relative flex items-center gap-3 sm:col-span-2" ref={howToRef}>
             <button
               type="button"
               onClick={() => (mode === "how-to-set" ? setShowHowTo((v) => !v) : void publish())}
