@@ -104,7 +104,7 @@ export default function NostrProfilePanel({ npub }: { npub: string }) {
     const picture = profile.picture ?? "";
     const glyph = picture !== "" && !isAvatarUrl(picture);
     try {
-      const r = await publishProfile({
+      const r = await publishProfile(npub, {
         ...profile,
         name: profile.display_name,
         // kind-0 picture is a URL; a glyph stays local to this site.

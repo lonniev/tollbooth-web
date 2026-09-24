@@ -8,7 +8,6 @@
 
 import { finalizeEvent, type Event as NostrEvent } from "nostr-tools";
 
-import { getStoredNpub } from "./identity.ts";
 import { getSessionNsecBytes, hasSessionNsec } from "./sessionNsec.ts";
 import {
   getNostrProfile,
@@ -47,7 +46,7 @@ export async function fetchProfile(npub: string): Promise<Kind0 | null> {
 }
 
 /** Sign a kind-0 in the browser and have the wheel relay it. */
-export async function publishProfile(content: Kind0): Promise<PublishNostrProfileResult> {
+export async function publishProfile(npub: string, content: Kind0): Promise<PublishNostrProfileResult> {
   const clean: Kind0 = {};
   for (const [k, v] of Object.entries(content)) {
     if (typeof v === "string" && v.trim()) clean[k as keyof Kind0] = v.trim();
@@ -71,5 +70,5 @@ export async function publishProfile(content: Kind0): Promise<PublishNostrProfil
       "No signer available — sign in with a session key or a NIP-07 extension to publish your Nostr profile.",
     );
   }
-  return publishNostrProfile(getStoredNpub(), JSON.stringify(signed));
+  return publishNostrProfile(npub, JSON.stringify(signed));
 }

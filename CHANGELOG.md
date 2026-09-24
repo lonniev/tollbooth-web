@@ -15,6 +15,9 @@
 - `getSessionNsecBytes` and `sessionKeyClaimVisible` are exported.
 
 ### Changed
+- `publishProfile(npub, content)` takes the npub it publishes for, as the
+  panel already knows it. It used to read the stored patron npub, which a
+  site keeping its sign-in under other keys (taxsort) does not have.
 - `AVATAR_CHOICES` is now `DEFAULT_AVATAR_CHOICES`; read the site's set with
   `avatarChoices()`.
 - `NostrProfilePanel` lays its fields out two across on a wide screen and
