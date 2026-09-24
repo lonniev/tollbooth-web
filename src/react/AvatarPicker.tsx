@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { AVATAR_CHOICES } from "../avatar.ts";
+import { avatarChoices } from "../avatar.ts";
 import Avatar from "./Avatar.tsx";
 import { errBox, input, muted } from "./ui.ts";
 
@@ -124,7 +124,7 @@ export default function AvatarPicker({ value, onChange }: { value: string; onCha
 
       {tab === "glyphs" && (
         <div className="grid grid-cols-10 gap-1.5">
-          {AVATAR_CHOICES.map((glyph) => (
+          {avatarChoices().map((glyph) => (
             <button key={glyph} type="button" onClick={() => onChange(glyph)} className={`${tile(value === glyph)} text-lg`}>
               {glyph}
             </button>

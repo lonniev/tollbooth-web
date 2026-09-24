@@ -28,11 +28,15 @@ export interface TollboothConfig {
   extraBootstrapTools?: string[];
   /** Tools too routine to log in the debug panel. */
   quietTools?: string[];
+  /** Avatar glyphs in this site's voice. Defaults to a general set. */
+  avatarChoices?: string[];
 }
 
-interface Resolved extends Required<Omit<TollboothConfig, "extraBootstrapTools" | "quietTools">> {
+interface Resolved
+  extends Required<Omit<TollboothConfig, "extraBootstrapTools" | "quietTools" | "avatarChoices">> {
   extraBootstrapTools: string[];
   quietTools: string[];
+  avatarChoices?: string[];
 }
 
 let current: Resolved | null = null;
@@ -48,6 +52,7 @@ export function configureTollbooth(config: TollboothConfig): void {
     mcpUrl: config.mcpUrl,
     extraBootstrapTools: config.extraBootstrapTools ?? [],
     quietTools: config.quietTools ?? [],
+    avatarChoices: config.avatarChoices,
   };
 }
 

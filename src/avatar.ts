@@ -6,16 +6,24 @@
  * every avatar on the page updates without a reload.
  */
 
+import { tollboothConfig } from "./config.ts";
 import { fetchProfile } from "./nostrProfile.ts";
 import { readStored, writeStored } from "./storage.ts";
 
-export const AVATAR_CHOICES: string[] = [
+/** The glyphs offered when a site names none of its own. */
+export const DEFAULT_AVATAR_CHOICES: string[] = [
   "🐂", "🐻", "🦂", "🦅", "🐺", "🦉",
   "🦊", "🐉", "🦄", "🐢", "🦈", "🦀",
   "🎩", "🎭", "🃏", "🎯", "🪙", "💎",
   "⚡", "🔥", "🌪️", "🌊", "🏔️", "🌋",
   "♟️", "♛", "🛡️", "⚔️", "🗝️", "📜",
 ];
+
+/** This site's glyphs — `configureTollbooth({ avatarChoices })`, or the defaults. */
+export function avatarChoices(): string[] {
+  const own = tollboothConfig().avatarChoices;
+  return own?.length ? own : DEFAULT_AVATAR_CHOICES;
+}
 
 export const AVATAR_EVENT = "tollbooth:avatar-changed";
 
@@ -44,7 +52,8 @@ export function setStoredAvatar(npub: string, value: string): void {
 export function defaultAvatar(npub: string): string {
   let h = 0;
   for (const c of npub) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return AVATAR_CHOICES[h % AVATAR_CHOICES.length];
+  const choices = avatarChoices();
+  return choices[h % choices.length];
 }
 
 export function avatarFor(npub: string): string {

@@ -10,9 +10,13 @@
   Lifted from goodearth-mcp so every operator site gets it.
 - `shareOrDownload` / `handOffMode`: hand a file to the share sheet on a
   touch-first device, a download everywhere else.
+- `configureTollbooth({ avatarChoices })`: a site offers glyphs in its own
+  voice; the picker and the default avatar both draw from them.
 - `getSessionNsecBytes` and `sessionKeyClaimVisible` are exported.
 
 ### Changed
+- `AVATAR_CHOICES` is now `DEFAULT_AVATAR_CHOICES`; read the site's set with
+  `avatarChoices()`.
 - `NostrProfilePanel` lays its fields out two across on a wide screen and
   sits tighter. A new npub starts with empty fields instead of showing the
   previous patron's until the relays answer.
