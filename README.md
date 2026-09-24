@@ -9,7 +9,7 @@ features. It is the peer of the `tollbooth-dpyc` Python wheel.
   kind-27235 inline proof when the tab holds a session key
 - **MCP client** — one shared connection to the operator, typed wrappers for
   the standard tools (balance, top-up, statement, price, profile)
-- **React components** — `NpubGate`, `NostrProfilePanel`, `WalletCard`,
+- **React components** — `NpubGate`, `NostrProfilePanel`, `SessionKeyClaim`, `WalletCard`,
   `AvatarPicker`, `useSession`
 - **Pages proxy** — the `/mcp` Cloudflare Pages Function
 

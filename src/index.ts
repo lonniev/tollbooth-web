@@ -13,11 +13,14 @@ export * from "./standardTools.ts";
 export {
   clearSessionNsec,
   getSessionNsec,
+  getSessionNsecBytes,
   hasSessionNsec,
   sessionNsecNpub,
   setSessionNsec,
 } from "./sessionNsec.ts";
 export { signInlineProof } from "./inlineProof.ts";
+export { sessionKeyClaimVisible } from "./sessionKeyClaim.ts";
+export { handOffMode, shareOrDownload, type ShareOutcome } from "./shareFile.ts";
 export { canSignFor, isProven, type Claim } from "./signedIn.ts";
 export { readSignInFailure, type Situation } from "./signInSituation.ts";
 export { canSignProfile, fetchProfile, publishProfile } from "./nostrProfile.ts";
