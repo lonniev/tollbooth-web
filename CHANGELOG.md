@@ -20,6 +20,8 @@
   site keeping its sign-in under other keys (taxsort) does not have.
 - `AVATAR_CHOICES` is now `DEFAULT_AVATAR_CHOICES`; read the site's set with
   `avatarChoices()`.
+- `NostrProfilePanel` takes `onPublished(profile)`, called once relays accept
+  the kind-0, for a site that mirrors the name or avatar (a leaderboard).
 - `NostrProfilePanel` lays its fields out two across on a wide screen and
   sits tighter. A new npub starts with empty fields instead of showing the
   previous patron's until the relays answer.

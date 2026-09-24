@@ -29,7 +29,14 @@ const FIELDS: { key: keyof Kind0; label: string; placeholder: string }[] = [
   { key: "about", label: "About", placeholder: "A short bio…" },
 ];
 
-export default function NostrProfilePanel({ npub }: { npub: string }) {
+export default function NostrProfilePanel({
+  npub,
+  onPublished,
+}: {
+  npub: string;
+  /** After relays accept the kind-0 — for a site that mirrors the name or avatar elsewhere. */
+  onPublished?: (profile: Kind0) => void;
+}) {
   const { appName } = tollboothConfig();
   const [profile, setProfile] = useState<Kind0>({});
   const [loading, setLoading] = useState(true);
@@ -112,7 +119,10 @@ export default function NostrProfilePanel({ npub }: { npub: string }) {
       });
       const tail = glyph ? " (Emoji avatar kept local — a Nostr picture must be a URL.)" : "";
       if (r.error) setMsg({ ok: false, text: r.error });
-      else if ((r.ok ?? 0) > 0) setMsg({ ok: true, text: `Published to ${r.ok}/${r.total} relays.${tail}` });
+      else if ((r.ok ?? 0) > 0) {
+        setMsg({ ok: true, text: `Published to ${r.ok}/${r.total} relays.${tail}` });
+        onPublished?.(profile);
+      }
       else setMsg({ ok: false, text: `No relay accepted the event.${tail}` });
     } catch (e) {
       setMsg({ ok: false, text: (e as Error).message });
