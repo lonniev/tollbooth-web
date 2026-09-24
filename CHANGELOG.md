@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+- `publishConfig` no longer forces provenance. npm can only make a provenance
+  record inside CI, so it blocked a publish from a laptop; the release workflow
+  already passes `--provenance` itself.
+
 ## [0.1.0] - 2026-09-23
 
 ### Added
