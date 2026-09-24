@@ -1,6 +1,6 @@
 {
   "name": "@tollbooth-dpyc/web",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shared browser SDK for Tollbooth DPYC operator front ends: npub sign-in, proofs, MCP client, profile and wallet",
   "license": "Apache-2.0",
   "author": "Lonnie VanZandt",
