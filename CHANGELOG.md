@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.1.1] - 2026-09-24
 
 ### Fixed
 - `publishConfig` no longer forces provenance. npm can only make a provenance
