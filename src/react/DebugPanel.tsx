@@ -13,9 +13,15 @@
  *
  * Touch-first: every control is a real button at least 40px square, nothing
  * hides behind hover, and the page under the bar stays tappable.
+ *
+ * The panel keeps its own space: beside the fixed bar it renders an in-flow
+ * spacer as tall as the bar is right now (collapsed or open, measured with a
+ * ResizeObserver) plus the iOS safe-area inset, so the page's last line can
+ * always scroll clear of it. Mount it LAST in the app shell so that spacer is
+ * the last thing in the page's flow.
  */
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { onProofExpired } from "../client.ts";
 import {
   captureGlobalErrors,
@@ -27,6 +33,7 @@ import {
   type DebugSeverity,
 } from "../debugLog.ts";
 import { readStored, writeStored } from "../storage.ts";
+import { debugSpacerHeight, debugSpacerPx } from "./debugSpacer.ts";
 import { useDebugLog } from "./useDebugLog.ts";
 
 export interface DebugPanelProps {
@@ -70,6 +77,26 @@ export default function DebugPanel({
     return saved === "" ? defaultOpen : saved === "1";
   });
   const [copied, setCopied] = useState<"" | "ok" | "failed">("");
+  const barRef = useRef<HTMLDivElement>(null);
+  // Null until measured (and on the server, or with no ResizeObserver): the
+  // spacer then reserves the collapsed bar.
+  const [barHeight, setBarHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    const bar = barRef.current;
+    const RO = globalThis.ResizeObserver;
+    if (!bar || !RO) return;
+    // The observer reports once on observe and after every resize — opening,
+    // closing, a new log line, rotation — batched to the frame, and a state
+    // write only when the whole-pixel height actually changes.
+    const ro = new RO((entries) => {
+      const box = entries[entries.length - 1]?.borderBoxSize?.[0];
+      const next = debugSpacerPx(box ? box.blockSize : bar.getBoundingClientRect().height);
+      setBarHeight((prev) => (prev === next ? prev : next));
+    });
+    ro.observe(bar);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!captureErrors) return;
@@ -112,45 +139,49 @@ export default function DebugPanel({
         : "bg-[var(--tb-surface-2)] text-[var(--tb-ink)] border-[var(--tb-line)]";
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex flex-col items-end">
-      {/* The controls sit above the log, never over it, so Hide is always reachable. */}
-      <div className="pointer-events-auto flex flex-wrap justify-end gap-1 pr-3">
-        {open && (
-          <>
-            <button type="button" onClick={copy} className={plainTab} aria-label="Copy the whole log">
-              {copied === "ok" ? "Copied" : copied === "failed" ? "Copy failed" : "Copy"}
-            </button>
-            <button type="button" onClick={clearDebug} className={plainTab}>
-              Clear
-            </button>
-          </>
-        )}
-        <button type="button" onClick={toggle} aria-expanded={open} className={`${tab} ${toggleTone}`}>
-          {open ? "Hide" : title} ({log.length}
-          {failures > 0 ? ` · ${failures} err` : ""}
-          {notices > 0 ? ` · ${notices} notice` : ""})
-        </button>
-      </div>
-      {open && (
-        <div className="pointer-events-auto max-h-[40vh] w-full overflow-y-auto border-t border-[var(--tb-line)] bg-[var(--tb-surface)] p-3 font-mono text-xs text-[var(--tb-ink)]">
-          {children && <div className="mb-2 border-b border-[var(--tb-line)] pb-2 font-sans">{children}</div>}
-          {log.length === 0 && <div className="text-[var(--tb-muted)]">No MCP activity yet.</div>}
-          {log.map((entry, i) => {
-            const sev = debugSeverity(entry);
-            const flag = sev === "ok" ? null : FLAGGED[sev];
-            return (
-              <div key={log.length - i} className={`-mx-1 flex gap-2 rounded px-1 py-0.5 ${flag?.row ?? ""}`}>
-                <span className="shrink-0 text-[var(--tb-muted)]">{entry.ts}</span>
-                <span className={`w-14 shrink-0 ${flag?.ink ?? TYPE_INK[entry.type]}`}>
-                  {sev === "notice" ? "notice" : entry.type}
-                  {sev === "failure" && entry.type !== "error" ? " !" : ""}
-                </span>
-                <span className={`min-w-0 break-all ${flag?.ink ?? ""}`}>{entry.message}</span>
-              </div>
-            );
-          })}
+    <>
+      {/* In-flow: the page's own room for the bar, so nothing it holds sits under it. */}
+      <div aria-hidden="true" data-tb-debug-spacer="" style={{ height: debugSpacerHeight(barHeight), flexShrink: 0 }} />
+      <div ref={barRef} className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex flex-col items-end">
+        {/* The controls sit above the log, never over it, so Hide is always reachable. */}
+        <div className="pointer-events-auto flex flex-wrap justify-end gap-1 pr-3">
+          {open && (
+            <>
+              <button type="button" onClick={copy} className={plainTab} aria-label="Copy the whole log">
+                {copied === "ok" ? "Copied" : copied === "failed" ? "Copy failed" : "Copy"}
+              </button>
+              <button type="button" onClick={clearDebug} className={plainTab}>
+                Clear
+              </button>
+            </>
+          )}
+          <button type="button" onClick={toggle} aria-expanded={open} className={`${tab} ${toggleTone}`}>
+            {open ? "Hide" : title} ({log.length}
+            {failures > 0 ? ` · ${failures} err` : ""}
+            {notices > 0 ? ` · ${notices} notice` : ""})
+          </button>
         </div>
-      )}
-    </div>
+        {open && (
+          <div className="pointer-events-auto max-h-[40vh] w-full overflow-y-auto border-t border-[var(--tb-line)] bg-[var(--tb-surface)] p-3 font-mono text-xs text-[var(--tb-ink)]">
+            {children && <div className="mb-2 border-b border-[var(--tb-line)] pb-2 font-sans">{children}</div>}
+            {log.length === 0 && <div className="text-[var(--tb-muted)]">No MCP activity yet.</div>}
+            {log.map((entry, i) => {
+              const sev = debugSeverity(entry);
+              const flag = sev === "ok" ? null : FLAGGED[sev];
+              return (
+                <div key={log.length - i} className={`-mx-1 flex gap-2 rounded px-1 py-0.5 ${flag?.row ?? ""}`}>
+                  <span className="shrink-0 text-[var(--tb-muted)]">{entry.ts}</span>
+                  <span className={`w-14 shrink-0 ${flag?.ink ?? TYPE_INK[entry.type]}`}>
+                    {sev === "notice" ? "notice" : entry.type}
+                    {sev === "failure" && entry.type !== "error" ? " !" : ""}
+                  </span>
+                  <span className={`min-w-0 break-all ${flag?.ink ?? ""}`}>{entry.message}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </>
   );
 }

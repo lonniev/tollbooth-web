@@ -44,8 +44,13 @@ export const onRequest = makeMcpProxy("https://chartremotely-mcp.fastmcp.app/mcp
 ### Debug panel
 
 `callTool` logs to a shared, scrubbed ring buffer; `DebugPanel` shows it as a
-bar along the bottom of the page with Copy and Clear. Put it once near the root.
-Anything the site alone needs goes in as children, drawn above the log:
+bar along the bottom of the page with Copy and Clear. Put it once, **last** in
+the app shell. The bar is fixed to the viewport, but it also keeps its own
+room in the page: an in-flow spacer as tall as the bar is right now (collapsed
+or open) plus the iOS safe-area inset, so the page's last line always scrolls
+clear of it. Mounted last, that spacer is the page's last thing; mounted
+earlier, the room opens up there instead. Anything the site alone needs goes
+in as children, drawn above the log:
 
 ```tsx
 import { configureDebugLog, debugPush } from "@tollbooth-dpyc/web";
@@ -114,6 +119,14 @@ them after:
 
 :root { --tb-accent: #4cc38a; }
 ```
+
+## Stability
+
+From 1.0.0 the public API — everything exported from `@tollbooth-dpyc/web`,
+`/react`, `/pages-proxy` and the `theme.css` tokens — follows semver. Patch and
+minor releases are safe to take unattended (the fleet's Renovate preset
+auto-merges them); a breaking change ships only as a new major, which Renovate
+holds for review.
 
 ## Develop
 
