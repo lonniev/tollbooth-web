@@ -25,4 +25,17 @@ export { canSignFor, isProven, type Claim } from "./signedIn.ts";
 export { readSignInFailure, type Situation } from "./signInSituation.ts";
 export { canSignProfile, fetchProfile, publishProfile } from "./nostrProfile.ts";
 export * from "./avatar.ts";
-export { clearDebug, debugEntries, debugPush, onDebug, type DebugEntry } from "./debugLog.ts";
+export {
+  captureGlobalErrors,
+  clearDebug,
+  configureDebugLog,
+  debugEntries,
+  debugLogText,
+  debugPush,
+  debugSeverity,
+  onDebug,
+  redact,
+  type DebugEntry,
+  type DebugLogOptions,
+  type DebugSeverity,
+} from "./debugLog.ts";
