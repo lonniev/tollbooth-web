@@ -3,7 +3,7 @@ export { default as AvatarPicker } from "./AvatarPicker.tsx";
 export { default as DebugPanel, type DebugPanelProps } from "./DebugPanel.tsx";
 export { default as NpubGate } from "./NpubGate.tsx";
 export { default as NostrProfilePanel } from "./NostrProfilePanel.tsx";
-export { default as QuoteScroller, type QuoteScrollerProps } from "./QuoteScroller.tsx";
+export { default as QuoteScroller, type QuoteScrollerProps, type QuoteScrollerClassNames } from "./QuoteScroller.tsx";
 export { default as SessionKeyClaim } from "./SessionKeyClaim.tsx";
 export { default as WalletCard } from "./WalletCard.tsx";
 export { useSession, type Session } from "./useSession.ts";

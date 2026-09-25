@@ -66,7 +66,12 @@ zone the site stores under `<prefix>:timezone`, if any.
 Something to read while a page loads. The quotes are the site's own; the
 package only scrolls them. Name a remote corpus to edit the set without a
 redeploy — it is fetched once per page and replaces the inline set when it
-arrives, or never, if it cannot be had:
+arrives, or never, if it cannot be had.
+
+The package owns the mechanics (timing, cross-fade, reduced motion, pausing
+while the tab is hidden, `aria-live`, and a reserved height taken from the
+tallest quote as *your* styles lay it out). How the quotes look is yours:
+without `classNames` they are plain text inheriting from the page.
 
 ```tsx
 import { QuoteScroller } from "@tollbooth-dpyc/web/react";
@@ -79,8 +84,22 @@ const QUOTES: Quote[] = [{ text: "Observe the seasons.", author: "Hesiod" }];
   source="https://raw.githubusercontent.com/lonniev/dpyc-community/main/quotes-agrarian.json"
   heading="Reading the ledger…"
   spinner
+  classNames={{
+    root: "px-4 py-6 text-center",
+    heading: "mb-5 font-mono text-[11px] uppercase tracking-[0.3em] text-[var(--tb-accent)]",
+    figure: "mx-auto flex max-w-xl flex-col gap-3",
+    text: "font-serif text-[17px] italic leading-relaxed",
+    mark: "not-italic text-[var(--tb-accent)]",
+    author: "font-mono text-[10.5px] uppercase tracking-[0.22em] text-[var(--tb-muted)]",
+  }}
 />
 ```
+
+Props: `quotes`, `source`, `heading`, `spinner`, `intervalMs` (default 3500),
+`classNames` (`root`, `heading`, `spinner`, `figure`, `text`, `mark`,
+`author`), `marks` (curly quotes by default; `false` for none, or
+`[open, close]`), and `renderQuote(quote)` to draw a quote's markup yourself
+(then `text`, `mark` and `author` are unused).
 
 ### Styling
 

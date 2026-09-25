@@ -11,10 +11,17 @@
  * The order is shuffled and then walked, so nothing repeats until every quote
  * has shown. It cross-fades (instantly under reduced motion), stops while the
  * tab is hidden, and reserves the height of its longest quote so the page
- * does not jump as quotes change. Coloured only through `--tb-*` tokens.
+ * does not jump as quotes change.
+ *
+ * Mechanics only. The package owns the timing, the fade, the cache and the
+ * reserved height; every visual choice — type, size, colour, spacing,
+ * alignment — belongs to the site, through `classNames` or `renderQuote`.
+ * With neither, the quotes are plain text that inherits from the page. The
+ * reserved height is the tallest quote as the SITE styles it: every quote is
+ * laid out, invisibly, in the same grid cell as the one on show.
  */
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { loadQuotes, peekQuotes, shuffle, type Quote } from "../quotes.ts";
 
@@ -31,9 +38,36 @@ export interface QuoteScrollerProps {
   spinner?: boolean;
   /** How long each quote stays, in ms. Default 3500. */
   intervalMs?: number;
-  /** Classes for the outer box (padding, placement). */
-  className?: string;
+  /** Classes for each part. The package adds no typography or colour of its
+   *  own to any of them. `text`, `mark` and `author` are unused when
+   *  `renderQuote` is given. */
+  classNames?: QuoteScrollerClassNames;
+  /** Full control of one quote's markup. The package still wraps it for the
+   *  fade and the reserved height. */
+  renderQuote?: (quote: Quote) => ReactNode;
+  /** Quotation marks around the text: the curly pair by default, `false` for
+   *  none, or your own `[open, close]`. */
+  marks?: boolean | readonly [open: string, close: string];
 }
+
+export interface QuoteScrollerClassNames {
+  /** The outer box. */
+  root?: string;
+  /** The status line. */
+  heading?: string;
+  /** The spinner icon. Given, it replaces the default 1em size. */
+  spinner?: string;
+  /** Each quote's `<figure>`. */
+  figure?: string;
+  /** The `<blockquote>` holding the text and its marks. */
+  text?: string;
+  /** Each quotation mark. */
+  mark?: string;
+  /** The `<figcaption>` naming the author. */
+  author?: string;
+}
+
+const CURLY = ["\u201c", "\u201d"] as const;
 
 const FADE_MS = 450;
 
@@ -70,7 +104,9 @@ export default function QuoteScroller({
   heading,
   spinner = false,
   intervalMs = 3500,
-  className = "",
+  classNames = {},
+  renderQuote,
+  marks = true,
 }: QuoteScrollerProps) {
   const reduced = useReducedMotion();
   const pageVisible = usePageVisible();
@@ -130,72 +166,61 @@ export default function QuoteScroller({
     };
   }, [list, intervalMs, reduced, pageVisible]);
 
-  const longest = useMemo(
-    () =>
-      list.reduce<Quote | undefined>(
-        (a, q) => (!a || q.text.length + q.author.length > a.text.length + a.author.length ? q : a),
-        undefined,
-      ),
-    [list],
-  );
   const q = list[index % Math.max(list.length, 1)];
+  const pair = marks === true ? CURLY : marks === false ? null : marks;
+  const draw =
+    renderQuote ??
+    ((quote: Quote) => (
+      <figure className={classNames.figure}>
+        <blockquote className={classNames.text}>
+          {pair && <span className={classNames.mark}>{pair[0]}</span>}
+          {quote.text}
+          {pair && <span className={classNames.mark}>{pair[1]}</span>}
+        </blockquote>
+        <figcaption className={classNames.author}>{quote.author}</figcaption>
+      </figure>
+    ));
 
   return (
-    <div className={`px-4 py-6 text-center ${className}`}>
+    <div className={classNames.root}>
       {heading && (
-        <div className="mb-5 flex items-center justify-center gap-2 font-mono text-[11px] uppercase tracking-[0.3em] text-[var(--tb-accent)]">
-          {spinner && <Loader2 aria-hidden className="h-3.5 w-3.5 motion-safe:animate-spin" />}
+        <div className={classNames.heading}>
+          {spinner && (
+            <Loader2
+              aria-hidden
+              className={`${classNames.spinner ?? "inline-block h-[1em] w-[1em]"} motion-safe:animate-spin`}
+            />
+          )}
+          {spinner && " "}
           {heading}
         </div>
       )}
-      {q && longest && (
-        <div className="mx-auto grid max-w-xl">
-          {/* The longest quote, invisible, holds the height. */}
-          <QuoteText quote={longest} className="invisible [grid-area:1/1]" hidden />
-          <QuoteText
-            quote={q}
-            className="[grid-area:1/1]"
+      {q && (
+        <div style={STAGE}>
+          {/* Every quote, invisible, in the one cell: the tallest holds the height. */}
+          {list.map((each, i) => (
+            <div key={i} style={HOLDER} aria-hidden>
+              {draw(each)}
+            </div>
+          ))}
+          <div
             style={{
+              ...CELL,
               opacity: shown ? 1 : 0,
               transition: reduced ? "none" : `opacity ${FADE_MS}ms ease`,
             }}
-            live
-          />
+            aria-live="polite"
+            aria-atomic
+          >
+            {draw(q)}
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-function QuoteText({
-  quote,
-  className,
-  style,
-  hidden = false,
-  live = false,
-}: {
-  quote: Quote;
-  className: string;
-  style?: CSSProperties;
-  hidden?: boolean;
-  live?: boolean;
-}) {
-  return (
-    <figure
-      className={`m-0 flex flex-col justify-center gap-3 ${className}`}
-      style={style}
-      aria-hidden={hidden || undefined}
-      aria-live={live ? "polite" : undefined}
-      aria-atomic={live || undefined}
-    >
-      <blockquote className="m-0 font-serif text-[17px] italic leading-relaxed text-[var(--tb-ink)]">
-        <span className="not-italic text-[var(--tb-accent)]">&ldquo;</span>
-        {quote.text}
-        <span className="not-italic text-[var(--tb-accent)]">&rdquo;</span>
-      </blockquote>
-      <figcaption className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-[var(--tb-muted)]">
-        {quote.author}
-      </figcaption>
-    </figure>
-  );
-}
+// Structure for the mechanism only, inline so it needs no stylesheet.
+const STAGE: CSSProperties = { display: "grid" };
+const CELL: CSSProperties = { gridArea: "1 / 1", minWidth: 0 };
+const HOLDER: CSSProperties = { ...CELL, visibility: "hidden" };
