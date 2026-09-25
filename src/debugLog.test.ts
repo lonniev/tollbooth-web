@@ -57,6 +57,20 @@ describe("redaction", () => {
     assert.equal(redact('{"value":42}'), '{"value":42}');
   });
 
+  it("takes a credential value whole even when it holds quotes", () => {
+    const line = `update_patron_credential(${JSON.stringify({ field: "api_key", value: `it's "sk-live" 9` })})`;
+    const out = redact(line);
+    assert.equal(out, 'update_patron_credential({"field":"api_key","value":"[redacted]"})');
+    assert.ok(!out.includes("sk-live") && !out.includes("s \\"));
+  });
+
+  it("scrubs a credential value cut off by the log's truncation", () => {
+    const full = `update_patron_credential(${JSON.stringify({ field: "account_hash", value: "ABCDEFGH\\IJ" })})`;
+    // Cut just after the first backslash of the escaped pair: a lone trailing `\`.
+    const out = redact(full.slice(0, full.indexOf("\\") + 1));
+    assert.ok(!out.includes("ABCD"), out);
+  });
+
   it("leaves error codes that merely name a secret alone", () => {
     const line = '{"success":false,"error_code":"dpop_token_missing","tokens_used":5}';
     assert.equal(redact(line), line);

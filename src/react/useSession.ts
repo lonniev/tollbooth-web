@@ -18,6 +18,8 @@ export interface Session {
   canSign: boolean;
   /** Set when a cached proof lapses: a calm prompt to sign in again. */
   notice: string;
+  /** Clear the notice without signing in — the patron read it and moved on. */
+  dismissNotice: () => void;
   /** Call after a successful sign-in so the whole app notices. */
   refresh: () => void;
   signOut: () => void;
@@ -44,6 +46,8 @@ export function useSession(): Session {
     setNotice("");
   }, []);
 
+  const dismissNotice = useCallback(() => setNotice(""), []);
+
   useEffect(
     () =>
       onProofExpired(() => {
@@ -55,5 +59,5 @@ export function useSession(): Session {
     [],
   );
 
-  return { ...state, notice, refresh, signOut };
+  return { ...state, notice, dismissNotice, refresh, signOut };
 }

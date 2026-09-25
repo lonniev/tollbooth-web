@@ -5,14 +5,42 @@
 
 import { callTool } from "./client.ts";
 
+/** What a patron must supply beyond the npub proof, per the wheel's `patron_auth_block`. */
+export interface PatronAuth {
+  mode: "oauth" | "secure_courier" | "none";
+  patron_credentials_required: boolean;
+  /** mode "oauth": the provider's credential service. */
+  oauth_service?: string;
+  /** mode "secure_courier": the service a patron delivers secrets to. */
+  credential_service?: string;
+}
+
+/** The wheel's `service_status`: health and build facts, free and unauthenticated. */
 export interface ServiceStatus {
-  operator_npub_hash?: string;
-  lifecycle?: string;
-  message?: string;
-  version?: string;
-  tollbooth_dpyc_version?: string;
+  success?: boolean;
   service?: string;
   slug?: string;
+  version?: string;
+  tollbooth_dpyc_version?: string;
+  vault_configured?: boolean;
+  courier_has_vault?: boolean;
+  operator_npub_hash?: string;
+  process_id?: number;
+  /** Deploy metadata from the environment (commit, build time, …), lower-cased keys. */
+  build_info?: Record<string, string> | null;
+  patron_auth?: PatronAuth;
+  /** Only on a server that runs background jobs. */
+  async_jobs?: { docket_url_set: boolean; backend: string; durable_across_recycles: boolean };
+  durable_jobs?: {
+    modal_app: string | null;
+    detached_executor_active: boolean;
+    detached_executor_resolved: boolean;
+    detached_executor_error: string | null;
+    last_dispatch_error: string | null;
+    dispatching: boolean;
+  };
+  lifecycle?: string;
+  message?: string;
 }
 
 export function serviceStatus(): Promise<ServiceStatus> {
@@ -106,6 +134,13 @@ export interface CheckBalanceResult {
   vault_unavailable?: boolean;
   warning?: string;
   today_usage?: Record<string, { calls: number; api_sats: number }>;
+  invoice_summary?: {
+    total_invoices: number;
+    settled_count: number;
+    pending_count: number;
+    total_real_sats: number;
+    total_api_sats_credited: number;
+  };
   error?: string;
   error_code?: string;
 }
@@ -114,22 +149,44 @@ export function checkBalance(): Promise<CheckBalanceResult> {
   return callTool<CheckBalanceResult>("check_balance", {});
 }
 
+export interface ConstraintEffect {
+  type: string;
+  message?: string;
+  [key: string]: unknown;
+}
+
+/** The wheel's `check_price` preview. */
 export interface CheckPriceResult {
   success: boolean;
   tool_id?: string;
-  base_cost_api_sats?: number;
-  effective_cost_api_sats?: number;
+  tool_name?: string;
+  /** "flat" | "flat+multipliers" | "percent" */
+  pricing_type?: string;
+  base_cost_api_sats?: number | null;
+  effective_cost_api_sats?: number | null;
+  rate_percent?: number;
+  rate_param?: string;
+  min_cost_sats?: number;
+  multipliers?: Record<string, unknown>;
+  constraints_enabled?: boolean;
+  constraint_effects?: ConstraintEffect[];
+  hint?: string;
   error?: string;
   error_code?: string;
 }
 
 /**
  * The fare for one tool in api_sats, as the live pricing model resolves it,
- * constraints included — keyed by the tool's frozen UUID. Null when unreadable:
- * show the answer without a price rather than invent one.
+ * constraints included — keyed by the tool's frozen UUID (or its capability
+ * name). `toolKwargs` are the call's own parameters, for a tool priced by
+ * them (ad valorem, or a multiplier on a categorical argument). Null when
+ * unreadable: show the answer without a price rather than invent one.
  */
-export async function checkPrice(toolId: string): Promise<number | null> {
-  const r = await callTool<CheckPriceResult>("check_price", { tool_id: toolId });
+export async function checkPrice(toolId: string, toolKwargs?: Record<string, unknown>): Promise<number | null> {
+  const r = await callTool<CheckPriceResult>("check_price", {
+    tool_id: toolId,
+    ...(toolKwargs ? { tool_kwargs: JSON.stringify(toolKwargs) } : {}),
+  });
   const v = r.effective_cost_api_sats ?? r.base_cost_api_sats;
   return typeof v === "number" ? v : null;
 }
@@ -157,6 +214,10 @@ export interface CheckPaymentResult {
   invoice_id?: string;
   credits_granted?: number;
   balance_api_sats?: number;
+  amount_sats?: number;
+  /** false: the credit could not be written; nothing was granted. */
+  persisted?: boolean;
+  source?: string;
   error?: string;
   error_code?: string;
 }
@@ -316,4 +377,196 @@ export function publishNostrProfile(npub: string, signedEvent: string): Promise<
     npub,
     signed_event: signedEvent,
   });
+}
+
+// ─── Operator readiness ──────────────────────────────────────────────────
+
+/** Every lifecycle `session_status` reports. */
+export type SessionLifecycle =
+  | "ready"
+  | "warming_up"
+  | "misconfigured"
+  | "quota_exceeded"
+  | "not_registered"
+  | "no_identity";
+
+/** The patron's stored upstream OAuth token, when the operator has a provider. */
+export interface UpstreamOAuth {
+  service: string;
+  has_access_token: boolean;
+  has_refresh_token: boolean;
+  refresh_enabled: boolean;
+  access_token_expires_at?: number;
+  access_token_expires_in_seconds?: number;
+}
+
+export interface SessionStatusResult {
+  success?: boolean;
+  lifecycle?: SessionLifecycle;
+  message?: string;
+  operator_npub?: string;
+  /** Why it is not ready, from the failing layer. */
+  detail?: string;
+  operator_credential_service?: string;
+  patron_credential_service?: string;
+  upstream_oauth?: UpstreamOAuth;
+  /** The vault could not answer — not the same as "never authorized". */
+  upstream_oauth_unreadable?: string;
+  error?: string;
+  error_code?: string;
+}
+
+/**
+ * Is the operator ready to serve? Free, no proof. With `patronNpub`, also the
+ * patron's upstream OAuth token expiry, so a page can refresh ahead of time.
+ */
+export function sessionStatus(patronNpub?: string): Promise<SessionStatusResult> {
+  return callTool<SessionStatusResult>(
+    "session_status",
+    patronNpub ? { patron_npub: patronNpub } : {},
+    { bestEffort: true },
+  );
+}
+
+export interface OnboardingItem {
+  field: string;
+  /** "identity" | "authority" | "secret" */
+  category: string;
+  /** "configured" | "missing" | "unknown" */
+  status: string;
+  how?: string;
+  lifecycle?: string;
+  delivered_at?: string | null;
+}
+
+/** The wheel's `get_operator_onboarding_status`: what the operator still has to set up. */
+export interface OperatorOnboardingStatus {
+  ready?: boolean;
+  configured?: OnboardingItem[];
+  missing?: OnboardingItem[];
+  optional_missing?: OnboardingItem[];
+  summary?: string;
+  bootstrap_error?: string;
+  vault_ok?: boolean;
+  /** Set when the credential vault could not be read: nothing is known either way. */
+  vault_situation?: string;
+  credential_greeting?: string | null;
+  credential_service?: string | null;
+  operator_name?: string;
+  error?: string;
+  error_code?: string;
+}
+
+export function getOperatorOnboardingStatus(): Promise<OperatorOnboardingStatus> {
+  return callTool<OperatorOnboardingStatus>("get_operator_onboarding_status", {}, { bestEffort: true });
+}
+
+/**
+ * The operator's own balance at its Authority — what certifies patron top-ups.
+ * The Authority's ledger, in the same shape as a patron's `check_balance`.
+ */
+export function checkAuthorityBalance(): Promise<CheckBalanceResult> {
+  return callTool<CheckBalanceResult>("check_authority_balance", {}, { bestEffort: true });
+}
+
+// ─── Pricing model and tool identities ───────────────────────────────────
+
+export interface PricingStep {
+  id: string;
+  type: string;
+  params?: Record<string, unknown>;
+  patron_npubs?: string[];
+}
+
+export interface ToolPrice {
+  tool_id: string;
+  tool_name: string;
+  price_sats: number;
+  category: string;
+  intent: string;
+  priced: boolean;
+  price_type?: string;
+  price_formula?: unknown;
+  min_cost?: number;
+  max_cost?: number;
+  multipliers?: Record<string, unknown>;
+  chain?: PricingStep[];
+}
+
+/** The wheel's `get_pricing_model`. `status` is "ok" or "error". */
+export interface PricingModelResult {
+  status?: string;
+  model_id?: string | null;
+  name?: string | null;
+  is_active?: boolean | null;
+  tools?: ToolPrice[] | null;
+  tranche_lifetime?: { target_usage_pct: number; ttl_days?: number; min_days?: number; max_days?: number };
+  error?: string;
+}
+
+/** The operator's active pricing model. Free, no proof. */
+export function getPricingModel(): Promise<PricingModelResult> {
+  return callTool<PricingModelResult>("get_pricing_model", {});
+}
+
+export interface CanonicalIdentity {
+  tool_id: string;
+  mcp_name: string;
+  category: string;
+  intent: string;
+  capability: string;
+  registered: boolean;
+  reason?: string;
+}
+
+/** The wheel's `list_canonical_identities`: every tool's frozen UUID and wire name. */
+export interface CanonicalIdentitiesResult {
+  success?: boolean;
+  operator_npub?: string;
+  count?: number;
+  unregistered_count?: number;
+  tools?: CanonicalIdentity[];
+  unregistered?: Array<{ mcp_name: string; reason: string; [key: string]: unknown }>;
+  error?: string;
+}
+
+export function listCanonicalIdentities(): Promise<CanonicalIdentitiesResult> {
+  return callTool<CanonicalIdentitiesResult>("list_canonical_identities", {});
+}
+
+// ─── Patron credentials ──────────────────────────────────────────────────
+// Values go in, never out: the wheel returns field names only, and the call
+// log scrubs any `value` sent beside a `field`.
+
+export interface PatronCredentialFieldsResult {
+  success?: boolean;
+  fields?: string[];
+  /** Per field, when it was delivered; null for secrets vaulted before stamps. */
+  delivered_at?: Record<string, string | null>;
+  count?: number;
+  error?: string;
+  error_code?: string;
+}
+
+export interface PatronCredentialWriteResult {
+  success?: boolean;
+  message?: string;
+  error?: string;
+  error_code?: string;
+}
+
+/** The names of the patron's stored credential fields — never their values. */
+export function getPatronCredentialFields(): Promise<PatronCredentialFieldsResult> {
+  return callTool<PatronCredentialFieldsResult>("get_patron_credential_fields", {});
+}
+
+/** Set one credential field, leaving the others as they are. */
+export function updatePatronCredential(field: string, value: string): Promise<PatronCredentialWriteResult> {
+  // `field` first: the log's scrubber keys on it to hide `value`.
+  return callTool<PatronCredentialWriteResult>("update_patron_credential", { field, value });
+}
+
+/** Remove one credential field, leaving the others as they are. */
+export function deletePatronCredential(field: string): Promise<PatronCredentialWriteResult> {
+  return callTool<PatronCredentialWriteResult>("delete_patron_credential", { field });
 }
