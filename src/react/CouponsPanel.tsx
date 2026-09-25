@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { forgetCoupon, listMyCoupons, redeemCoupon, type PatronCoupon } from "../standardTools.ts";
 import { couponExpiryText, couponStatusLabel, couponUsesText, redeemedText } from "../wallet.ts";
+import { cx } from "./cx.ts";
 
 export interface CouponsPanelClassNames {
   root?: string;
@@ -72,11 +73,6 @@ function defaultConfirm(): boolean {
     typeof window === "undefined" ||
     window.confirm("Remove this coupon from your list? You can redeem the code again while its window allows.")
   );
-}
-
-function cx(...parts: (string | false | undefined)[]): string | undefined {
-  const s = parts.filter(Boolean).join(" ");
-  return s || undefined;
 }
 
 export default function CouponsPanel({

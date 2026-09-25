@@ -19,6 +19,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "re
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { filterActive } from "../table.ts";
 import { oncePerFrame, reclampPanel } from "./panelPlacement.ts";
+import { cx } from "./cx.ts";
 
 export interface DateFieldOption {
   value: string;
@@ -105,11 +106,6 @@ export interface TableFilterProps<F extends object> {
 
 /** The panel keeps this many px from each edge of the viewport. */
 const EDGE = 8;
-
-function cx(...parts: (string | false | undefined)[]): string | undefined {
-  const s = parts.filter(Boolean).join(" ");
-  return s || undefined;
-}
 
 export default function TableFilter<F extends object>({
   search,

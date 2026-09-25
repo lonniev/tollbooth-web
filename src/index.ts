@@ -31,6 +31,10 @@ export { isTransportFailure } from "./networkError.ts";
 export * from "./wallet.ts";
 export * from "./table.ts";
 export * from "./theme.ts";
+export * from "./timezone.ts";
+export { usageFacts, type ToolSpend, type UsageFacts } from "./usage.ts";
+export { buildFacts, type BuildFacts } from "./buildInfo.ts";
+export * from "./funding.ts";
 export { errorReport } from "./errorReport.ts";
 export { loadQuotes, peekQuotes, shuffle, validQuotes, type Quote } from "./quotes.ts";
 export {

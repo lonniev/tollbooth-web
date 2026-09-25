@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.4.0] - 2026-09-25
+
+### Added
+- **Time zone** (`timezone.ts`, lifted from eXcalibur; Roastify held a copy):
+  the display-zone preference under `<prefix>:timezone` ("auto" or an IANA
+  name; an unknown name or a fixed offset reads as "auto"), `TIMEZONE_OPTIONS`,
+  `detectBrowserTimeZone` / `isValidTimeZone` / `normalizeTimezonePref` /
+  `resolveTimeZone` / `displayTimeZone`, `readTimezonePref` /
+  `writeTimezonePref` / `onTimezoneChange`, `getZonedParts`,
+  `getTimeZoneOffsetMs`, `zonedWallTimeToUtcMs`, `formatDateTime` / `Date` /
+  `Time`, `formatHourLabel`, `hourInZone`, `isoToDatetimeLocalValue` /
+  `datetimeLocalValueToIso`, `startOfLocalDayIso` / `startOfNextLocalDayIso` /
+  `localDateFilterBounds`. A wall time that does not exist on a spring-forward
+  morning moves an hour on, and a doubled one on a fall-back night is the
+  earlier (tested across both New York changes).
+- `useTimezone()` → `[pref, zone, setPref]`, shared by every component on the
+  page and followed across tabs; `TimezonePicker`, a select with
+  "Automatic (<zone>)" (`classNames`, `autoLabel`, `optionLabel`, `options`).
+- `UsageSummary`: the account-statement card — balance, deposited, consumed,
+  expired, and the period's spend, calls and top-ups, with its top tools
+  (`days`, `figures`, `labels`, `topTools`, `renderRow`, `classNames`). The
+  arithmetic is `usageFacts` (tested).
+- `PatronFundingStatus` / `OperatorFundingStatus` (lifted from eXcalibur): rows
+  read fresh and stamped in the patron's zone — sign-in proof, credit balance
+  and tranche expiry (`thresholds: { low, empty }`); operator credentials,
+  Authority balance (`authorityThresholds`), database and background jobs.
+  The operator panel shows only when the signed-in npub equals
+  `session_status.operator_npub`. `siteRows` adds a site's own checks. The
+  rules are `funding.ts` (tested).
+- `BuildInfoPanel` (lifted from eXcalibur / Roastify / Optionality): front-end
+  version (passed in), MCP server version, wheel and commit linked to its
+  repository from `service_status`, the Tollbooth-DPYC™ links, licence and
+  patent notice. `buildFacts` (tested) links only https URLs.
+
+### Changed
+- `DebugPanel` stamps use `displayTimeZone()` — the same preference and
+  validation as every other clock, not a second reading of the key.
+
 ## [1.3.1] - 2026-09-25
 
 ### Fixed

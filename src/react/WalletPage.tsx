@@ -26,6 +26,7 @@ import {
 import { amountReducer, formatSats, parseSats, presetChosen } from "../wallet.ts";
 import CouponsPanel, { type CouponsPanelProps } from "./CouponsPanel.tsx";
 import { useTopUp, type UseTopUpOptions } from "./useTopUp.ts";
+import { cx } from "./cx.ts";
 
 export interface WalletPageClassNames {
   root?: string;
@@ -91,11 +92,6 @@ const DEFAULT_TOP_UPS = [1_000, 5_000, 25_000];
 
 const localDate = (iso: string) => new Date(iso).toLocaleDateString();
 const localDateTime = (iso: string) => new Date(iso).toLocaleString();
-
-function cx(...parts: (string | false | undefined)[]): string | undefined {
-  const s = parts.filter(Boolean).join(" ");
-  return s || undefined;
-}
 
 export default function WalletPage({
   heading = "Wallet",
