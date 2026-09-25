@@ -1,5 +1,59 @@
 # Changelog
 
+## [1.1.0] - 2026-09-24
+
+Five more widgets every fleet front end carried its own copy of, as mechanics
+only: each takes `classNames` per part (and a render prop where one helps),
+adds no typography or colour of its own, and draws its actions as chips.
+
+### Added
+- `NetworkError` and `isNetworkError(e)`: `callTool` / `callToolWithContent`
+  now throw a `NetworkError` (carrying the runtime `tool` name and the
+  original `cause`) when the call never reached the service — offline, a
+  fetch failure, an abort, a timeout before an answer, or the Pages proxy's
+  own 502 — and a plain `Error` for anything the service answered. An
+  offline outbox can now test `isNetworkError(e)` instead of matching the
+  `<slug>_<tool>: ` message prefix (which is kept). `isTransportFailure(e)`
+  is the classifier behind it.
+- `WalletPage` (React): balance with deposited / consumed / expired /
+  tranches, a stale-ledger notice, pending invoices and credit about to
+  expire; a Lightning top-up from preset chips or any amount; credit
+  tranches; the account statement on request; and coupons. `before` and
+  `children` take a site's own panels; `formatDate` / `formatDateTime` take
+  its time-zone formatter.
+- `useTopUp` (React) and `topUpReducer`: purchase_credits → invoice →
+  check_payment, polled every `pollMs` (default 5 s) while the tab is
+  visible, up to `maxChecks` (default 60), with a manual check and cancel.
+  `WalletCard` now runs on it too, so an open invoice settles on its own.
+- `CouponsPanel` (React): redeem a code, list what is held, remove one.
+  `listMyCoupons`, `redeemCoupon`, `forgetCoupon` and the coupon types join
+  the standard-tool wrappers.
+- `TableFilter` (React): any of a search box (regex, applied on Enter or its
+  chip), a date range with an optional date-field select, and a panel of
+  toggle / number questions behind a mark; one Clear chip while anything is
+  on. `filterRows`, `searchMatcher`, `inDateRange`, `filterActive` for
+  filtering in the browser.
+- `SortHeader`, `PageControls`, `TableShell` (React), with `lastPage`,
+  `clampPage`, `pageCount`, `pageRows` and `nextSort`.
+- `useTheme` and `ThemeToggle` (React), `bootstrapTheme`, `readTheme`,
+  `writeTheme`, `applyTheme`, `resolveTheme`: dark / light / system,
+  persisted under `<prefix>:theme`, followed across tabs and, in system,
+  live with the OS. Applying sets the `dark` class, `data-theme` and
+  `color-scheme` together, so class-based and attribute-based sheets both
+  work.
+- `ErrorBoundary` (React): a render crash is pushed to the debug log and
+  shown with Copy error + log / Try again / Reload chips, or your
+  `fallback`. `errorReport` builds the copied text.
+- `theme.css`: `:root[data-theme="dark"]` so an explicit dark pick wins over
+  a light OS.
+
+### Fixed
+- `AccountStatementResult` now describes what the wheel's
+  `account_statement` returns (`account_summary`, `purchase_history`,
+  `active_tranches`, `tool_usage_all_time`, `daily_usage`); the fields it
+  listed before were never sent. `CheckBalanceResult` gains the tranche,
+  pending-invoice and stale-ledger fields the wheel does send.
+
 ## [1.0.0] - 2026-09-24
 
 First stable release — the API is now semver-stable. Patch and minor releases

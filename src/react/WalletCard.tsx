@@ -5,27 +5,25 @@
  * unknown, and unknown is not zero: showing 0 to someone with funds would send
  * them to buy credits they already own. The card offers round numbers to pay
  * in and never guesses what anything costs.
+ *
+ * The compact card. `WalletPage` is the full account view; both run the same
+ * top-up (`useTopUp`), which checks an open invoice on its own until it settles.
  */
 
 import { useCallback, useEffect, useState } from "react";
 import { RefreshCw, Zap } from "lucide-react";
 import { tollboothConfig } from "../config.ts";
-import { checkBalance, checkPayment, purchaseCredits } from "../standardTools.ts";
+import { checkBalance } from "../standardTools.ts";
+import { formatSats } from "../wallet.ts";
 import { card, ghost, iconButton, muted, primary } from "./ui.ts";
+import { useTopUp } from "./useTopUp.ts";
 
 const DEFAULT_TOP_UPS = [1_000, 5_000, 20_000];
-
-function sats(n: number | null): string {
-  return n === null ? "—" : n.toLocaleString("en-US");
-}
 
 export default function WalletCard({ topUps = DEFAULT_TOP_UPS }: { topUps?: number[] }) {
   const { appName } = tollboothConfig();
   const [balance, setBalance] = useState<number | null>(null);
   const [reachable, setReachable] = useState(true);
-  const [busy, setBusy] = useState(false);
-  const [invoice, setInvoice] = useState<{ id: string; link: string; sats: number } | null>(null);
-  const [msg, setMsg] = useState("");
 
   const load = useCallback(() => {
     checkBalance()
@@ -38,46 +36,19 @@ export default function WalletCard({ topUps = DEFAULT_TOP_UPS }: { topUps?: numb
 
   useEffect(load, [load]);
 
-  async function topUp(amount: number) {
-    setBusy(true);
-    setMsg("");
-    try {
-      const r = await purchaseCredits(amount);
-      if (r.error || !r.invoice_id) {
-        setMsg(r.error ?? "The service did not return an invoice. Try again.");
-        return;
-      }
-      setInvoice({
-        id: r.invoice_id,
-        link: r.checkout_link ?? r.lightning_invoice ?? r.payment_request ?? "",
-        sats: r.amount_sats ?? amount,
-      });
-    } catch (e) {
-      setMsg((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function confirm() {
-    if (!invoice) return;
-    setBusy(true);
-    setMsg("");
-    try {
-      const r = await checkPayment(invoice.id);
-      if (r.status === "Settled") {
-        setInvoice(null);
-        setMsg(`Paid. ${sats(r.credits_granted ?? invoice.sats)} sats added.`);
-        load();
-      } else {
-        setMsg(`Not paid yet — the invoice reads ${r.status ?? "unknown"}.`);
-      }
-    } catch (e) {
-      setMsg((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
+  const { state, create, check, cancel } = useTopUp({ onSettled: load });
+  const busy = state.phase === "creating" || (state.phase === "awaiting" && state.checking);
+  const invoice = state.phase === "awaiting" ? state.invoice : null;
+  const msg =
+    state.phase === "settled"
+      ? `Paid. ${formatSats(state.credited)} sats added.`
+      : state.phase === "failed"
+        ? state.message
+        : state.phase === "awaiting" && state.status
+          ? `Not paid yet — ${state.status}`
+          : state.phase === "idle"
+            ? (state.message ?? "")
+            : "";
 
   return (
     <section className={`${card} p-4`}>
@@ -88,7 +59,7 @@ export default function WalletCard({ topUps = DEFAULT_TOP_UPS }: { topUps?: numb
         </button>
       </div>
       <div className="mt-1 flex items-baseline gap-2">
-        <span className="text-2xl font-semibold tabular-nums">{sats(reachable ? balance : null)}</span>
+        <span className="text-2xl font-semibold tabular-nums">{formatSats(reachable ? balance : null)}</span>
         <span className={`text-sm ${muted}`}>sats</span>
       </div>
       {!reachable && <p className={`mt-2 text-xs ${muted}`}>{appName} did not answer, so no balance is shown.</p>}
@@ -96,7 +67,7 @@ export default function WalletCard({ topUps = DEFAULT_TOP_UPS }: { topUps?: numb
       {!invoice ? (
         <div className="mt-4 flex gap-2">
           {topUps.map((n) => (
-            <button key={n} type="button" disabled={busy} onClick={() => topUp(n)} className={ghost}>
+            <button key={n} type="button" disabled={busy} onClick={() => create(n)} className={ghost}>
               +{n.toLocaleString("en-US")}
             </button>
           ))}
@@ -104,7 +75,7 @@ export default function WalletCard({ topUps = DEFAULT_TOP_UPS }: { topUps?: numb
       ) : (
         <div className="mt-4 space-y-2">
           <a
-            href={invoice.link}
+            href={invoice.checkoutLink ?? (invoice.bolt11 ? `lightning:${invoice.bolt11}` : "#")}
             target="_blank"
             rel="noreferrer"
             className={`${primary} flex items-center justify-center gap-2`}
@@ -112,10 +83,10 @@ export default function WalletCard({ topUps = DEFAULT_TOP_UPS }: { topUps?: numb
             <Zap size={16} /> Pay {invoice.sats.toLocaleString("en-US")} sats
           </a>
           <div className="flex gap-2">
-            <button type="button" disabled={busy} onClick={confirm} className={ghost}>
+            <button type="button" disabled={busy} onClick={check} className={ghost}>
               I've paid — check
             </button>
-            <button type="button" onClick={() => setInvoice(null)} className={`${ghost} w-auto px-4`}>
+            <button type="button" onClick={cancel} className={`${ghost} w-auto px-4`}>
               Cancel
             </button>
           </div>

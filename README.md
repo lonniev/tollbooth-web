@@ -10,7 +10,11 @@ features. It is the peer of the `tollbooth-dpyc` Python wheel.
 - **MCP client** — one shared connection to the operator, typed wrappers for
   the standard tools (balance, top-up, statement, price, profile)
 - **React components** — `NpubGate`, `NostrProfilePanel`, `SessionKeyClaim`, `WalletCard`,
-  `AvatarPicker`, `DebugPanel`, `QuoteScroller`, `useSession`, `useDebugLog`
+  `WalletPage`, `CouponsPanel`, `TableFilter`, `SortHeader` / `PageControls` /
+  `TableShell`, `ThemeToggle`, `ErrorBoundary`, `AvatarPicker`, `DebugPanel`,
+  `QuoteScroller`, `useSession`, `useTopUp`, `useTheme`, `useDebugLog`
+- **Mechanics, not looks** — the newer components take `classNames` per part
+  and add no typography or colour of their own; actions are chips
 - **Debug log** — every call, result and error from `callTool`, scrubbed of
   nsecs, hex keys, tokens and proofs before it is stored
 - **Pages proxy** — the `/mcp` Cloudflare Pages Function
@@ -40,6 +44,64 @@ is bound to the full runtime name.
 import { makeMcpProxy } from "@tollbooth-dpyc/web/pages-proxy";
 export const onRequest = makeMcpProxy("https://chartremotely-mcp.fastmcp.app/mcp");
 ```
+
+### Network failures
+
+`callTool` throws a `NetworkError` when the call never reached the service
+(offline, fetch failed, timed out before an answer, the proxy could not reach
+the operator) and a plain `Error` for anything the service said. Only the
+first is safe to queue and send again:
+
+```ts
+import { callTool, isNetworkError } from "@tollbooth-dpyc/web";
+
+try {
+  await callTool("task_save", task);
+} catch (e) {
+  if (isNetworkError(e)) outbox.push({ tool: "task_save", args: task }); // e.tool is the runtime name
+  else throw e;
+}
+```
+
+### Wallet, coupons, tables, theme, error boundary
+
+Mechanics only: the calls, states, paging and persistence are the package's;
+every class is yours. Pass `classNames` (each component's type lists its
+parts); without them the markup is plain and inherits from the page.
+
+```tsx
+import { bootstrapTheme, filterRows, pageRows } from "@tollbooth-dpyc/web";
+import {
+  CouponsPanel, ErrorBoundary, PageControls, SortHeader, TableFilter, TableShell,
+  ThemeToggle, WalletPage,
+} from "@tollbooth-dpyc/web/react";
+
+bootstrapTheme();            // main.tsx, after configureTollbooth: <prefix>:theme → <html>
+
+<ErrorBoundary classNames={{ root: "p-6", chip: "chip" }}>
+  <App />
+</ErrorBoundary>
+
+<WalletPage
+  topUps={[1_000, 5_000, 25_000]}
+  formatDateTime={(iso) => formatInZone(iso, zone)}
+  before={<FundingStatus />}
+  coupons={{ classNames: { root: "card", chip: "chip" } }}
+  classNames={{ section: "card p-5", figure: "text-3xl", chip: "chip", chipActive: "chip-on" }}
+/>
+
+<ThemeToggle themes={["dark", "light", "system"]} classNames={{ chip: "chip", active: "chip-on" }} />
+
+<TableFilter
+  search={{ value: search, onSearch: setSearch, title: "Case-insensitive regular expression" }}
+  dates={{ from, to, onFrom: setFrom, onTo: setTo, field, fields, onField: setField }}
+  onClear={clearAll}
+  classNames={{ root: "flex gap-2", input: "field", chip: "chip" }}
+/>
+```
+
+`useTopUp` is the wallet's top-up on its own (purchase_credits → invoice →
+check_payment, polled while the tab is visible) for a site drawing its own.
 
 ### Debug panel
 

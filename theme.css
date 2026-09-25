@@ -51,3 +51,25 @@
     --tb-notice-ink: #d8b4fe;
   }
 }
+
+/* An explicit dark pick (bootstrapTheme / useTheme set data-theme) wins over
+   a light OS, just as data-theme="light" wins over a dark one above. */
+:root[data-theme="dark"] {
+  --tb-accent: #7aa7ff;
+  --tb-on-accent: #0b1220;
+  --tb-surface: #151a21;
+  --tb-surface-2: #1d232c;
+  --tb-ink: #e6ebf2;
+  --tb-muted: #9aa5b4;
+  --tb-line: #2b333e;
+  --tb-ok: #5fd39a;
+  --tb-warn-bg: #2a2110;
+  --tb-warn-line: #5c4717;
+  --tb-warn-ink: #f2cf7a;
+  --tb-err-bg: #2c1515;
+  --tb-err-line: #5e2525;
+  --tb-err-ink: #f4a3a3;
+  --tb-notice-bg: #241532;
+  --tb-notice-line: #4d2d6e;
+  --tb-notice-ink: #d8b4fe;
+}
