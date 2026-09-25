@@ -45,6 +45,29 @@ export function nextSort(
   return { col, dir: initial };
 }
 
+/** The `aria-sort` of a column header: set on the sorted column only. */
+export function ariaSort(col: string, activeCol: string, dir: SortDir): "ascending" | "descending" | undefined {
+  if (col !== activeCol) return undefined;
+  return dir === "desc" ? "descending" : "ascending";
+}
+
+// ── A popover kept on screen ───────────────────────────────────────────────
+
+/**
+ * How far to slide a popover sideways so it stays inside the viewport: the
+ * horizontal offset (px, negative is left) to add to where it would sit.
+ * `left` and `width` are its box as laid out before any slide. It keeps
+ * `margin` px from each edge; one wider than the room left is pinned to the
+ * left margin (give it a max-width to fit). Zero when it already fits.
+ */
+export function nudgeIntoView(left: number, width: number, viewportWidth: number, margin = 8): number {
+  const minLeft = margin;
+  const maxLeft = viewportWidth - margin - width;
+  if (maxLeft < minLeft || left < minLeft) return minLeft - left;
+  if (left > maxLeft) return maxLeft - left;
+  return 0;
+}
+
 // ── Filtering ──────────────────────────────────────────────────────────────
 
 /**

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  amountReducer,
   couponDaysLeft,
   couponExpiryText,
   couponStatusLabel,
@@ -9,10 +10,12 @@ import {
   invoiceFrom,
   parseSats,
   paymentPhase,
+  presetChosen,
   redeemedText,
   shouldPoll,
   TOP_UP_IDLE,
   topUpReducer,
+  type AmountEvent,
   type TopUpEvent,
   type TopUpState,
 } from "./wallet.ts";
@@ -169,5 +172,36 @@ describe("coupon words", () => {
   it("says what a redeem bought", () => {
     assert.equal(redeemedText({ name: "EARLYBIRD", discount_percent: 20, uses_remaining: 1 }), "EARLYBIRD: 20% off — 1 use left.");
     assert.equal(redeemedText({ name: "X", discount_percent: 5, uses_remaining: null }), "X: 5% off.");
+  });
+});
+
+describe("the amount box: presets fill, then the patron confirms", () => {
+  const pick = (events: AmountEvent[], from = "") => events.reduce(amountReducer, from);
+
+  it("fills the box from a preset and marks that chip, asking nothing of the service", () => {
+    const text = pick([{ type: "preset", sats: 5000 }]);
+    assert.equal(text, "5000");
+    assert.ok(presetChosen(text, 5000));
+    assert.ok(!presetChosen(text, 1000));
+    // The only way to an invoice is the confirm step, which reads the box.
+    assert.equal(parseSats(text), 5000);
+  });
+
+  it("lets a second tap change the choice before anything is created", () => {
+    const text = pick([{ type: "preset", sats: 5000 }, { type: "preset", sats: 1000 }]);
+    assert.equal(text, "1000");
+    assert.ok(presetChosen(text, 1000) && !presetChosen(text, 5000));
+  });
+
+  it("keeps digits only when typed, and a typed amount matching a preset marks it", () => {
+    assert.equal(pick([{ type: "typed", text: "2,5k00" }]), "2500");
+    assert.ok(presetChosen(pick([{ type: "typed", text: "25000" }]), 25_000));
+  });
+
+  it("ignores a nonsense preset and clears on request", () => {
+    assert.equal(pick([{ type: "preset", sats: 0 }], "42"), "42");
+    assert.equal(pick([{ type: "preset", sats: 1.5 }], "42"), "42");
+    assert.equal(pick([{ type: "preset", sats: 5000 }, { type: "clear" }]), "");
+    assert.equal(parseSats(""), null, "an empty box cannot be confirmed");
   });
 });

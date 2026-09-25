@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  ariaSort,
   clampPage,
   dayOf,
   filterActive,
@@ -8,6 +9,7 @@ import {
   inDateRange,
   lastPage,
   nextSort,
+  nudgeIntoView,
   pageCount,
   pageRows,
   searchMatcher,
@@ -93,5 +95,41 @@ describe("filtering", () => {
     assert.deepEqual(filterRows(rows, { search: "frost" }, by).map((r) => r.at), ["2026-10-12", "2026-09-01"]);
     assert.deepEqual(filterRows(rows, { search: "frost", dateFrom: "2026-10-01" }, by).map((r) => r.at), ["2026-10-12"]);
     assert.equal(filterRows(rows, {}, by).length, 3);
+  });
+});
+
+describe("aria-sort", () => {
+  it("is set on the sorted column only, in the words assistive tech reads", () => {
+    assert.equal(ariaSort("date", "date", "desc"), "descending");
+    assert.equal(ariaSort("date", "date", "asc"), "ascending");
+    assert.equal(ariaSort("amount", "date", "desc"), undefined);
+  });
+});
+
+describe("a popover kept on screen", () => {
+  it("leaves one that fits where it is", () => {
+    assert.equal(nudgeIntoView(20, 300, 390), 0);
+    assert.equal(nudgeIntoView(8, 374, 390), 0, "exactly the room between the margins fits");
+  });
+
+  it("slides one hanging off the left edge back in (Good Earth at 390 px)", () => {
+    // A 280 px panel right-aligned under a mark near the left: it starts at -150.
+    const dx = nudgeIntoView(-150, 280, 390);
+    assert.equal(dx, 158);
+    assert.equal(-150 + dx, 8);
+  });
+
+  it("slides one hanging off the right edge back in", () => {
+    const dx = nudgeIntoView(200, 280, 390);
+    assert.equal(200 + dx + 280, 390 - 8);
+  });
+
+  it("pins one wider than the viewport to the left margin", () => {
+    assert.equal(-40 + nudgeIntoView(-40, 500, 390), 8);
+    assert.equal(100 + nudgeIntoView(100, 500, 390), 8);
+  });
+
+  it("honours a custom margin", () => {
+    assert.equal(-10 + nudgeIntoView(-10, 200, 390, 16), 16);
   });
 });

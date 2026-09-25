@@ -6,14 +6,16 @@
  * purchase_credits → check_payment, account_statement, the coupon tools),
  * holds the states and writes the words; every visual choice belongs to the
  * site, through `classNames` — with none it is plain markup that inherits from
- * the page. Actions are chips (`classNames.chip`). Anything only one site has
+ * the page. Actions are chips (`classNames.chip`); the one that moves a top-up
+ * forward may keep an accent (`classNames.primary`). A preset amount only fills
+ * the amount — the invoice is made by "Create invoice". Anything only one site has
  * (a funding-health panel, an operator view) goes in `before` or `children`.
  *
  * A balance nobody has read is a dash, never 0: showing 0 to someone with
  * funds sends them to buy credits they already own.
  */
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useReducer, useState, type ReactNode } from "react";
 import {
   checkBalance,
   getAccountStatement,
@@ -21,7 +23,7 @@ import {
   type CheckBalanceResult,
   type CreditTranche,
 } from "../standardTools.ts";
-import { formatSats, parseSats } from "../wallet.ts";
+import { amountReducer, formatSats, parseSats, presetChosen } from "../wallet.ts";
 import CouponsPanel, { type CouponsPanelProps } from "./CouponsPanel.tsx";
 import { useTopUp, type UseTopUpOptions } from "./useTopUp.ts";
 
@@ -42,7 +44,13 @@ export interface WalletPageClassNames {
   error?: string;
   /** Every action. */
   chip?: string;
-  /** Added to a chip that is the current choice. */
+  /**
+   * The action that moves a top-up forward — "Create invoice", then "Open
+   * checkout" — in place of `chip`, for a site that gives it its accent.
+   * Default: `chip`.
+   */
+  primary?: string;
+  /** Added to a chip that is the current choice (the chosen preset). */
   chipActive?: string;
   /** A row of chips. */
   chips?: string;
@@ -59,7 +67,7 @@ export interface WalletPageClassNames {
 export interface WalletPageProps {
   /** The page heading. Default "Wallet"; null for none. */
   heading?: ReactNode;
-  /** Preset amounts, in sats, offered as chips. */
+  /** Preset amounts, in sats, offered as chips. A tap fills the amount; it does not invoice. */
   topUps?: number[];
   /** Offer a box for any amount. Default true. */
   customAmount?: boolean;
@@ -214,10 +222,15 @@ function TopUpSection({
   c: WalletPageClassNames;
 }) {
   const { state, create, check, cancel, reset } = useTopUp({ ...poll, onSettled });
-  const [custom, setCustom] = useState("");
+  const [amount, pick] = useReducer(amountReducer, "");
   const [copied, setCopied] = useState(false);
-  const customSats = parseSats(custom);
+  const sats = parseSats(amount);
   const creating = state.phase === "creating";
+  const primary = c.primary ?? c.chip;
+
+  function confirm() {
+    if (sats && !creating) create(sats);
+  }
 
   async function copy(text: string) {
     try {
@@ -241,36 +254,33 @@ function TopUpSection({
                 key={n}
                 type="button"
                 disabled={creating}
-                onClick={() => create(n)}
-                className={cx(c.chip, creating && state.sats === n && c.chipActive)}
+                aria-pressed={presetChosen(amount, n)}
+                onClick={() => pick({ type: "preset", sats: n })}
+                className={cx(c.chip, presetChosen(amount, n) && c.chipActive)}
               >
                 {n.toLocaleString("en-US")} sats
               </button>
             ))}
           </div>
-          {customAmount && (
-            <div className={c.chips}>
+          <div className={c.chips}>
+            {customAmount && (
               <input
                 inputMode="numeric"
-                value={custom}
-                onChange={(e) => setCustom(e.target.value.replace(/[^\d]/g, ""))}
+                value={amount}
+                disabled={creating}
+                onChange={(e) => pick({ type: "typed", text: e.target.value })}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && customSats) create(customSats);
+                  if (e.key === "Enter") confirm();
                 }}
                 placeholder="Any amount"
                 aria-label="Amount in sats"
                 className={c.input}
               />
-              <button
-                type="button"
-                disabled={creating || !customSats}
-                onClick={() => customSats && create(customSats)}
-                className={c.chip}
-              >
-                Create invoice
-              </button>
-            </div>
-          )}
+            )}
+            <button type="button" disabled={creating || !sats} onClick={confirm} className={primary}>
+              Create invoice
+            </button>
+          </div>
           {creating && <p className={c.status}>Making a Lightning invoice…</p>}
           {state.phase === "idle" && state.message && <p className={c.error}>{state.message}</p>}
         </>
@@ -282,7 +292,7 @@ function TopUpSection({
           {state.invoice.bolt11 && <div className={c.bolt11}>{state.invoice.bolt11}</div>}
           <div className={c.chips}>
             {state.invoice.checkoutLink && (
-              <a href={state.invoice.checkoutLink} target="_blank" rel="noreferrer" className={c.chip}>
+              <a href={state.invoice.checkoutLink} target="_blank" rel="noreferrer" className={primary}>
                 Open checkout
               </a>
             )}
@@ -310,7 +320,14 @@ function TopUpSection({
             Paid. {formatSats(state.credited)} sats added.
           </p>
           <div className={c.chips}>
-            <button type="button" onClick={reset} className={c.chip}>
+            <button
+              type="button"
+              onClick={() => {
+                pick({ type: "clear" });
+                reset();
+              }}
+              className={c.chip}
+            >
               Done
             </button>
           </div>

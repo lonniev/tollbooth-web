@@ -9,7 +9,7 @@
  */
 
 import type { ReactNode } from "react";
-import { clampPage, lastPage, nextSort, type SortDir } from "../table.ts";
+import { ariaSort, clampPage, lastPage, nextSort, type SortDir } from "../table.ts";
 
 function cx(...parts: (string | false | undefined)[]): string | undefined {
   const s = parts.filter(Boolean).join(" ");
@@ -17,7 +17,7 @@ function cx(...parts: (string | false | undefined)[]): string | undefined {
 }
 
 export interface SortHeaderClassNames {
-  /** The <th>. */
+  /** The header cell: the <th>, or the <div> when `as="div"`. */
   cell?: string;
   /** The button inside a sortable header. */
   button?: string;
@@ -36,15 +36,37 @@ export interface SortHeaderProps {
   onSort: (col: string, dir: SortDir) => void;
   /** The direction a newly chosen column starts in. Default "desc". */
   initialDir?: SortDir;
+  /**
+   * The element: a <th> in a table (default), or a <div role="columnheader">
+   * for a grid of divs — the sort, the button and aria-sort are the same.
+   */
+  as?: "th" | "div";
   classNames?: SortHeaderClassNames;
 }
 
 /** A header cell. Tapping the sorted column flips it; another column starts at `initialDir`. */
-export function SortHeader({ label, col, activeCol, dir, onSort, initialDir = "desc", classNames: c = {} }: SortHeaderProps) {
-  if (!col) return <th className={c.cell}>{label}</th>;
+export function SortHeader({
+  label,
+  col,
+  activeCol,
+  dir,
+  onSort,
+  initialDir = "desc",
+  as = "th",
+  classNames: c = {},
+}: SortHeaderProps) {
+  const Cell = as;
+  const role = as === "div" ? "columnheader" : undefined;
+  if (!col) {
+    return (
+      <Cell role={role} className={c.cell}>
+        {label}
+      </Cell>
+    );
+  }
   const active = col === activeCol;
   return (
-    <th className={c.cell} aria-sort={active ? (dir === "desc" ? "descending" : "ascending") : undefined}>
+    <Cell role={role} className={c.cell} aria-sort={ariaSort(col, activeCol, dir)}>
       <button
         type="button"
         onClick={() => {
@@ -60,7 +82,7 @@ export function SortHeader({ label, col, activeCol, dir, onSort, initialDir = "d
           </span>
         )}
       </button>
-    </th>
+    </Cell>
   );
 }
 

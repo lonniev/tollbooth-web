@@ -140,14 +140,6 @@ export interface CallOptions {
    * patron out, whatever it gets back.
    */
   bestEffort?: boolean;
-  /**
-   * A background read — a badge, a poll — that must not send the patron to
-   * the sign-in gate. A proof bounce still throws `ProofRequiredError`, but
-   * the session is left as it is and `onProofExpired` is not told; the next
-   * call the patron makes themselves meets the lapse and re-arms sign-in.
-   * Opt-in: by default a bounce signs the patron out and re-arms the gate.
-   */
-  quietProof?: boolean;
   timeoutMs?: number;
 }
 
@@ -216,7 +208,6 @@ export async function callToolWithContent<T = unknown>(
   if (!opts.bestEffort) {
     const bounced = proofBounceMessage(payload);
     if (bounced !== null) {
-      if (opts.quietProof) throw new ProofRequiredError(bounced);
       // The token just refused is the same one the recent-login shortcut
       // would replay, so it goes too, or a returning patron re-bounces.
       const npub = getStoredNpub();
