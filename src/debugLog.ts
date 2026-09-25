@@ -49,10 +49,13 @@ const SECRET_FIELD =
 
 // `"dpop_token":"…"`, `\"dpop_token\":\"…\"` (JSON inside a JSON string),
 // `dpop_token=…` (a query string) and `dpop_token: '…'` (a Python repr). A
-// quoted value is taken whole, spaces and all; a bare one up to a delimiter.
+// quoted value is taken whole — spaces, escaped quotes and the other kind of
+// quote included — up to its own closing quote or the end of a truncated line;
+// a bare one up to a delimiter. Stopping at the first quote of either kind let
+// the tail of a secret holding `'` or `\"` through.
 function fieldValue(names: string): RegExp {
   return new RegExp(
-    `((?:\\\\*["'])?\\b${names}(?:\\\\*["'])?\\s*[:=]\\s*)(?:(\\\\*["'])[^"'\\\\]*|[^"'\\\\,}\\]&\\s]+)`,
+    `((?:\\\\*["'])?\\b${names}(?:\\\\*["'])?\\s*[:=]\\s*)(?:(\\\\*["'])(?:\\\\.|\\\\$|(?!\\2)[^\\\\])*?(?=\\2|$)|[^"'\\\\,}\\]&\\s]+)`,
     "gi",
   );
 }

@@ -94,7 +94,8 @@ test("an inline proof is a valid kind-27235 bound to the runtime tool name", () 
   const sk = generateSecretKey();
   const ev = JSON.parse(signInlineProof(toolName("snapshot_display"), sk));
   assert.equal(ev.kind, 27235);
-  assert.deepEqual(ev.tags, [["u", "chart_snapshot_display"]]);
+  assert.deepEqual(ev.tags[0], ["u", "chart_snapshot_display"]);
+  assert.equal(ev.tags[1][0], "nonce");
   assert.equal(ev.pubkey, getPublicKey(sk));
   assert.equal(verifyEvent(ev), true);
   // Sanity: the same helper nostr-tools uses to sign produces what we verify.

@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.2.0] - 2026-09-25
+
+### Fixed
+- Inline proofs carry a nonce: `signInlineProof` now signs
+  `tags: [["u", tool], ["nonce", <32 hex>]]`, the same shape as the Python
+  SDK's `create_proof`. Two calls to the same tool in the same wall-clock
+  second no longer sign byte-identical events that the server's replay guard
+  refuses (seen live: nav and wallet both calling check_balance at once). The
+  wheel's `verify_proof` reads only the `u` tag, so the nonce is inert to it.
+- `get_pricing_model` is sent without the npub/proof envelope — its wheel
+  signature takes none, and the strict schema refused one.
+- The call log's scrubber takes a quoted secret whole up to its own closing
+  quote, so a credential value holding `'` or `\"` (or cut off by the log's
+  truncation) no longer lets its tail through.
+
+### Added
+- Standard-tool wrappers: `sessionStatus(patronNpub?)` with a typed
+  `SessionLifecycle`; `getOperatorOnboardingStatus()`,
+  `checkAuthorityBalance()`; `getPricingModel()`,
+  `listCanonicalIdentities()`; `getPatronCredentialFields()`,
+  `updatePatronCredential(field, value)`, `deletePatronCredential(field)` —
+  values go in, only field names come back, and the log scrubs the value.
+- `checkPrice(toolId, toolKwargs?)` passes `tool_kwargs` for tools priced by
+  their arguments.
+- `CallOptions.quietProof`: a background read whose proof bounced throws
+  `ProofRequiredError` but leaves the session alone and does not emit
+  `onProofExpired`, so a badge or poll never sends the patron to sign-in.
+  Opt-in; the default is unchanged.
+- `useSession().dismissNotice()` clears the lapsed-session notice.
+- `ServiceStatus`, `CheckBalanceResult`, `CheckPriceResult` and
+  `CheckPaymentResult` carry the fields the wheel actually returns
+  (`patron_auth`, `build_info`, `invoice_summary`, `constraint_effects`,
+  `persisted`, …).
+
 ## [1.1.0] - 2026-09-24
 
 Five more widgets every fleet front end carried its own copy of, as mechanics
