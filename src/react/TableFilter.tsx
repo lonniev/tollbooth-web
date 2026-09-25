@@ -10,14 +10,15 @@
  * the query (server-side, or `filterRows` in the browser), so paging reflects
  * the filtered set. The search is applied on Enter or its chip, never on each
  * keystroke. Mechanics only: every visual choice is the site's, through
- * `classNames`; the actions are chips. The panel is kept on screen: once open,
- * it is slid sideways (`nudgeIntoView`) so no part of it hangs past either edge
- * of a phone.
+ * `classNames`; the actions are chips. The panel is kept on screen: while open,
+ * it is slid sideways (`reclampPanel`) so no part of it hangs past either edge
+ * of a phone, however its mark grows or the window changes.
  */
 
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import { filterActive, nudgeIntoView } from "../table.ts";
+import { filterActive } from "../table.ts";
+import { oncePerFrame, reclampPanel } from "./panelPlacement.ts";
 
 export interface DateFieldOption {
   value: string;
@@ -228,25 +229,43 @@ function QuestionPanel<F extends object>({
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
+  const mark = useRef<HTMLButtonElement>(null);
 
-  // Kept on screen: measured where the site's CSS puts it, then slid by the
-  // `translate` property (a site's own `transform` is left alone). Only a panel
-  // wider than the viewport gets a max-width.
+  // Kept on screen, and kept there while open: the mark widens as questions
+  // are answered, the Clear chip joins the panel, the window turns or scrolls —
+  // each moves the panel, so each re-places it (at most once a frame). Slid by
+  // the `translate` property (a site's own `transform` is left alone); only a
+  // panel wider than the viewport gets a max-width.
   useLayoutEffect(() => {
     const el = panel.current;
     if (!open || !el) return;
+    let dx = 0;
     const place = () => {
-      el.style.translate = "";
-      el.style.maxWidth = "";
       const room = document.documentElement.clientWidth;
+      el.style.maxWidth = "";
       if (el.getBoundingClientRect().width > room - 2 * EDGE) el.style.maxWidth = `${room - 2 * EDGE}px`;
       const r = el.getBoundingClientRect();
-      const dx = nudgeIntoView(r.left, r.width, room, EDGE);
-      el.style.translate = dx ? `${dx}px 0` : "";
+      const next = reclampPanel(dx, r.left, r.width, room, EDGE);
+      if (next !== dx) {
+        dx = next;
+        el.style.translate = dx ? `${dx}px 0` : "";
+      }
     };
     place();
-    window.addEventListener("resize", place);
-    return () => window.removeEventListener("resize", place);
+    const frame = oncePerFrame(place);
+    const sized = new ResizeObserver(frame.schedule);
+    sized.observe(el);
+    for (const around of [mark.current, box.current]) if (around) sized.observe(around);
+    window.addEventListener("resize", frame.schedule);
+    window.addEventListener("orientationchange", frame.schedule);
+    window.addEventListener("scroll", frame.schedule, { capture: true, passive: true });
+    return () => {
+      frame.cancel();
+      sized.disconnect();
+      window.removeEventListener("resize", frame.schedule);
+      window.removeEventListener("orientationchange", frame.schedule);
+      window.removeEventListener("scroll", frame.schedule, { capture: true });
+    };
   }, [open]);
 
   // Dismissed by a tap outside or Escape.
@@ -272,6 +291,7 @@ function QuestionPanel<F extends object>({
   return (
     <div className={c.questions} ref={box}>
       <button
+        ref={mark}
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
