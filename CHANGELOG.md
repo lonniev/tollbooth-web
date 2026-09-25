@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.3.1] - 2026-09-25
+
+### Fixed
+- TableFilter's panel stays on screen when its trigger grows or the window
+  changes. It was kept inside the viewport only when it opened, so ticking a
+  question (which widens the mark with its summary) pushed it past the right
+  edge — 30 px on Good Earth's Crops at 390 px. It is now re-placed whenever
+  the mark or the panel changes size, and on resize, scroll and orientation
+  change, at most once a frame, keeping 8 px from both edges
+  (`reclampPanel` / `oncePerFrame`, tested).
+
 ## [1.3.0] - 2026-09-25
 
 ### Changed
