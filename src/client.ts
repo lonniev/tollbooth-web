@@ -14,7 +14,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 import { tollboothConfig, toolName } from "./config.ts";
-import { debugPush } from "./debugLog.ts";
+import { debugPush, redact } from "./debugLog.ts";
 import {
   clearStoredProof,
   forgetRecentLogin,
@@ -166,7 +166,7 @@ export async function callToolWithContent<T = unknown>(
   const quiet = STANDARD_QUIET.includes(tool) || cfg.quietTools.includes(tool);
   // `args` holds only the caller's own parameters — the envelope is added
   // below — so it is safe to log.
-  if (!quiet) debugPush("call", `${name}(${JSON.stringify(args).slice(0, 140)})`);
+  if (!quiet) debugPush("call", `${name}(${redact(JSON.stringify(args)).slice(0, 140)})`);
 
   const bootstrap = STANDARD_BOOTSTRAP.includes(tool) || cfg.extraBootstrapTools.includes(tool);
   const merged = bootstrap
@@ -194,7 +194,7 @@ export async function callToolWithContent<T = unknown>(
 
   if (result.isError) {
     const text = errorText(result);
-    if (!quiet) debugPush("error", `${name}: ${text.slice(0, 200)}`);
+    if (!quiet) debugPush("error", `${name}: ${redact(text).slice(0, 200)}`);
     throw new Error(text);
   }
 
@@ -202,7 +202,7 @@ export async function callToolWithContent<T = unknown>(
   if (!quiet) {
     const preview = typeof payload === "string" ? payload : JSON.stringify(payload);
     const tail = images.length ? ` +${images.length} image` : "";
-    debugPush(looksFailed(payload) ? "error" : "result", `${name} → ${String(preview).slice(0, 220)}${tail}`);
+    debugPush(looksFailed(payload) ? "error" : "result", `${name} → ${redact(String(preview)).slice(0, 220)}${tail}`);
   }
 
   if (!opts.bestEffort) {

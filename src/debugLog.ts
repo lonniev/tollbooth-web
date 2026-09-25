@@ -7,8 +7,10 @@
  * that flips the view can still be read and copied afterward.
  *
  * Every message is scrubbed on the way in: an nsec, a 64-hex key, a bearer
- * token, and the value of any secret-named field (dpop_token, proof, poison,
- * password, api_key, …) never reach the buffer, the clipboard or storage.
+ * token, the value of any secret-named field (dpop_token, proof, poison,
+ * password, api_key, …), and a secret inside a URL (a query token, a
+ * bearer-like path segment, userinfo) never reach the buffer, the clipboard
+ * or storage.
  * That is the one guarantee a panel relies on — it renders what is here.
  *
  * Merged from the fleet's copies (goodearth, beesknees, cypher, excalibur,
@@ -56,7 +58,7 @@ const SECRET_FIELD =
 // the tail of a secret holding `'` or `\"` through.
 function fieldValue(names: string): RegExp {
   return new RegExp(
-    `((?:\\\\*["'])?\\b${names}(?:\\\\*["'])?\\s*[:=]\\s*)(?:(\\\\*["'])(?:\\\\.|\\\\$|(?!\\2)[^\\\\])*?(?=\\2|$)|[^"'\\\\,}\\]&\\s]+)`,
+    `((?:\\\\*["'])?\\b${names}(?:\\\\*["'])?\\s*[:=]\\s*)(?:(\\\\*["'])(?:\\\\.|\\\\$|(?!\\2)[^\\\\])*?(?=\\2|$)|(?!\\[redacted\\])[^"'\\\\,}\\]&\\s]+)`,
     "gi",
   );
 }
@@ -73,6 +75,55 @@ function scrubbed(_match: string, head: string, quote: string | undefined): stri
   return `${head}${quote ?? ""}${REDACTED}`;
 }
 
+// ── Secrets inside URLs ────────────────────────────────────────────────────
+//
+// A capability link carries its secret in the URL itself — Good Earth's
+// calendar feed is `https://host/calendar/<32 hex>.ics` — and a link read
+// back in a tool result is logged whole. Three places a URL hides a secret:
+// the userinfo, a query or fragment parameter, and a bearer-like path segment.
+
+/** Query/fragment parameter names whose value is a secret (matched whole). */
+const URL_SECRET_PARAM =
+  /([?&#;](?:token|access_token|refresh_token|id_token|auth|authorization|key|api_key|apikey|secret|client_secret|password|pass|sig|signature|code|proof|dpop_token|session|sessionid|nsec)=)[^&#;\s"'\\<>]*/gi;
+
+// A URL up to whitespace, a quote, an escape or an angle bracket — so one
+// inside JSON (or JSON inside JSON) ends at its own closing quote.
+const URL_IN_TEXT = /\b(?:https?|webcal|wss?):\/\/[^\s"'\\<>]+/gi;
+const USERINFO = /^([a-z]+:\/\/)[^/?#@]+@/i;
+
+/**
+ * A path segment that reads as a bearer secret rather than a name: 32+ hex,
+ * or 24+ base64url characters holding both a letter and a digit and one
+ * unbroken alphanumeric run of 16+ (a slug's words are short; a token's are
+ * not). An npub is public and stays.
+ */
+function isSecretSegment(seg: string): boolean {
+  if (/^npub1/i.test(seg)) return false;
+  if (/^[0-9a-f]{32,}$/i.test(seg)) return true;
+  if (!/^[A-Za-z0-9_-]{24,}$/.test(seg)) return false;
+  if (!/[0-9]/.test(seg) || !/[A-Za-z]/.test(seg)) return false;
+  return /[A-Za-z0-9]{16,}/.test(seg);
+}
+
+function scrubUrl(url: string): string {
+  const head = url.replace(USERINFO, `$1${REDACTED}@`);
+  const pathStart = head.indexOf("/", head.indexOf("://") + 3);
+  if (pathStart < 0) return head;
+  const tailAt = head.slice(pathStart).search(/[?#]/);
+  const pathEnd = tailAt < 0 ? head.length : pathStart + tailAt;
+  const path = head
+    .slice(pathStart, pathEnd)
+    .split("/")
+    .map((seg) => {
+      // `<token>.ics`: judge the name, keep the extension.
+      const dot = seg.indexOf(".");
+      const name = dot < 0 ? seg : seg.slice(0, dot);
+      return isSecretSegment(name) ? REDACTED + (dot < 0 ? "" : seg.slice(dot)) : seg;
+    })
+    .join("/");
+  return head.slice(0, pathStart) + path + head.slice(pathEnd);
+}
+
 /**
  * Scrub secrets from a log line. Deliberately over-eager: a 64-hex event id
  * is hidden along with a hex private key, because the two look alike.
@@ -81,7 +132,9 @@ export function redact(message: string): string {
   let out = message
     .replace(NSEC, REDACTED)
     .replace(BEARER, `Bearer ${REDACTED}`)
-    .replace(FIELD_VALUE, scrubbed);
+    .replace(URL_IN_TEXT, scrubUrl)
+    .replace(FIELD_VALUE, scrubbed)
+    .replace(URL_SECRET_PARAM, `$1${REDACTED}`);
   if (HAS_FIELD.test(out)) out = out.replace(CREDENTIAL_VALUE, scrubbed);
   return out.replace(HEX_KEY, REDACTED);
 }

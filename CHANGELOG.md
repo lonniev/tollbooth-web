@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.1] - 2026-09-25
+
+### Fixed
+- The debug log scrubs secrets inside URLs (query tokens, bearer-like path
+  segments, userinfo): a secret-named query or fragment parameter (`token`,
+  `code`, `sig`, `key`, `session`, …) keeps its name and loses its value; a
+  path segment of 32+ hex or a 24+ character base64url token becomes
+  `[redacted]` with the host and path shape kept
+  (`https://host/calendar/[redacted].ics`); `user:pass@` becomes
+  `[redacted]@`. The client now scrubs before it truncates a line, so a
+  secret cut in half by the preview limit is still caught.
+
 ## [1.4.0] - 2026-09-25
 
 ### Added
