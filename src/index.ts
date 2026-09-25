@@ -2,6 +2,8 @@ export { configureTollbooth, tollboothConfig, toolName, type TollboothConfig } f
 export {
   callTool,
   callToolWithContent,
+  isNetworkError,
+  NetworkError,
   onProofExpired,
   ProofRequiredError,
   type CallOptions,
@@ -25,6 +27,11 @@ export { canSignFor, isProven, type Claim } from "./signedIn.ts";
 export { readSignInFailure, type Situation } from "./signInSituation.ts";
 export { canSignProfile, fetchProfile, publishProfile } from "./nostrProfile.ts";
 export * from "./avatar.ts";
+export { isTransportFailure } from "./networkError.ts";
+export * from "./wallet.ts";
+export * from "./table.ts";
+export * from "./theme.ts";
+export { errorReport } from "./errorReport.ts";
 export { loadQuotes, peekQuotes, shuffle, validQuotes, type Quote } from "./quotes.ts";
 export {
   captureGlobalErrors,

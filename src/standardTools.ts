@@ -78,13 +78,34 @@ export function checkProofStatus(patronNpub: string, dpopToken: string): Promise
   );
 }
 
+/** One credit tranche: a purchase (or grant) and what is left of it. */
+export interface CreditTranche {
+  id: string;
+  amount_sats: number;
+  remaining_sats: number;
+  expires_at: string | null;
+  created_at: string | null;
+}
+
 export interface CheckBalanceResult {
   success?: boolean;
   balance_api_sats?: number;
   total_deposited_api_sats?: number;
   total_consumed_api_sats?: number;
+  total_expired_api_sats?: number;
+  pending_invoices?: number;
+  pending_invoice_ids?: string[];
+  last_deposit_at?: string | null;
   next_expiration_iso?: string;
   expiring_within_24h_sats?: number;
+  active_tranches?: number;
+  tranches?: CreditTranche[];
+  expired_tranches?: CreditTranche[];
+  seed_balance_granted?: boolean;
+  /** The ledger could not be read: the figures may be stale or zero. */
+  vault_unavailable?: boolean;
+  warning?: string;
+  today_usage?: Record<string, { calls: number; api_sats: number }>;
   error?: string;
   error_code?: string;
 }
@@ -144,18 +165,117 @@ export function checkPayment(invoiceId: string): Promise<CheckPaymentResult> {
   return callTool<CheckPaymentResult>("check_payment", { invoice_id: invoiceId });
 }
 
+export interface StatementInvoice {
+  invoice_id: string;
+  status: string;
+  amount_sats: number;
+  api_sats_credited: number;
+  multiplier?: number;
+  created_at: string | null;
+  settled_at?: string;
+}
+
+export interface StatementTranche {
+  granted_at: string | null;
+  original_sats: number;
+  remaining_sats: number;
+  invoice_id: string | null;
+  expires_at?: string;
+}
+
+export interface StatementToolUsage {
+  tool: string;
+  calls: number;
+  api_sats: number;
+}
+
+export interface StatementDay {
+  date: string;
+  total_calls: number;
+  total_api_sats: number;
+  tools: Record<string, { calls: number; api_sats: number }>;
+}
+
+/** The wheel's `account_statement`: history, tranches and usage, newest first. */
 export interface AccountStatementResult {
   success?: boolean;
-  balance_api_sats?: number;
-  total_deposited_api_sats?: number;
-  total_consumed_api_sats?: number;
-  total_expired_api_sats?: number;
-  today_usage?: Record<string, { calls: number; api_sats: number }>;
+  generated_at?: string;
+  statement_period_days?: number;
+  account_summary?: {
+    balance_api_sats: number;
+    total_deposited_api_sats: number;
+    total_consumed_api_sats: number;
+    total_expired_api_sats: number;
+  };
+  purchase_history?: StatementInvoice[];
+  active_tranches?: StatementTranche[];
+  tool_usage_all_time?: StatementToolUsage[];
+  daily_usage?: StatementDay[];
   error?: string;
+  error_code?: string;
 }
 
 export function getAccountStatement(days = 30): Promise<AccountStatementResult> {
   return callTool<AccountStatementResult>("account_statement", { days });
+}
+
+// ─── Coupons (patron side) ───────────────────────────────────────────────
+
+export interface PatronCoupon {
+  coupon_id: string;
+  name: string;
+  discount_percent: number;
+  valid_from: string;
+  valid_until: string;
+  uses_per_patron: number | null;
+  use_count: number;
+  uses_remaining: number | null;
+  total_uses: number | null;
+  total_remaining: number | null;
+  /** active | window_closed | window_not_started | patron_limit | total_limit */
+  status: string;
+}
+
+export interface ListMyCouponsResult {
+  success?: boolean;
+  count?: number;
+  coupons?: PatronCoupon[];
+  error?: string;
+  error_code?: string;
+}
+
+export interface RedeemCouponResult {
+  success?: boolean;
+  coupon_id?: string;
+  name?: string;
+  discount_percent?: number;
+  valid_until?: string;
+  uses_remaining?: number | null;
+  uses_per_patron?: number | null;
+  error?: string;
+  error_code?: string;
+}
+
+export interface ForgetCouponResult {
+  success?: boolean;
+  coupon_id?: string;
+  error?: string;
+  error_code?: string;
+}
+
+/** The coupons this patron has redeemed here. Free. */
+export function listMyCoupons(): Promise<ListMyCouponsResult> {
+  return callTool<ListMyCouponsResult>("list_my_coupons", {});
+}
+
+/** Redeem an operator's code once; the discount then applies on its own. Free. */
+export function redeemCoupon(code: string): Promise<RedeemCouponResult> {
+  return callTool<RedeemCouponResult>("redeem_coupon", { code });
+}
+
+/** Take a coupon off the patron's list. The code stays re-redeemable while its window allows. */
+export function forgetCoupon(couponId: string): Promise<ForgetCouponResult> {
+  return callTool<ForgetCouponResult>("forget_coupon", { coupon_id: couponId });
 }
 
 // ─── Nostr kind-0 profile (the wheel does the relay I/O) ─────────────────
