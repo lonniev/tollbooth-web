@@ -1,5 +1,45 @@
 # Changelog
 
+## [1.3.0] - 2026-09-25
+
+### Changed
+- `WalletPage` and `WalletCard`: tapping a preset amount only fills the amount
+  (the chosen chip is marked, `aria-pressed`); the Lightning invoice is made
+  only by the explicit "Create invoice". `WalletPage` shows "Create invoice"
+  with or without the any-amount box. The logic is `amountReducer` /
+  `presetChosen` (framework-free, tested).
+
+### Removed
+- `CallOptions.quietProof` (added in 1.2.0). A read whose proof has lapsed now
+  always signs the patron out and shows the gate — the patron should see that
+  their access lapsed, not a page that quietly stops loading. No front end
+  used it (checked across the fleet's `frontend/src`).
+
+### Added
+- `classNames.primary` on `WalletPage` (Create invoice, Open checkout),
+  `WalletCard` (Create invoice, Pay) and `CouponsPanel` (Redeem): the action
+  that moves things forward, in place of `chip`, so a site keeps its accent
+  while every other action stays an outlined chip. `WalletCard` takes
+  `classNames` (`chip`, `chipActive`, `primary`) for the first time; its
+  defaults are the old look.
+- Every standard-tool wrapper takes the same optional `CallOptions` as
+  `callTool`, last (`listCanonicalIdentities({ bestEffort: true })`). A
+  wrapper that is best-effort by default stays so unless the caller says
+  otherwise.
+- `TableFilter`: the questions panel is slid back inside the viewport once
+  open (and on resize), keeping 8 px from each edge, by the CSS `translate`
+  property — a site's own `transform` is untouched; a panel wider than the
+  viewport also gets a max-width. The arithmetic is `nudgeIntoView` (tested).
+  `clearPlacement: "beside" | "panel"` puts Clear inside the panel.
+- `SortHeader` `as="div"` renders `<div role="columnheader">` for a grid of
+  divs; `ariaSort(col, activeCol, dir)` is exported for a site drawing its own.
+- `CouponsPanel` `formHeading` / `listHeading` sub-labels (e.g. "Redeem a
+  code", "Active"), styled by `classNames.subheading`.
+
+### Noted for 2.0
+- `ServiceStatus.lifecycle` / `.message` are `session_status` fields, not
+  `service_status` ones; removing them is breaking, so they stay until 2.0.
+
 ## [1.2.0] - 2026-09-25
 
 ### Fixed

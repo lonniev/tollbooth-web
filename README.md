@@ -87,7 +87,7 @@ bootstrapTheme();            // main.tsx, after configureTollbooth: <prefix>:the
   formatDateTime={(iso) => formatInZone(iso, zone)}
   before={<FundingStatus />}
   coupons={{ classNames: { root: "card", chip: "chip" } }}
-  classNames={{ section: "card p-5", figure: "text-3xl", chip: "chip", chipActive: "chip-on" }}
+  classNames={{ section: "card p-5", figure: "text-3xl", chip: "chip", chipActive: "chip-on", primary: "chip-accent" }}
 />
 
 <ThemeToggle themes={["dark", "light", "system"]} classNames={{ chip: "chip", active: "chip-on" }} />
@@ -98,7 +98,17 @@ bootstrapTheme();            // main.tsx, after configureTollbooth: <prefix>:the
   onClear={clearAll}
   classNames={{ root: "flex gap-2", input: "field", chip: "chip" }}
 />
+
+<SortHeader as="div" label="Date" col="date" activeCol={col} dir={dir} onSort={sortBy} />  // a div grid
 ```
+
+A preset amount in `WalletPage` / `WalletCard` only fills the amount; the
+invoice is made by the explicit "Create invoice". `classNames.primary` styles
+the action that moves a top-up forward (Redeem in `CouponsPanel`); every other
+action stays a chip. `TableFilter`'s panel slides itself back on screen on a
+phone; `clearPlacement="panel"` puts Clear inside it. Every standard-tool
+wrapper takes the same optional `CallOptions` as `callTool`, last
+(`listCanonicalIdentities({ bestEffort: true })`).
 
 `useTopUp` is the wallet's top-up on its own (purchase_credits → invoice →
 check_payment, polled while the tab is visible) for a site drawing its own.

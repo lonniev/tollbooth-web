@@ -73,6 +73,32 @@ export function parseSats(input: string | number): number | null {
   return Number.isSafeInteger(n) && n > 0 ? n : null;
 }
 
+// ── The amount to invoice ─────────────────────────────────────────────────
+
+/**
+ * The amount box. Tapping a preset only fills it; an invoice is made only by
+ * the explicit "Create invoice" action, which reads `parseSats(text)`. A tap is
+ * a choice, not a purchase — a patron who taps the wrong chip changes it
+ * before anything is asked of the service.
+ */
+export type AmountEvent = { type: "preset"; sats: number } | { type: "typed"; text: string } | { type: "clear" };
+
+export function amountReducer(text: string, event: AmountEvent): string {
+  switch (event.type) {
+    case "preset":
+      return parseSats(event.sats) === null ? text : String(event.sats);
+    case "typed":
+      return event.text.replace(/[^\d]/g, "");
+    case "clear":
+      return "";
+  }
+}
+
+/** Whether preset `sats` is what the amount box holds — the chip to mark as chosen. */
+export function presetChosen(text: string, sats: number): boolean {
+  return parseSats(text) === sats;
+}
+
 export function topUpReducer(state: TopUpState, event: TopUpEvent): TopUpState {
   switch (event.type) {
     case "create":

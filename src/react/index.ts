@@ -33,7 +33,7 @@ export {
   type TableFilterSearch,
 } from "./TableFilter.tsx";
 export { default as ThemeToggle, type ThemeToggleProps, type ThemeToggleClassNames } from "./ThemeToggle.tsx";
-export { default as WalletCard } from "./WalletCard.tsx";
+export { default as WalletCard, type WalletCardProps, type WalletCardClassNames } from "./WalletCard.tsx";
 export { default as WalletPage, type WalletPageProps, type WalletPageClassNames } from "./WalletPage.tsx";
 export { useSession, type Session } from "./useSession.ts";
 export { useDebugLog } from "./useDebugLog.ts";

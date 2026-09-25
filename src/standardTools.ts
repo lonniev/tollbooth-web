@@ -1,9 +1,13 @@
 /**
  * Typed wrappers for the tools every operator gets from
  * `register_standard_tools` in the tollbooth-dpyc wheel.
+ *
+ * Every wrapper takes the same optional `CallOptions` as `callTool`, last.
+ * A wrapper that is best-effort by default stays so unless the caller says
+ * otherwise; what the caller passes wins.
  */
 
-import { callTool } from "./client.ts";
+import { callTool, type CallOptions } from "./client.ts";
 
 /** What a patron must supply beyond the npub proof, per the wheel's `patron_auth_block`. */
 export interface PatronAuth {
@@ -43,8 +47,8 @@ export interface ServiceStatus {
   message?: string;
 }
 
-export function serviceStatus(): Promise<ServiceStatus> {
-  return callTool<ServiceStatus>("service_status", {}, { bestEffort: true });
+export function serviceStatus(opts?: CallOptions): Promise<ServiceStatus> {
+  return callTool<ServiceStatus>("service_status", {}, { bestEffort: true, ...opts });
 }
 
 export interface NpubProofResult {
@@ -71,23 +75,29 @@ export function requestNpubProof(
   patronNpub: string,
   verifyAt?: string,
   reason?: string,
+  opts?: CallOptions,
 ): Promise<NpubProofResult> {
-  return callTool<NpubProofResult>("request_npub_proof", {
-    patron_npub: patronNpub,
-    ...(verifyAt ? { verify_at: verifyAt } : {}),
-    ...(reason ? { reason } : {}),
-  });
+  return callTool<NpubProofResult>(
+    "request_npub_proof",
+    {
+      patron_npub: patronNpub,
+      ...(verifyAt ? { verify_at: verifyAt } : {}),
+      ...(reason ? { reason } : {}),
+    },
+    opts,
+  );
 }
 
 /**
  * Step 2: drain DMs for the signed reply to step 1. Call only after the human
  * says they replied — it is destructive, so never poll it.
  */
-export function receiveNpubProof(patronNpub: string, dpopToken: string): Promise<NpubProofResult> {
-  return callTool<NpubProofResult>("receive_npub_proof", {
-    patron_npub: patronNpub,
-    dpop_token: dpopToken,
-  });
+export function receiveNpubProof(patronNpub: string, dpopToken: string, opts?: CallOptions): Promise<NpubProofResult> {
+  return callTool<NpubProofResult>(
+    "receive_npub_proof",
+    { patron_npub: patronNpub, dpop_token: dpopToken },
+    opts,
+  );
 }
 
 export interface ProofStatusResult {
@@ -98,11 +108,11 @@ export interface ProofStatusResult {
   error_code?: string;
 }
 
-export function checkProofStatus(patronNpub: string, dpopToken: string): Promise<ProofStatusResult> {
+export function checkProofStatus(patronNpub: string, dpopToken: string, opts?: CallOptions): Promise<ProofStatusResult> {
   return callTool<ProofStatusResult>(
     "check_proof_status",
     { patron_npub: patronNpub, dpop_token: dpopToken },
-    { bestEffort: true },
+    { bestEffort: true, ...opts },
   );
 }
 
@@ -145,8 +155,8 @@ export interface CheckBalanceResult {
   error_code?: string;
 }
 
-export function checkBalance(): Promise<CheckBalanceResult> {
-  return callTool<CheckBalanceResult>("check_balance", {});
+export function checkBalance(opts?: CallOptions): Promise<CheckBalanceResult> {
+  return callTool<CheckBalanceResult>("check_balance", {}, opts);
 }
 
 export interface ConstraintEffect {
@@ -182,11 +192,16 @@ export interface CheckPriceResult {
  * them (ad valorem, or a multiplier on a categorical argument). Null when
  * unreadable: show the answer without a price rather than invent one.
  */
-export async function checkPrice(toolId: string, toolKwargs?: Record<string, unknown>): Promise<number | null> {
-  const r = await callTool<CheckPriceResult>("check_price", {
-    tool_id: toolId,
-    ...(toolKwargs ? { tool_kwargs: JSON.stringify(toolKwargs) } : {}),
-  });
+export async function checkPrice(
+  toolId: string,
+  toolKwargs?: Record<string, unknown>,
+  opts?: CallOptions,
+): Promise<number | null> {
+  const r = await callTool<CheckPriceResult>(
+    "check_price",
+    { tool_id: toolId, ...(toolKwargs ? { tool_kwargs: JSON.stringify(toolKwargs) } : {}) },
+    opts,
+  );
   const v = r.effective_cost_api_sats ?? r.base_cost_api_sats;
   return typeof v === "number" ? v : null;
 }
@@ -203,8 +218,8 @@ export interface PurchaseCreditsResult {
   error_code?: string;
 }
 
-export function purchaseCredits(sats: number): Promise<PurchaseCreditsResult> {
-  return callTool<PurchaseCreditsResult>("purchase_credits", { amount_sats: sats });
+export function purchaseCredits(sats: number, opts?: CallOptions): Promise<PurchaseCreditsResult> {
+  return callTool<PurchaseCreditsResult>("purchase_credits", { amount_sats: sats }, opts);
 }
 
 export interface CheckPaymentResult {
@@ -222,8 +237,8 @@ export interface CheckPaymentResult {
   error_code?: string;
 }
 
-export function checkPayment(invoiceId: string): Promise<CheckPaymentResult> {
-  return callTool<CheckPaymentResult>("check_payment", { invoice_id: invoiceId });
+export function checkPayment(invoiceId: string, opts?: CallOptions): Promise<CheckPaymentResult> {
+  return callTool<CheckPaymentResult>("check_payment", { invoice_id: invoiceId }, opts);
 }
 
 export interface StatementInvoice {
@@ -276,8 +291,8 @@ export interface AccountStatementResult {
   error_code?: string;
 }
 
-export function getAccountStatement(days = 30): Promise<AccountStatementResult> {
-  return callTool<AccountStatementResult>("account_statement", { days });
+export function getAccountStatement(days = 30, opts?: CallOptions): Promise<AccountStatementResult> {
+  return callTool<AccountStatementResult>("account_statement", { days }, opts);
 }
 
 // ─── Coupons (patron side) ───────────────────────────────────────────────
@@ -325,18 +340,18 @@ export interface ForgetCouponResult {
 }
 
 /** The coupons this patron has redeemed here. Free. */
-export function listMyCoupons(): Promise<ListMyCouponsResult> {
-  return callTool<ListMyCouponsResult>("list_my_coupons", {});
+export function listMyCoupons(opts?: CallOptions): Promise<ListMyCouponsResult> {
+  return callTool<ListMyCouponsResult>("list_my_coupons", {}, opts);
 }
 
 /** Redeem an operator's code once; the discount then applies on its own. Free. */
-export function redeemCoupon(code: string): Promise<RedeemCouponResult> {
-  return callTool<RedeemCouponResult>("redeem_coupon", { code });
+export function redeemCoupon(code: string, opts?: CallOptions): Promise<RedeemCouponResult> {
+  return callTool<RedeemCouponResult>("redeem_coupon", { code }, opts);
 }
 
 /** Take a coupon off the patron's list. The code stays re-redeemable while its window allows. */
-export function forgetCoupon(couponId: string): Promise<ForgetCouponResult> {
-  return callTool<ForgetCouponResult>("forget_coupon", { coupon_id: couponId });
+export function forgetCoupon(couponId: string, opts?: CallOptions): Promise<ForgetCouponResult> {
+  return callTool<ForgetCouponResult>("forget_coupon", { coupon_id: couponId }, opts);
 }
 
 // ─── Nostr kind-0 profile (the wheel does the relay I/O) ─────────────────
@@ -359,8 +374,8 @@ export interface GetNostrProfileResult {
   error?: string;
 }
 
-export function getNostrProfile(npub: string): Promise<GetNostrProfileResult> {
-  return callTool<GetNostrProfileResult>("get_nostr_profile", { npub });
+export function getNostrProfile(npub: string, opts?: CallOptions): Promise<GetNostrProfileResult> {
+  return callTool<GetNostrProfileResult>("get_nostr_profile", { npub }, opts);
 }
 
 export interface PublishNostrProfileResult {
@@ -372,11 +387,12 @@ export interface PublishNostrProfileResult {
 }
 
 /** Relay a kind-0 the BROWSER signed. The wheel verifies it and fans it out. */
-export function publishNostrProfile(npub: string, signedEvent: string): Promise<PublishNostrProfileResult> {
-  return callTool<PublishNostrProfileResult>("publish_nostr_profile", {
-    npub,
-    signed_event: signedEvent,
-  });
+export function publishNostrProfile(
+  npub: string,
+  signedEvent: string,
+  opts?: CallOptions,
+): Promise<PublishNostrProfileResult> {
+  return callTool<PublishNostrProfileResult>("publish_nostr_profile", { npub, signed_event: signedEvent }, opts);
 }
 
 // ─── Operator readiness ──────────────────────────────────────────────────
@@ -420,11 +436,11 @@ export interface SessionStatusResult {
  * Is the operator ready to serve? Free, no proof. With `patronNpub`, also the
  * patron's upstream OAuth token expiry, so a page can refresh ahead of time.
  */
-export function sessionStatus(patronNpub?: string): Promise<SessionStatusResult> {
+export function sessionStatus(patronNpub?: string, opts?: CallOptions): Promise<SessionStatusResult> {
   return callTool<SessionStatusResult>(
     "session_status",
     patronNpub ? { patron_npub: patronNpub } : {},
-    { bestEffort: true },
+    { bestEffort: true, ...opts },
   );
 }
 
@@ -457,16 +473,16 @@ export interface OperatorOnboardingStatus {
   error_code?: string;
 }
 
-export function getOperatorOnboardingStatus(): Promise<OperatorOnboardingStatus> {
-  return callTool<OperatorOnboardingStatus>("get_operator_onboarding_status", {}, { bestEffort: true });
+export function getOperatorOnboardingStatus(opts?: CallOptions): Promise<OperatorOnboardingStatus> {
+  return callTool<OperatorOnboardingStatus>("get_operator_onboarding_status", {}, { bestEffort: true, ...opts });
 }
 
 /**
  * The operator's own balance at its Authority — what certifies patron top-ups.
  * The Authority's ledger, in the same shape as a patron's `check_balance`.
  */
-export function checkAuthorityBalance(): Promise<CheckBalanceResult> {
-  return callTool<CheckBalanceResult>("check_authority_balance", {}, { bestEffort: true });
+export function checkAuthorityBalance(opts?: CallOptions): Promise<CheckBalanceResult> {
+  return callTool<CheckBalanceResult>("check_authority_balance", {}, { bestEffort: true, ...opts });
 }
 
 // ─── Pricing model and tool identities ───────────────────────────────────
@@ -505,8 +521,8 @@ export interface PricingModelResult {
 }
 
 /** The operator's active pricing model. Free, no proof. */
-export function getPricingModel(): Promise<PricingModelResult> {
-  return callTool<PricingModelResult>("get_pricing_model", {});
+export function getPricingModel(opts?: CallOptions): Promise<PricingModelResult> {
+  return callTool<PricingModelResult>("get_pricing_model", {}, opts);
 }
 
 export interface CanonicalIdentity {
@@ -530,8 +546,8 @@ export interface CanonicalIdentitiesResult {
   error?: string;
 }
 
-export function listCanonicalIdentities(): Promise<CanonicalIdentitiesResult> {
-  return callTool<CanonicalIdentitiesResult>("list_canonical_identities", {});
+export function listCanonicalIdentities(opts?: CallOptions): Promise<CanonicalIdentitiesResult> {
+  return callTool<CanonicalIdentitiesResult>("list_canonical_identities", {}, opts);
 }
 
 // ─── Patron credentials ──────────────────────────────────────────────────
@@ -556,17 +572,21 @@ export interface PatronCredentialWriteResult {
 }
 
 /** The names of the patron's stored credential fields — never their values. */
-export function getPatronCredentialFields(): Promise<PatronCredentialFieldsResult> {
-  return callTool<PatronCredentialFieldsResult>("get_patron_credential_fields", {});
+export function getPatronCredentialFields(opts?: CallOptions): Promise<PatronCredentialFieldsResult> {
+  return callTool<PatronCredentialFieldsResult>("get_patron_credential_fields", {}, opts);
 }
 
 /** Set one credential field, leaving the others as they are. */
-export function updatePatronCredential(field: string, value: string): Promise<PatronCredentialWriteResult> {
+export function updatePatronCredential(
+  field: string,
+  value: string,
+  opts?: CallOptions,
+): Promise<PatronCredentialWriteResult> {
   // `field` first: the log's scrubber keys on it to hide `value`.
-  return callTool<PatronCredentialWriteResult>("update_patron_credential", { field, value });
+  return callTool<PatronCredentialWriteResult>("update_patron_credential", { field, value }, opts);
 }
 
 /** Remove one credential field, leaving the others as they are. */
-export function deletePatronCredential(field: string): Promise<PatronCredentialWriteResult> {
-  return callTool<PatronCredentialWriteResult>("delete_patron_credential", { field });
+export function deletePatronCredential(field: string, opts?: CallOptions): Promise<PatronCredentialWriteResult> {
+  return callTool<PatronCredentialWriteResult>("delete_patron_credential", { field }, opts);
 }
