@@ -25,6 +25,9 @@
   --tb-err-bg: #fdecec;
   --tb-err-line: #f2b8b8;
   --tb-err-ink: #9b1c1c;
+  --tb-notice-bg: #f4ecfd;
+  --tb-notice-line: #d6bdf5;
+  --tb-notice-ink: #5b2a91;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -43,5 +46,8 @@
     --tb-err-bg: #2c1515;
     --tb-err-line: #5e2525;
     --tb-err-ink: #f4a3a3;
+    --tb-notice-bg: #241532;
+    --tb-notice-line: #4d2d6e;
+    --tb-notice-ink: #d8b4fe;
   }
 }

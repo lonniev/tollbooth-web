@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.3.0] - 2026-09-24
+
+### Added
+- `DebugPanel` (React): the on-screen MCP activity log every fleet front end
+  carried its own copy of. Collapsed, one tab coloured by what the log holds
+  (a failure, or a notice such as sign in / top up); open, the log newest
+  first with Copy and Clear. Remembers whether it was open. Themed only through
+  `--tb-*` tokens, 40px tap targets, the page beneath stays tappable.
+  `children` is the site's own section (eXcalibur's scheduler controls).
+- `useDebugLog()` (React), on `useSyncExternalStore`.
+- `debugLogText`, `debugSeverity`, `captureGlobalErrors`, `redact`, and
+  `configureDebugLog({ max, persist })` — a cap (default 200) and an opt-in
+  copy in localStorage so the log survives a reload.
+- `--tb-notice-bg`, `--tb-notice-line`, `--tb-notice-ink` theme tokens.
+
+### Changed
+- `debugPush` scrubs every message before storing it: nsec/ncryptsec strings,
+  64+ hex runs (keys, signatures — and, over-eagerly, event ids), bearer
+  tokens, the value of any secret-named field (`dpop_token`, `proof`,
+  `poison`, `*_token`, `password`, `api_key`, …) and the `value` of a
+  credential update. None of the fleet's copies scrubbed.
+- The log keeps 200 entries (was 60) and stamps times in the site's stored
+  display zone when it has one.
+
 ## [0.2.0] - 2026-09-24
 
 ### Added

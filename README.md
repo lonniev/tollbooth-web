@@ -10,7 +10,9 @@ features. It is the peer of the `tollbooth-dpyc` Python wheel.
 - **MCP client** — one shared connection to the operator, typed wrappers for
   the standard tools (balance, top-up, statement, price, profile)
 - **React components** — `NpubGate`, `NostrProfilePanel`, `SessionKeyClaim`, `WalletCard`,
-  `AvatarPicker`, `useSession`
+  `AvatarPicker`, `DebugPanel`, `useSession`, `useDebugLog`
+- **Debug log** — every call, result and error from `callTool`, scrubbed of
+  nsecs, hex keys, tokens and proofs before it is stored
 - **Pages proxy** — the `/mcp` Cloudflare Pages Function
 
 ## Use
@@ -38,6 +40,26 @@ is bound to the full runtime name.
 import { makeMcpProxy } from "@tollbooth-dpyc/web/pages-proxy";
 export const onRequest = makeMcpProxy("https://chartremotely-mcp.fastmcp.app/mcp");
 ```
+
+### Debug panel
+
+`callTool` logs to a shared, scrubbed ring buffer; `DebugPanel` shows it as a
+bar along the bottom of the page with Copy and Clear. Put it once near the root.
+Anything the site alone needs goes in as children, drawn above the log:
+
+```tsx
+import { configureDebugLog, debugPush } from "@tollbooth-dpyc/web";
+import { DebugPanel } from "@tollbooth-dpyc/web/react";
+
+configureDebugLog({ persist: true });   // optional: outlive a reload; max defaults to 200
+
+<DebugPanel>
+  <button onClick={loadSchedulerRuns}>Scheduler ↻</button>
+</DebugPanel>
+```
+
+A site's own `debugPush` lines are scrubbed the same way. Stamps follow the
+zone the site stores under `<prefix>:timezone`, if any.
 
 ### Styling
 
