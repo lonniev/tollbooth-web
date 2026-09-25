@@ -86,6 +86,98 @@ describe("redaction", () => {
   });
 });
 
+describe("secrets inside URLs", () => {
+  // Shapes, not secrets: built at run time.
+  const FEED = "0123456789abcdef".repeat(2); // secrets.token_hex(16)
+  const B64 = "Zk3q9XbT0pLw7RcV2yHn5MdA8sEf1GuJ-kOi4"; // token_urlsafe-like
+
+  it("scrubs the Good Earth calendar feed token in both link forms", () => {
+    const line = JSON.stringify({
+      token: FEED,
+      url: `https://goodearth.example/calendar/${FEED}.ics`,
+      webcal_url: `webcal://goodearth.example/calendar/${FEED}.ics`,
+    });
+    const out = redact(line);
+    assert.ok(!out.includes(FEED.slice(0, 12)), out);
+    assert.match(out, /"url":"https:\/\/goodearth\.example\/calendar\/\[redacted\]\.ics"/);
+    assert.match(out, /"webcal_url":"webcal:\/\/goodearth\.example\/calendar\/\[redacted\]\.ics"/);
+  });
+
+  it("scrubs a bearer-like base64url path segment and keeps the path's shape", () => {
+    assert.equal(redact(`GET https://h.example/s/${B64}/view?x=1`), "GET https://h.example/s/[redacted]/view?x=1");
+  });
+
+  it("scrubs a feed URL inside JSON inside a JSON string", () => {
+    const nested = JSON.stringify({ text: JSON.stringify({ url: `https://h.example/calendar/${FEED}.ics` }) });
+    const out = redact(nested);
+    assert.ok(!out.includes(FEED.slice(0, 12)), out);
+    assert.match(out, /calendar\/\[redacted\]\.ics/);
+  });
+
+  it("scrubs secret-named query and fragment parameters, keeping the name", () => {
+    const cases: [string, string][] = [
+      ["https://h.example/cb?code=abc123&state=ok", "https://h.example/cb?code=[redacted]&state=ok"],
+      ["https://h.example/p?page=2&sig=deadbeef", "https://h.example/p?page=2&sig=[redacted]"],
+      ["https://h.example/#access_token=ya29.x&expires_in=3600", "https://h.example/#access_token=[redacted]&expires_in=3600"],
+      ["https://h.example/a?KEY=k1&Session=s1&sessionid=s2", "https://h.example/a?KEY=[redacted]&Session=[redacted]&sessionid=[redacted]"],
+      ["https://h.example/a?auth=a&pass=p&apikey=q&signature=g", "https://h.example/a?auth=[redacted]&pass=[redacted]&apikey=[redacted]&signature=[redacted]"],
+      ["https://h.example/a?id_token=i&client_secret=c&proof=f", "https://h.example/a?id_token=[redacted]&client_secret=[redacted]&proof=[redacted]"],
+    ];
+    for (const [line, want] of cases) assert.equal(redact(line), want);
+  });
+
+  it("scrubs a URL-encoded value whole", () => {
+    assert.equal(redact("https://h.example/cb?token=a%2Bb%2Fc%3D%3D&next=%2Fhome"), "https://h.example/cb?token=[redacted]&next=%2Fhome");
+  });
+
+  it("scrubs a value that runs to the end of a truncated line", () => {
+    const full = `webhook → https://h.example/hook?signature=${"9f".repeat(20)}&t=1`;
+    const cut = full.slice(0, full.indexOf("signature=") + 18);
+    const out = redact(cut);
+    assert.ok(out.endsWith("signature=[redacted]"), out);
+    assert.ok(!out.includes("9f9f"), out);
+  });
+
+  it("scrubs userinfo and keeps the host", () => {
+    assert.equal(redact("connect https://admin:hunter2@db.example:5432/x"), "connect https://[redacted]@db.example:5432/x");
+    assert.equal(redact("wss://tok@relay.example"), "wss://[redacted]@relay.example");
+  });
+
+  it("scrubs before the client truncates, and a second pass changes nothing", () => {
+    const line = `calendar_list → ${JSON.stringify({ feeds: [{ url: `https://h.example/calendar/${FEED}.ics` }] })}`;
+    const cut = redact(line).slice(0, 60);
+    assert.ok(!cut.includes(FEED.slice(0, 8)), cut);
+    const once = redact('{"token":"x"} https://h.example/a?code=1 key=2 https://u:p@h.example/' + FEED);
+    assert.equal(redact(once), once);
+  });
+
+  it("is applied by debugPush", () => {
+    clearDebug();
+    debugPush("result", `calendar_subscribe → {"url":"https://h.example/calendar/${FEED}.ics"}`);
+    assert.ok(!debugLogText().includes(FEED.slice(0, 12)));
+  });
+
+  describe("leaves ordinary text alone", () => {
+    const NPUB = "npub1" + "qpzry9x8gf2tvdw0s3jn54khce6mua7l".repeat(2).slice(0, 58);
+    const keep = [
+      "https://goodearth.example/calendar",
+      "https://example.com/blog/planting-window-for-early-tomatoes-in-zone-five",
+      "https://example.com/items/12345/edit?page=2&sort=name&q=tomato",
+      "https://api.example.com/v1/blocks/9b79617/items?kind=crop",
+      `https://njump.me/${NPUB}`,
+      "https://h.example/a?monkey=1&keyboard=2&passage=3&codec=4&tokens=5",
+      "https://h.example/2026-09-25/report.ics",
+      "https://github.com/lonniev/tollbooth-web/pull/15",
+      "https://h.example/u/2026_09_25_harvest_report_final_v2",
+      "goodearth_calendar_list → {\"success\":true,\"feeds\":[]}",
+      "email a@b.example about https://h.example/x",
+      "date 2026-09-25T12:00:00Z tool goodearth_frost_window",
+      '{"success":false,"error_code":"proof_required"}',
+    ];
+    for (const line of keep) it(line, () => assert.equal(redact(line), line));
+  });
+});
+
 describe("the ring buffer", () => {
   it("keeps newest first and drops the oldest past the cap", () => {
     configureDebugLog({ max: 3 });
