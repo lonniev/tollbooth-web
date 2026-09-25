@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.0] - 2026-09-24
+
+First stable release — the API is now semver-stable. Patch and minor releases
+stay compatible; breaking changes come only as a new major.
+
+### Fixed
+- `DebugPanel` keeps its own space. The bar is still fixed to the bottom of
+  the viewport, but beside it the panel now renders an in-flow spacer as tall
+  as the bar is right now — the collapsed tab or the open log, measured with a
+  `ResizeObserver` — plus `env(safe-area-inset-bottom)`, so page content (a
+  loading quote on a phone) always scrolls clear of it. With no
+  `ResizeObserver` (or before the first measure) the spacer reserves the
+  collapsed bar. No props change and nothing covers the page. Mount the panel
+  last in the app shell so the spacer is the last thing in the page's flow.
+
 ## [0.5.0] - 2026-09-24
 
 ### Changed (breaking)
