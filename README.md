@@ -10,7 +10,7 @@ features. It is the peer of the `tollbooth-dpyc` Python wheel.
 - **MCP client** — one shared connection to the operator, typed wrappers for
   the standard tools (balance, top-up, statement, price, profile)
 - **React components** — `NpubGate`, `NostrProfilePanel`, `SessionKeyClaim`, `WalletCard`,
-  `AvatarPicker`, `DebugPanel`, `useSession`, `useDebugLog`
+  `AvatarPicker`, `DebugPanel`, `QuoteScroller`, `useSession`, `useDebugLog`
 - **Debug log** — every call, result and error from `callTool`, scrubbed of
   nsecs, hex keys, tokens and proofs before it is stored
 - **Pages proxy** — the `/mcp` Cloudflare Pages Function
@@ -60,6 +60,27 @@ configureDebugLog({ persist: true });   // optional: outlive a reload; max defau
 
 A site's own `debugPush` lines are scrubbed the same way. Stamps follow the
 zone the site stores under `<prefix>:timezone`, if any.
+
+### Quote scroller
+
+Something to read while a page loads. The quotes are the site's own; the
+package only scrolls them. Name a remote corpus to edit the set without a
+redeploy — it is fetched once per page and replaces the inline set when it
+arrives, or never, if it cannot be had:
+
+```tsx
+import { QuoteScroller } from "@tollbooth-dpyc/web/react";
+import type { Quote } from "@tollbooth-dpyc/web";
+
+const QUOTES: Quote[] = [{ text: "Observe the seasons.", author: "Hesiod" }];
+
+<QuoteScroller
+  quotes={QUOTES}
+  source="https://raw.githubusercontent.com/lonniev/dpyc-community/main/quotes-agrarian.json"
+  heading="Reading the ledger…"
+  spinner
+/>
+```
 
 ### Styling
 

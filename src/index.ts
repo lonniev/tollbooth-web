@@ -25,6 +25,7 @@ export { canSignFor, isProven, type Claim } from "./signedIn.ts";
 export { readSignInFailure, type Situation } from "./signInSituation.ts";
 export { canSignProfile, fetchProfile, publishProfile } from "./nostrProfile.ts";
 export * from "./avatar.ts";
+export { loadQuotes, peekQuotes, shuffle, validQuotes, type Quote } from "./quotes.ts";
 export {
   captureGlobalErrors,
   clearDebug,

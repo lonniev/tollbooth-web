@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.0] - 2026-09-24
+
+### Added
+- `QuoteScroller` (React): rotating quotations for a wait, the loading screen
+  six fleet front ends each carried a copy of. The site passes its own
+  `quotes`; an optional `source` URL names a remote corpus that supersedes
+  them once it loads. Shuffled, then walked, so nothing repeats until every
+  quote has shown. Cross-fades (instantly under reduced motion), stops while
+  the tab is hidden, announces politely, and reserves its longest quote's
+  height so the page does not jump. `heading`, `spinner`, `intervalMs`
+  (default 3500) and `className`. Themed only through `--tb-*` tokens.
+- `loadQuotes(source, fallback)`, `peekQuotes`, `validQuotes`, `shuffle` and
+  the `Quote` type: the framework-free half. A corpus is fetched once per page
+  per URL, concurrent callers share the request, a failure is remembered, and
+  malformed rows are dropped.
+
 ## [0.3.0] - 2026-09-24
 
 ### Added
