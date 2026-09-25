@@ -10,11 +10,7 @@
 
 import type { ReactNode } from "react";
 import { ariaSort, clampPage, lastPage, nextSort, type SortDir } from "../table.ts";
-
-function cx(...parts: (string | false | undefined)[]): string | undefined {
-  const s = parts.filter(Boolean).join(" ");
-  return s || undefined;
-}
+import { cx } from "./cx.ts";
 
 export interface SortHeaderClassNames {
   /** The header cell: the <th>, or the <div> when `as="div"`. */

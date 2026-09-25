@@ -16,6 +16,7 @@
  */
 
 import { tollboothConfig } from "./config.ts";
+import { displayTimeZone } from "./timezone.ts";
 
 export interface DebugEntry {
   ts: string;
@@ -133,18 +134,9 @@ function hydrate(): DebugEntry[] {
   }
 }
 
-/**
- * The patron's display zone, if the site stores one under `<prefix>:timezone`
- * ("auto" or absent means the browser's own), so stamps match the rest of the UI.
- */
+/** In the patron's display zone (`timezone.ts`), so stamps match the rest of the UI. */
 function stamp(now: Date): string {
-  try {
-    const pref = readLocal("timezone");
-    const zone = pref && pref !== "auto" ? pref : undefined;
-    return now.toLocaleTimeString(undefined, zone ? { timeZone: zone } : undefined);
-  } catch {
-    return now.toLocaleTimeString();
-  }
+  return now.toLocaleTimeString(undefined, { timeZone: displayTimeZone() });
 }
 
 function emit(): void {

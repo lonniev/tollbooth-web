@@ -10,9 +10,13 @@ features. It is the peer of the `tollbooth-dpyc` Python wheel.
 - **MCP client** — one shared connection to the operator, typed wrappers for
   the standard tools (balance, top-up, statement, price, profile)
 - **React components** — `NpubGate`, `NostrProfilePanel`, `SessionKeyClaim`, `WalletCard`,
-  `WalletPage`, `CouponsPanel`, `TableFilter`, `SortHeader` / `PageControls` /
-  `TableShell`, `ThemeToggle`, `ErrorBoundary`, `AvatarPicker`, `DebugPanel`,
-  `QuoteScroller`, `useSession`, `useTopUp`, `useTheme`, `useDebugLog`
+  `WalletPage`, `CouponsPanel`, `UsageSummary`, `PatronFundingStatus` /
+  `OperatorFundingStatus`, `BuildInfoPanel`, `TimezonePicker`, `TableFilter`,
+  `SortHeader` / `PageControls` / `TableShell`, `ThemeToggle`, `ErrorBoundary`,
+  `AvatarPicker`, `DebugPanel`, `QuoteScroller`, `useSession`, `useTopUp`,
+  `useTheme`, `useTimezone`, `useDebugLog`
+- **Time zone** — the patron's display zone and the conversions every clock
+  needs (render, datetime-local, day-filter bounds), DST-correct
 - **Mechanics, not looks** — the newer components take `classNames` per part
   and add no typography or colour of their own; actions are chips
 - **Debug log** — every call, result and error from `callTool`, scrubbed of
@@ -113,6 +117,63 @@ wrapper takes the same optional `CallOptions` as `callTool`, last
 `useTopUp` is the wallet's top-up on its own (purchase_credits → invoice →
 check_payment, polled while the tab is visible) for a site drawing its own.
 
+### Time zone
+
+The patron picks a display zone once — "auto" (the browser's) or an IANA name,
+never a fixed offset — and every clock follows. It is kept under
+`<prefix>:timezone`; `useTimezone()` re-renders on any change, from this page
+or another tab. Storage stays UTC; convert at the edges:
+
+```tsx
+import { datetimeLocalValueToIso, formatDateTime, isoToDatetimeLocalValue, localDateFilterBounds } from "@tollbooth-dpyc/web";
+import { TimezonePicker, useTimezone } from "@tollbooth-dpyc/web/react";
+
+const [, zone] = useTimezone();
+formatDateTime(post.sent_at, zone);                       // render
+isoToDatetimeLocalValue(post.publish_at, zone);           // → <input type="datetime-local">
+datetimeLocalValueToIso(value, zone);                     // ← back to UTC ISO
+localDateFilterBounds("2026-03-08", "2026-03-08", zone);  // the patron's midnights, as instants
+
+<TimezonePicker label="Display time zone" classNames={{ select: "field" }} />
+```
+
+Around a DST change a missing wall time (02:30 on a spring-forward morning)
+moves an hour on and a doubled one (01:30 on a fall-back night) is the
+earlier; day bounds give the 23- and 25-hour days their true length.
+`displayTimeZone()` is the zone for code outside React.
+
+### Usage, funding, build
+
+```tsx
+import { BuildInfoPanel, OperatorFundingStatus, PatronFundingStatus, UsageSummary } from "@tollbooth-dpyc/web/react";
+
+<UsageSummary days={30} figures={["balance", "deposited", "consumed"]} classNames={{ root: "card p-5", figures: "grid grid-cols-3" }} />
+
+<PatronFundingStatus thresholds={{ low: 100 }} siteRows={xConnectionRows} classNames={{ root: "card p-5", ok: "text-green-600" }} />
+<OperatorFundingStatus authorityThresholds={{ low: 500 }} />
+
+<BuildInfoPanel
+  status={status}
+  frontend={{ version: __APP_VERSION__, commit: __BUILD_COMMIT__, builtAt: __BUILD_TIME__, source: "https://github.com/you/site" }}
+  intro={<p>…the site's own words…</p>}
+/>
+```
+
+- `UsageSummary` reads `account_statement`: balance and lifetime totals, the
+  period's spend, calls and top-ups (from its daily log), and its top tools.
+  `figures` picks the numbers, `renderRow` draws a tool row.
+- `PatronFundingStatus`: sign-in proof and credit balance, with tranche expiry;
+  `OperatorFundingStatus`: credentials still to deliver, the Authority balance,
+  the database and background jobs. Every row is read fresh and stamped with
+  when, in the patron's zone. **The operator panel renders nothing — and calls
+  nothing operator-only — unless the signed-in npub equals the `operator_npub`
+  that `session_status` reports.** That is display only; the server enforces
+  its own ACL. `siteRows` adds a site's own checks.
+- `BuildInfoPanel`: the front end's version (yours, passed in), the MCP
+  server's version, wheel and commit linked to its repository (from
+  `service_status`; only https links), the Tollbooth-DPYC™ links, the licence
+  and the patent notice. `children` adds rows after the MCP server section.
+
 ### Debug panel
 
 `callTool` logs to a shared, scrubbed ring buffer; `DebugPanel` shows it as a
@@ -136,7 +197,7 @@ configureDebugLog({ persist: true });   // optional: outlive a reload; max defau
 ```
 
 A site's own `debugPush` lines are scrubbed the same way. Stamps follow the
-zone the site stores under `<prefix>:timezone`, if any.
+patron's display time zone (see Time zone).
 
 ### Quote scroller
 
