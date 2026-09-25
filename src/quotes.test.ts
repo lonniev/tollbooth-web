@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
 import { loadQuotes, peekQuotes, shuffle, validQuotes, type Quote } from "./quotes.ts";
 
 const OWN: Quote[] = [{ text: "Observe the seasons.", author: "Hesiod" }];
@@ -111,5 +114,33 @@ describe("loading a remote corpus", () => {
   it("hands back a copy of the fallback, never the site's own array", async () => {
     const out = await loadQuotes(url(), OWN, serving({}).impl);
     assert.notEqual(out, OWN);
+  });
+});
+
+describe("the QuoteScroller component", () => {
+  const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "react/QuoteScroller.tsx"), "utf8");
+  // Everything the component renders, comments aside.
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+
+  it("imposes no type, size or colour of its own — those are the site's", () => {
+    for (const banned of [
+      /\btext-(xs|sm|base|lg|[2-9]?xl|\[)/,
+      /\bfont-(serif|mono|sans|thin|light|normal|medium|semibold|bold|black)\b/,
+      /\b(italic|not-italic|uppercase|lowercase)\b/,
+      /\b(tracking|leading)-/,
+      /\b(bg|border|text)-\[var/,
+      /var\(--tb-/,
+      /\b(p|px|py|m|mx|my|mb|mt|gap|max-w)-/,
+      /\btext-center\b/,
+    ]) {
+      assert.doesNotMatch(code, banned, `QuoteScroller applies ${banned}`);
+    }
+  });
+
+  it("hands each part the site's classes", () => {
+    for (const part of ["root", "heading", "figure", "text", "mark", "author"]) {
+      assert.match(code, new RegExp(`className=\\{classNames\\.${part}\\}`));
+    }
+    assert.match(code, /classNames\.spinner/);
   });
 });

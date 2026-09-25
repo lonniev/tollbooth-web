@@ -3,8 +3,9 @@
  *
  * Renders ONLY when this browser holds the session nsec for the signed-in
  * npub. NIP-07 and courier-proof sign-ins see nothing: no disabled control,
- * no placeholder, no mention. Reveal takes a deliberate second step so an
- * account page opened in front of other people does not paint the key.
+ * no placeholder, no mention. Painting the key takes two deliberate taps —
+ * "Claim your session key", then the Reveal chip — so an account page opened
+ * in front of other people does not show it.
  *
  * Destinations: copy, download .env, password-manager prompt, and an
  * encrypted DM to another npub the patron names. The nsec never reaches a
@@ -227,22 +228,11 @@ function SessionKeyClaimInner() {
         choose a destination below — never logged, never sent to {appName}.
       </p>
 
-      {showKey ? (
-        <div className="mb-3 break-all rounded-lg border border-[var(--tb-line)] bg-[var(--tb-surface-2)] px-3 py-2 font-mono text-[12px] text-[var(--tb-ink)]">
-          {/* Shown only after an explicit "Show" — still a deliberate step. */}
-          {getSessionNsec()}
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setShowKey(true)}
-          className={`mb-3 text-[12.5px] ${muted} underline-offset-2 hover:text-[var(--tb-ink)] hover:underline`}
-        >
-          Show the key on screen
-        </button>
-      )}
-
       <div className="flex flex-wrap gap-2">
+        {/* Reveal is its own deliberate tap, a peer of the destinations. */}
+        <DestButton onClick={() => setShowKey((v) => !v)} active={showKey}>
+          {showKey ? "Conceal" : "Reveal"}
+        </DestButton>
         <DestButton onClick={() => void copyKey()} disabled={busy}>
           {copied ? "Copied" : "Copy"}
         </DestButton>
@@ -263,6 +253,12 @@ function SessionKeyClaimInner() {
           Send by DM
         </DestButton>
       </div>
+
+      {showKey && (
+        <div className="mt-3 break-all rounded-lg border border-[var(--tb-line)] bg-[var(--tb-surface-2)] px-3 py-2 font-mono text-[12px] text-[var(--tb-ink)]">
+          {getSessionNsec()}
+        </div>
+      )}
 
       {dmOpen && (
         <div className="mt-3 space-y-2 rounded-lg border border-[var(--tb-line)] bg-[var(--tb-surface-2)] p-3">

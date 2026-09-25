@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.5.0] - 2026-09-24
+
+### Changed (breaking)
+- `QuoteScroller` no longer styles its content. The package keeps the
+  mechanics — loading and caching, shuffle-then-step, the interval, the
+  cross-fade, reduced motion, pausing while hidden, `aria-live`, the reserved
+  height and the spinner — and the site brings every visual choice. Migrate by
+  passing `classNames={{ root, heading, spinner, figure, text, mark, author }}`
+  (or `renderQuote` for full markup). With neither, quotes render as plain
+  text that inherits from the page. `className` is gone: use
+  `classNames.root`. New `marks` prop: curly quotes by default, `false` for
+  none, or `[open, close]`. The reserved height is now the tallest quote as
+  the site styles it, not the longest by character count.
+
+### Changed
+- `SessionKeyClaim`: showing the key on screen is now a **Reveal** chip,
+  first in the row beside Copy / Download .env / Password manager / Send by
+  DM; it reads **Conceal** while the key is shown. The key box sits below the
+  row. Still two deliberate taps before the key is painted.
+
 ## [0.4.0] - 2026-09-24
 
 ### Added

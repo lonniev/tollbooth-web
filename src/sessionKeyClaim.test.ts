@@ -81,7 +81,10 @@ describe("the SessionKeyClaim card", () => {
 
   it("takes a deliberate step before the key is shown or used", () => {
     assert.match(src, /Claim your session key/);
-    assert.match(src, /Show the key on screen/);
+    assert.match(src, /"Reveal"/);
+    // The key is painted only behind the Reveal toggle.
+    assert.match(src, /\{showKey && \(/);
+    assert.match(src, /const \[showKey, setShowKey\] = useState\(false\)/);
   });
 
   it("never logs the key", () => {
