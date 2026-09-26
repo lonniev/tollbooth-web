@@ -227,6 +227,10 @@ function Nav() {
   the lapsed-sign-in note), or the gate alone. The frame is a column: "page"
   grows with the content; "viewport" pins it to the screen and lets the
   content shrink, so the debug log's spacer never pushes a bottom rail off.
+  `shell.statusState` is `"connecting"`, `"ready"` or `"failed"`;
+  `shell.statusError` is the failure as one short, scrubbed line; and
+  `shell.retryStatus()` runs the check again — so a banner can say
+  "connection failed" rather than "Connecting…" through an outage.
 - `SiteNav`: brand, pages (icon, label, badge), `trailing`, and an account
   menu (avatar → identity, links, Log out). Below `collapse` (default
   `(max-width: 639px)`; `false` never) the pages fold into a menu button.

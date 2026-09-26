@@ -12,21 +12,24 @@
  * `signedOut` the gate is the page.
  *
  * Inside, `useAppShell()` gives any component the same `shell` — the npub,
- * `signOut`, the `service_status` answer — so a site keeps no session context
- * of its own.
+ * `signOut`, the `service_status` answer and whether that check is still
+ * connecting, answered or failed (with `retryStatus()` to ask again) — so a
+ * site keeps no session context of its own.
  *
  * Also done here, once: the stored theme applied before paint and followed
  * across tabs; the npub's kind-0 picture seeded as its avatar; `DebugPanel`
  * mounted last, so its spacer is the page's last thing (see `shellLayout`).
  */
 
-import { createContext, useContext, useEffect, useLayoutEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useReducer, useRef, type ReactNode } from "react";
 import { hydrateAvatarFromNostr } from "../avatar.ts";
+import { debugPush } from "../debugLog.ts";
 import { serviceStatus, type ServiceStatus } from "../standardTools.ts";
 import { bootstrapTheme, type Theme } from "../theme.ts";
 import DebugPanel, { type DebugPanelProps } from "./DebugPanel.tsx";
 import NpubGate from "./NpubGate.tsx";
 import { shellLayout, type ShellFit } from "./shellLayout.ts";
+import { STATUS_CONNECTING, statusReducer, type StatusState } from "./statusCheck.ts";
 import { useSession, type Session } from "./useSession.ts";
 import { useTheme } from "./useTheme.ts";
 
@@ -34,6 +37,12 @@ export interface AppShellContext {
   session: Session;
   /** The `service_status` answer, or null until (or unless) it comes. */
   status: ServiceStatus | null;
+  /** Where the `service_status` check stands: "connecting", "ready" or "failed". */
+  statusState: StatusState;
+  /** Why the last check failed — short, human, scrubbed of secrets — or null. */
+  statusError: string | null;
+  /** Run the `service_status` check again (back to "connecting" until it settles). */
+  retryStatus: () => void;
   /** The sign-in gate, ready to place. */
   gate: ReactNode;
 }
@@ -81,32 +90,48 @@ export default function AppShell({
   classNames: c = {},
 }: AppShellProps) {
   const session = useSession();
-  const [status, setStatus] = useState<ServiceStatus | null>(null);
+  const [check, dispatch] = useReducer(statusReducer, STATUS_CONNECTING);
+  const attempt = useRef(0);
   useTheme(theme);
 
   useLayoutEffect(() => {
     bootstrapTheme(theme);
   }, [theme]);
 
-  useEffect(() => {
-    let live = true;
-    serviceStatus({ bestEffort: true })
-      .then((s) => live && setStatus(s))
-      .catch(() => live && setStatus(null));
-    return () => {
-      live = false;
-    };
+  // Only the newest check settles the state: a slow first answer must not
+  // overwrite a retry's, and an unmounted shell settles nothing.
+  const retryStatus = useCallback(() => {
+    const mine = ++attempt.current;
+    dispatch({ type: "start" });
+    serviceStatus({ bestEffort: true }).then(
+      (s) => {
+        if (attempt.current === mine) dispatch({ type: "ok", status: s });
+      },
+      (e: unknown) => {
+        // service_status is a quiet call, so its failure is logged here.
+        debugPush("error", `service_status failed: ${e instanceof Error ? e.message : String(e)}`);
+        if (attempt.current === mine) dispatch({ type: "fail", error: e });
+      },
+    );
   }, []);
+
+  useEffect(() => {
+    retryStatus();
+    return () => {
+      attempt.current++;
+    };
+  }, [retryStatus]);
 
   const { npub, signedIn, notice, refresh } = session;
   useEffect(() => {
     if (signedIn && npub) void hydrateAvatarFromNostr(npub);
   }, [signedIn, npub]);
 
+  const { status, state: statusState, error: statusError } = check;
   const gate = (
     <NpubGate onLogin={refresh} operatorHash={status?.operator_npub_hash} notice={notice} startFresh={startFresh} />
   );
-  const shell: AppShellContext = { session, status, gate };
+  const shell: AppShellContext = { session, status, statusState, statusError, retryStatus, gate };
   const layout = shellLayout(fit);
 
   return (

@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.5.1] - 2026-09-26
+
+### Fixed
+- AppShell reports a failed service check (statusState/statusError/retryStatus).
+  `useAppShell()` now says whether `service_status` is `"connecting"`,
+  `"ready"` or `"failed"`, gives the failure as one short, secret-scrubbed
+  line, and `retryStatus()` asks again — so a site can tell "still connecting"
+  from "connection failed" instead of showing "Connecting…" through an outage.
+  The failure is also written to the debug log.
+
 ## [1.5.0] - 2026-09-26
 
 ### Added
