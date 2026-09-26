@@ -81,10 +81,30 @@ describe("the SessionKeyClaim card", () => {
 
   it("takes a deliberate step before the key is shown or used", () => {
     assert.match(src, /Claim your session key/);
-    assert.match(src, /"Reveal"/);
-    // The key is painted only behind the Reveal toggle.
+    // The key is painted only behind the Reveal toggle, which starts off.
     assert.match(src, /\{showKey && \(/);
     assert.match(src, /const \[showKey, setShowKey\] = useState\(false\)/);
+    assert.match(src, /showKey \? "Conceal the key" : "Reveal the key"/);
+    assert.match(src, /onClick=\{\(\) => setShowKey\(\(v\) => !v\)\}/);
+    // getSessionNsec() is rendered in exactly one place: inside that toggle.
+    const painted = src.match(/\{getSessionNsec\(\)\}/g) ?? [];
+    assert.equal(painted.length, 1);
+    assert.ok(src.indexOf("{showKey && (") < src.indexOf("{getSessionNsec()}"));
+  });
+
+  it("names every icon action for screen readers and as a tooltip", () => {
+    for (const label of [
+      "Download a .env file",
+      "Save to your password manager",
+      "Send by encrypted DM",
+    ]) {
+      assert.match(src, new RegExp(`label="${label.replace(".", "\\.")}"`));
+    }
+    assert.match(src, /label=\{copied \? "Copied" : "Copy the key"\}/);
+    assert.match(src, /aria-label=\{label\}/);
+    assert.match(src, /title=\{label\}/);
+    assert.match(src, /focus-visible:ring-2/);
+    assert.match(src, /h-11 w-11/);
   });
 
   it("never logs the key", () => {

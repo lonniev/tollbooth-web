@@ -4,7 +4,7 @@
  * Renders ONLY when this browser holds the session nsec for the signed-in
  * npub. NIP-07 and courier-proof sign-ins see nothing: no disabled control,
  * no placeholder, no mention. Painting the key takes two deliberate taps —
- * "Claim your session key", then the Reveal chip — so an account page opened
+ * "Claim your session key", then the Reveal (eye) button — so an account page opened
  * in front of other people does not show it.
  *
  * Destinations: copy, download .env, password-manager prompt, and an
@@ -13,6 +13,7 @@
  */
 
 import { useRef, useState, type ReactNode } from "react";
+import { Check, Copy, Download, Eye, EyeOff, KeyRound, Send } from "lucide-react";
 import { tollboothConfig } from "../config.ts";
 import {
   passwordManagerOutcomeLabel,
@@ -33,7 +34,17 @@ import { card, input, muted } from "./ui.ts";
 
 type Flash = { tone: "ok" | "err"; text: string };
 
-export default function SessionKeyClaim({ npub }: { npub: string }) {
+export interface SessionKeyClaimClassNames {
+  /** Each round icon action (Reveal, Copy, .env, password manager, DM) when not active. Default: the package's outlined chip. */
+  action?: string;
+}
+
+export interface SessionKeyClaimProps {
+  npub: string;
+  classNames?: SessionKeyClaimClassNames;
+}
+
+export default function SessionKeyClaim({ npub, classNames = {} }: SessionKeyClaimProps) {
   const visible = sessionKeyClaimVisible({
     hasSessionNsec: hasSessionNsec(),
     sessionNsecNpub: sessionNsecNpub(),
@@ -43,10 +54,10 @@ export default function SessionKeyClaim({ npub }: { npub: string }) {
   // Hard requirement: silence when the browser does not hold the key.
   if (!visible) return null;
 
-  return <SessionKeyClaimInner />;
+  return <SessionKeyClaimInner actionClass={classNames.action} />;
 }
 
-function SessionKeyClaimInner() {
+function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
   const { slug, appName } = tollboothConfig();
   const envFilename = sessionKeyEnvFilename(slug);
   const [revealed, setRevealed] = useState(false);
@@ -230,27 +241,49 @@ function SessionKeyClaimInner() {
 
       <div className="flex flex-wrap gap-2">
         {/* Reveal is its own deliberate tap, a peer of the destinations. */}
-        <DestButton onClick={() => setShowKey((v) => !v)} active={showKey}>
-          {showKey ? "Conceal" : "Reveal"}
-        </DestButton>
-        <DestButton onClick={() => void copyKey()} disabled={busy}>
-          {copied ? "Copied" : "Copy"}
-        </DestButton>
-        <DestButton onClick={() => void downloadEnv()} disabled={busy}>
-          Download .env
-        </DestButton>
-        <DestButton onClick={() => void passwordManagerSave()} disabled={busy}>
-          Password manager
+        <DestButton
+          label={showKey ? "Conceal the key" : "Reveal the key"}
+          onClick={() => setShowKey((v) => !v)}
+          active={showKey}
+          className={actionClass}
+        >
+          {showKey ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
         </DestButton>
         <DestButton
+          label={copied ? "Copied" : "Copy the key"}
+          onClick={() => void copyKey()}
+          disabled={busy}
+          className={actionClass}
+        >
+          {copied ? <Check size={20} aria-hidden="true" /> : <Copy size={20} aria-hidden="true" />}
+        </DestButton>
+        <DestButton
+          label="Download a .env file"
+          onClick={() => void downloadEnv()}
+          disabled={busy}
+          className={actionClass}
+        >
+          <Download size={20} aria-hidden="true" />
+        </DestButton>
+        <DestButton
+          label="Save to your password manager"
+          onClick={() => void passwordManagerSave()}
+          disabled={busy}
+          className={actionClass}
+        >
+          <KeyRound size={20} aria-hidden="true" />
+        </DestButton>
+        <DestButton
+          label="Send by encrypted DM"
           onClick={() => {
             setDmOpen((v) => !v);
             setFlash(null);
           }}
           disabled={busy}
           active={dmOpen}
+          className={actionClass}
         >
-          Send by DM
+          <Send size={20} aria-hidden="true" />
         </DestButton>
       </div>
 
@@ -338,26 +371,35 @@ function SessionKeyClaimInner() {
   );
 }
 
+/** An icon-only round action. `label` is its aria-label and tooltip. */
 function DestButton({
+  label,
   onClick,
   disabled,
   active,
+  className,
   children,
 }: {
+  label: string;
   onClick: () => void;
   disabled?: boolean;
   active?: boolean;
+  className?: string;
   children: ReactNode;
 }) {
+  const idle =
+    className ?? `border-[var(--tb-line)] ${muted} active:bg-[var(--tb-surface-2)]`;
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`min-h-11 shrink-0 rounded-full border px-3.5 text-[12.5px] font-medium disabled:opacity-40 ${
+      aria-label={label}
+      title={label}
+      className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tb-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--tb-surface)] disabled:opacity-40 ${
         active
           ? "border-[var(--tb-accent)] bg-[var(--tb-accent)] text-[var(--tb-on-accent)]"
-          : `border-[var(--tb-line)] ${muted} active:bg-[var(--tb-surface-2)]`
+          : idle
       }`}
     >
       {children}

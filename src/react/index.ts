@@ -36,7 +36,11 @@ export {
   type TableShellClassNames,
 } from "./PagedTable.tsx";
 export { default as QuoteScroller, type QuoteScrollerProps, type QuoteScrollerClassNames } from "./QuoteScroller.tsx";
-export { default as SessionKeyClaim } from "./SessionKeyClaim.tsx";
+export {
+  default as SessionKeyClaim,
+  type SessionKeyClaimProps,
+  type SessionKeyClaimClassNames,
+} from "./SessionKeyClaim.tsx";
 export {
   default as TableFilter,
   type DateFieldOption,
