@@ -9,7 +9,8 @@ features. It is the peer of the `tollbooth-dpyc` Python wheel.
   kind-27235 inline proof when the tab holds a session key
 - **MCP client** — one shared connection to the operator, typed wrappers for
   the standard tools (balance, top-up, statement, price, profile)
-- **React components** — `NpubGate`, `NostrProfilePanel`, `SessionKeyClaim`, `WalletCard`,
+- **React components** — `AppShell` / `useAppShell`, `SiteNav`, `AccountPage`,
+  `RefreshButton`, `NpubGate`, `NostrProfilePanel`, `SessionKeyClaim`, `WalletCard`,
   `WalletPage`, `CouponsPanel`, `UsageSummary`, `PatronFundingStatus` /
   `OperatorFundingStatus`, `BuildInfoPanel`, `TimezonePicker`, `TableFilter`,
   `SortHeader` / `PageControls` / `TableShell`, `ThemeToggle`, `ErrorBoundary`,
@@ -173,6 +174,74 @@ import { BuildInfoPanel, OperatorFundingStatus, PatronFundingStatus, UsageSummar
   server's version, wheel and commit linked to its repository (from
   `service_status`; only https links), the Tollbooth-DPYC™ links, the licence
   and the patent notice. `children` adds rows after the MCP server section.
+
+### App shell, site nav, account page, refresh
+
+The frame a site used to write for itself. `AppShell` holds the session, the
+sign-in gate, `service_status`, the theme and the debug log (mounted last);
+it owns no routes. `useAppShell()` gives any component inside the same npub,
+`signOut` and status, so the site keeps no session context of its own.
+
+```tsx
+import { AccountPage, AppShell, RefreshButton, SiteNav, matchesPath, useAppShell } from "@tollbooth-dpyc/web/react";
+
+<AppShell
+  signedOut={({ gate }) => <><TopBar /><Hero />{gate}</>}
+  footer={({ status }) => <Footer status={status} />}
+  debug={{ children: <SchedulerLogSection /> }}
+  fit="page"                                     // "viewport" for a bottom rail
+>
+  {() => <BrowserRouter><Nav /><Routes>…</Routes></BrowserRouter>}
+</AppShell>
+
+function Nav() {
+  const { session } = useAppShell();
+  const { pathname } = useLocation();
+  return (
+    <SiteNav
+      brand={<Link to="/">eXcalibur</Link>}
+      items={[{ href: "/", label: "Posts", end: true }, { href: "/wallet", label: "Wallet", icon: <Wallet /> }]}
+      isActive={(href, item) => matchesPath(pathname, href, item.end)}
+      renderLink={({ href, ...p }) => <Link to={href} {...p} />}
+      trailing={<BalanceChip />}
+      account={{ npub: session.npub, links: [{ href: "/profile", label: "Profile & theme" }], onSignOut: session.signOut }}
+      classNames={{ root: "flex items-center gap-1.5", list: "flex gap-1", item: "chip", active: "chip-on", end: "ml-auto flex gap-3" }}
+    />
+  );
+}
+
+<AccountPage
+  npub={session.npub}
+  between={{ sessionKey: <XConnectPanel /> }}
+  timezone={{ note: (pref, zone) => (pref === "auto" ? `Currently ${zone}.` : `Using ${zone}.`) }}
+  build={{ status, frontend: { version: __APP_VERSION__, source: "https://github.com/you/site" } }}
+  onSignOut={session.signOut}
+  classNames={{ root: "space-y-5", section: "card p-5", signOut: "chip" }}
+/>
+
+<RefreshButton onRefresh={load} label="Refresh posts" classNames={{ root: "h-12 w-12 rounded-lg" }} />
+```
+
+- `AppShell`: signed in → `children(shell)`; signed out → `signedOut(shell)`,
+  placing `shell.gate` (the `NpubGate`, wired to the operator fingerprint and
+  the lapsed-sign-in note), or the gate alone. The frame is a column: "page"
+  grows with the content; "viewport" pins it to the screen and lets the
+  content shrink, so the debug log's spacer never pushes a bottom rail off.
+- `SiteNav`: brand, pages (icon, label, badge), `trailing`, and an account
+  menu (avatar → identity, links, Log out). Below `collapse` (default
+  `(max-width: 639px)`; `false` never) the pages fold into a menu button.
+  Both popovers set `aria-expanded`, focus their first item, close on Escape
+  (focus back to the button), on a press or focus outside, and move with the
+  arrows, Home and End; tap targets are at least 40 px. Router-agnostic:
+  `isActive` and `renderLink` (plain `<a>` and `location.pathname` by
+  default); `matchesPath(pathname, href, end)` is segment-bounded.
+- `AccountPage`: Nostr profile, session key, usage, time zone, theme, coupons,
+  build — one order. Each section is `false` or its own props; `before`,
+  `after`, and `between[section]` (kept in place when that section is off)
+  hold the site's panels.
+- `RefreshButton`: spins (`motion-safe:animate-spin`, or
+  `classNames.spinning`), is disabled and `aria-busy` while `onRefresh`'s
+  promise runs or `busy` is set; `label` is the tooltip and accessible name.
 
 ### Debug panel
 
