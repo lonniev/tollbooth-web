@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.5.0] - 2026-09-26
+
+### Added
+- `AppShell` and `useAppShell()`: the signed-in/out frame eXcalibur, Roastify
+  and Cypher each wrote — the session (package `useSession`), the `NpubGate`
+  with the operator fingerprint and the lapsed-sign-in note, `service_status`,
+  the theme applied before paint and followed across tabs, the npub's kind-0
+  avatar seeded, an optional footer, and `DebugPanel` mounted last. Routes stay
+  the site's (`children` / `signedOut` render props). `fit="viewport"` pins
+  the frame to the screen so the debug log's spacer never pushes a bottom rail
+  off it.
+- `SiteNav`: brand, pages (icon, label, badge), a right-side slot and the
+  avatar account menu (identity, links, Log out); folds into an accessible
+  menu button on phones (aria-expanded, focus in and back, Escape, press or
+  focus outside, arrow keys, 40 px targets). Router-agnostic via `isActive`
+  and `renderLink`; `matchesPath` does segment-bounded active matching.
+- `AccountPage`: the Profile composition in one order (Nostr profile, session
+  key, usage, time zone, theme, coupons, build), each section optional or
+  given its own props, with `before` / `between` / `after` for a site's panels
+  and an optional Log out chip.
+- `RefreshButton`: an icon button that spins, disables and sets `aria-busy`
+  while its refresh promise runs.
+- Every new component takes `classNames` per part and brings no typography or
+  colour of its own.
+
 ## [1.4.2] - 2026-09-25
 
 ### Changed
