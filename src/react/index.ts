@@ -14,6 +14,7 @@ export {
   type AppShellContext,
   type AppShellProps,
 } from "./AppShell.tsx";
+export { statusErrorMessage, type StatusState } from "./statusCheck.ts";
 export type { ShellFit } from "./shellLayout.ts";
 export { default as Avatar } from "./Avatar.tsx";
 export { default as AvatarPicker } from "./AvatarPicker.tsx";
