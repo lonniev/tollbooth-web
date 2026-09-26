@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.2] - 2026-09-25
+
+### Changed
+- The session-key actions are icon buttons (with labels for screen readers):
+  Reveal/Conceal (eye), Copy (turns to a check for 1.5 s), Download .env,
+  Password manager (key) and Send by DM are 44 px round buttons, each with an
+  `aria-label` and a matching `title`, and a visible focus ring — one row on
+  an iPad. Their outlined look can be replaced with `classNames.action`.
+
 ## [1.4.1] - 2026-09-25
 
 ### Fixed
