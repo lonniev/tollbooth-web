@@ -2,10 +2,12 @@
  * The sequence under the sign-in card: what happens, who does it, and which
  * step is under way now — read from the gate's real stage, never guessed.
  *
- * Mechanics only. It renders an ordered list with `data-state` on each step
- * (`done` / `current` / `todo`) and `aria-current="step"` on the ones under
- * way; every class is the site's through `classNames`. Without them the
- * markup is plain and inherits from the page.
+ * Mechanics only. It renders an ordered list — meant to run left to right and
+ * wrap — with `data-state` on each step (`done` / `current` / `todo`),
+ * `aria-current="step"` on the ones under way, a glyph, the label, the actor
+ * as a caption, and a `connector` between tiles; every class is the site's
+ * through `classNames`. Without them the markup is plain and inherits from
+ * the page.
  */
 
 import { cx } from "./cx.ts";
@@ -25,11 +27,13 @@ export interface SignInStepsClassNames {
   done?: string;
   current?: string;
   todo?: string;
-  /** The step number. */
-  index?: string;
-  /** Who acts. */
-  actor?: string;
+  /** The emoji. */
+  glyph?: string;
   label?: string;
+  /** Who acts, as a caption. */
+  actor?: string;
+  /** The mark between tiles (not after the last). */
+  connector?: string;
 }
 
 export interface SignInStepsProps {
@@ -61,11 +65,16 @@ export default function SignInSteps({
             aria-current={state === "current" ? "step" : undefined}
             className={cx(c.step, c[state])}
           >
-            <span aria-hidden className={c.index}>
-              {i + 1}
+            <span aria-hidden className={c.glyph}>
+              {s.glyph}
             </span>
-            <span className={c.actor}>{actors[s.actor]}</span>
             <span className={c.label}>{s.label}</span>
+            <span className={c.actor}>{actors[s.actor]}</span>
+            {i < steps.length - 1 && (
+              <span aria-hidden className={c.connector}>
+                {"\u203A"}
+              </span>
+            )}
           </li>
         );
       })}

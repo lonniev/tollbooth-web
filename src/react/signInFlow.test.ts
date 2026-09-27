@@ -15,6 +15,14 @@ describe("the nine steps", () => {
     for (const s of SIGN_IN_STEPS) assert.ok(SIGN_IN_ACTORS[s.actor], `${s.id} has an unnamed actor`);
   });
 
+  it("each carry one glyph and a label of at most four words", () => {
+    for (const s of SIGN_IN_STEPS) {
+      assert.ok(s.glyph.length > 0, `${s.id} has no glyph`);
+      assert.ok([...new Intl.Segmenter().segment(s.glyph)].length === 1, `${s.id}: one emoji, not ${s.glyph}`);
+      assert.ok(s.label.split(" ").length <= 4, `${s.id}: ${s.label}`);
+    }
+  });
+
   it("never say the protocol's words on screen", () => {
     for (const s of SIGN_IN_STEPS) {
       assert.doesNotMatch(s.label, /\b(MCP|dpop|FE|DM|courier|token)\b/i, `${s.id}: ${s.label}`);

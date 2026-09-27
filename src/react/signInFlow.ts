@@ -2,7 +2,7 @@
  * The pure half of `SignInSteps` (named apart from it: the filesystem is case-blind): what happens when someone signs in, in the
  * order it happens, and which step is under way for a given gate stage.
  *
- * Nine steps, four actors. The words are the visitor's, not the protocol's:
+ * Nine steps, four actors, one emoji each. The words are the visitor's, not the protocol's:
  * "the operator" (never MCP), "a proof" (never dpop), "this page" (never FE).
  * A site may pass its own list to `SignInSteps`; this one is the default.
  */
@@ -15,7 +15,9 @@ export type SignInActor = "you" | "page" | "operator" | "client";
 export interface SignInStep {
   id: string;
   actor: SignInActor;
-  /** Short, on screen. */
+  /** One emoji that pictures the step. */
+  glyph: string;
+  /** Two or three words, on the tile. */
   label: string;
   /** The stage during which this step is the one under way. */
   at: SignInStage;
@@ -31,15 +33,15 @@ export const SIGN_IN_ACTORS: Readonly<Record<SignInActor, string>> = {
 };
 
 export const SIGN_IN_STEPS: readonly SignInStep[] = [
-  { id: "enter", actor: "you", label: "Enter your npub", at: "begin" },
-  { id: "ask", actor: "page", label: "Asks the operator for a proof", at: "sending" },
-  { id: "message", actor: "operator", label: "Sends a message to your Nostr client", at: "awaiting" },
-  { id: "approve", actor: "you", label: "Approve it, for as long as you choose", at: "awaiting" },
-  { id: "reply", actor: "client", label: "Your signed reply travels back", at: "awaiting" },
-  { id: "verify", actor: "you", label: "Tap Verify", at: "awaiting" },
-  { id: "check", actor: "operator", label: "Checks your signature", at: "checking" },
-  { id: "token", actor: "operator", label: "Hands this page a proof", at: "checking" },
-  { id: "unlock", actor: "page", label: "Unlocks", at: "done" },
+  { id: "enter", actor: "you", glyph: "\u{1F511}", label: "Enter your npub", at: "begin" },
+  { id: "ask", actor: "page", glyph: "\u{1F4E8}", label: "Ask for a proof", at: "sending" },
+  { id: "message", actor: "operator", glyph: "\u{1F4AC}", label: "Message to your client", at: "awaiting" },
+  { id: "approve", actor: "you", glyph: "\u2705", label: "Approve, for a while", at: "awaiting" },
+  { id: "reply", actor: "client", glyph: "\u21A9\uFE0F", label: "Signed reply returns", at: "awaiting" },
+  { id: "verify", actor: "you", glyph: "\u{1F446}", label: "Tap Verify", at: "awaiting" },
+  { id: "check", actor: "operator", glyph: "\u{1F50D}", label: "Signature checked", at: "checking" },
+  { id: "token", actor: "operator", glyph: "\u{1F39F}\uFE0F", label: "Proof handed over", at: "checking" },
+  { id: "unlock", actor: "page", glyph: "\u{1F513}", label: "Unlocked", at: "done" },
 ];
 
 const ORDER: readonly SignInStage[] = ["begin", "sending", "awaiting", "checking", "done"];

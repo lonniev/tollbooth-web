@@ -18,6 +18,10 @@ export interface SignInLinksClassNames {
   list?: string;
   item?: string;
   link?: string;
+  /** The app's mark. */
+  logo?: string;
+  /** Around the name and line, beside the mark. */
+  text?: string;
   name?: string;
   line?: string;
   credit?: string;
@@ -46,8 +50,11 @@ export default function SignInLinks({
         {links.map((l) => (
           <li key={l.id} className={c.item}>
             <a href={l.href} target="_blank" rel="noopener noreferrer" className={cx(c.link)}>
-              <span className={c.name}>{l.name}</span>
-              <span className={c.line}>{l.line}</span>
+              {l.logo && <img src={l.logo} alt="" width={40} height={40} className={c.logo} />}
+              <span className={c.text}>
+                <span className={c.name}>{l.name}</span>
+                <span className={c.line}>{l.line}</span>
+              </span>
             </a>
           </li>
         ))}
