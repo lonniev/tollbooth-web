@@ -27,7 +27,7 @@ import { debugPush } from "../debugLog.ts";
 import { serviceStatus, type ServiceStatus } from "../standardTools.ts";
 import { bootstrapTheme, type Theme } from "../theme.ts";
 import DebugPanel, { type DebugPanelProps } from "./DebugPanel.tsx";
-import NpubGate from "./NpubGate.tsx";
+import NpubGate, { type NpubGateProps } from "./NpubGate.tsx";
 import { shellLayout, type ShellFit } from "./shellLayout.ts";
 import { STATUS_CONNECTING, statusReducer, type StatusState } from "./statusCheck.ts";
 import { useSession, type Session } from "./useSession.ts";
@@ -67,6 +67,11 @@ export interface AppShellProps {
   fit?: ShellFit;
   /** Arrive at the gate with a new key already made. */
   startFresh?: boolean;
+  /**
+   * The gate's own words and look: the site's `welcome` above the card, whether
+   * the sequence strip and the tool links show, and their `classNames`.
+   */
+  gateOptions?: Pick<NpubGateProps, "welcome" | "steps" | "links" | "linksCredit" | "classNames">;
   classNames?: AppShellClassNames;
 }
 
@@ -87,6 +92,7 @@ export default function AppShell({
   theme = "dark",
   fit = "page",
   startFresh,
+  gateOptions,
   classNames: c = {},
 }: AppShellProps) {
   const session = useSession();
@@ -129,7 +135,13 @@ export default function AppShell({
 
   const { status, state: statusState, error: statusError } = check;
   const gate = (
-    <NpubGate onLogin={refresh} operatorHash={status?.operator_npub_hash} notice={notice} startFresh={startFresh} />
+    <NpubGate
+      onLogin={refresh}
+      operatorHash={status?.operator_npub_hash}
+      notice={notice}
+      startFresh={startFresh}
+      {...gateOptions}
+    />
   );
   const shell: AppShellContext = { session, status, statusState, statusError, retryStatus, gate };
   const layout = shellLayout(fit);

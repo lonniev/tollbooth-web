@@ -4,9 +4,15 @@
  *   begin → request_npub_proof → awaiting reply → receive_npub_proof → app
  *
  * Success is not a `verified` flag but "no `error` and a token came back".
+ *
+ * Around the card: the site's `welcome` (its own words about what this place
+ * is for), the network's register line, and — below — `SignInSteps`, which
+ * shows the sequence above with the step under way lit from this component's
+ * real stage, and `SignInLinks`, the two tools a newcomer needs. Both take the
+ * gate's default look here; a site restyles them through `classNames`.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { generateSecretKey, getPublicKey, nip19 } from "nostr-tools";
 import { tollboothConfig } from "../config.ts";
 import {
@@ -22,24 +28,77 @@ import {
 import { setSessionNsec } from "../sessionNsec.ts";
 import { readSignInFailure } from "../signInSituation.ts";
 import { receiveNpubProof, requestNpubProof } from "../standardTools.ts";
+import { cx } from "./cx.ts";
+import SignInLinks, { type SignInLinksClassNames } from "./SignInLinks.tsx";
+import SignInSteps, { type SignInStepsClassNames } from "./SignInSteps.tsx";
+import { gateStage } from "./signInFlow.ts";
 import { card, errBox, ghost, input, muted, primary, warnBox } from "./ui.ts";
 
 type Stage = "begin" | "awaiting" | "checking";
+
+export interface NpubGateClassNames {
+  root?: string;
+  /** Around the site's `welcome`. */
+  welcome?: string;
+  /** The network's register line under the heading. */
+  register?: string;
+  /** The sequence strip's parts; the gate's defaults apply where unset. */
+  steps?: SignInStepsClassNames;
+  /** The tools list's parts; the gate's defaults apply where unset. */
+  links?: SignInLinksClassNames;
+}
+
+export interface NpubGateProps {
+  onLogin: () => void;
+  /** Arrive with a key already made, for a first-timer who asked for one. */
+  startFresh?: boolean;
+  /** Operator fingerprint, shown so the patron can check who sent the message. */
+  operatorHash?: string;
+  /** A routine re-auth prompt, drawn as a calm note rather than an error. */
+  notice?: string;
+  /** The site's own words about what this place is for, above the card. */
+  welcome?: ReactNode;
+  /** The sequence strip under the card. Default true. */
+  steps?: boolean;
+  /** The 0xchat / Pricing Studio links under the strip. Default true. */
+  links?: boolean;
+  /** The trademark credit under the links. Default true; false when the page's footer carries it. */
+  linksCredit?: boolean;
+  classNames?: NpubGateClassNames;
+}
+
+const STEPS_LOOK: SignInStepsClassNames = {
+  root: "mt-6 space-y-1.5",
+  step: "grid grid-cols-[1.5rem_auto_1fr] items-baseline gap-x-2 rounded-lg border px-3 py-1.5 text-xs transition-colors",
+  done: "border-transparent text-[var(--tb-muted)] opacity-70",
+  current: "border-[var(--tb-accent)] bg-[var(--tb-surface)] text-[var(--tb-ink)]",
+  todo: "border-transparent text-[var(--tb-muted)]",
+  index: "font-mono text-[10px] tabular-nums",
+  actor: "font-medium",
+  label: "",
+};
+
+const LINKS_LOOK: SignInLinksClassNames = {
+  root: "mt-6 space-y-2",
+  lead: `text-xs ${muted}`,
+  list: "space-y-1.5",
+  link: `${card} block px-3 py-2.5 hover:border-[var(--tb-accent)] transition-colors`,
+  name: "block text-sm font-medium",
+  line: `block text-xs ${muted}`,
+  credit: `text-[10px] leading-relaxed ${muted}`,
+};
 
 export default function NpubGate({
   onLogin,
   startFresh = false,
   operatorHash,
   notice,
-}: {
-  onLogin: () => void;
-  /** Arrive with a key already made, for a first-timer who asked for one. */
-  startFresh?: boolean;
-  /** Operator fingerprint, shown so the patron can check who sent the DM. */
-  operatorHash?: string;
-  /** A routine re-auth prompt, drawn as a calm note rather than an error. */
-  notice?: string;
-}) {
+  welcome,
+  steps = true,
+  links = true,
+  linksCredit = true,
+  classNames: c = {},
+}: NpubGateProps) {
   const { appName } = tollboothConfig();
   // Prefilled from what was typed last, NOT from the stored identity.
   const [value, setValue] = useState(getLastTypedNpub());
@@ -164,9 +223,13 @@ export default function NpubGate({
   }
 
   return (
-    <div className="max-w-md mx-auto mt-12 px-4">
+    <div className={cx("max-w-md mx-auto mt-12 px-4", c.root)}>
       <h1 className="text-xl font-semibold mb-1">Sign in to {appName}</h1>
-      <p className={`text-sm mb-5 ${muted}`}>Your Nostr npub is your identity. No email, no password.</p>
+      {welcome && <div className={cx("text-sm mb-3", c.welcome)}>{welcome}</div>}
+      <p className={cx(`text-sm mb-5 ${muted}`, c.register)}>
+        {appName} is an operator on the Tollbooth DPYC™ network. DPYC™ — Don't Pester Your Customer™: no email, no
+        password, no KYC. Your Nostr key is your identity.
+      </p>
 
       {notice && <div className={`mb-5 ${warnBox}`}>{notice}</div>}
 
@@ -221,7 +284,7 @@ export default function NpubGate({
                 if (isNsec) signInWithNsec();
                 else void begin();
               }}
-              placeholder="npub1… (DM challenge) or nsec1… (instant)"
+              placeholder="npub1… (a message to your client) or nsec1… (instant)"
               spellCheck={false}
               autoCapitalize="off"
               autoCorrect="off"
@@ -238,12 +301,12 @@ export default function NpubGate({
               disabled={!valid || busy}
               className={primary}
             >
-              {busy ? "Sending…" : isNpub ? "Send proof DM" : "Sign in"}
+              {busy ? "Sending…" : isNpub ? "Send message" : "Sign in"}
             </button>
             <p className={`text-xs ${muted}`}>
               {isNsec
                 ? "Your nsec stays in this browser and signs each call."
-                : "We send a Nostr DM to your npub. Reply from your Nostr client — your signature is the proof."}
+                : "We send a message to your npub. Approve it from your Nostr client — your signature is the proof."}
             </p>
             <button type="button" onClick={generateKey} className={ghost}>
               Generate a new key
@@ -252,8 +315,8 @@ export default function NpubGate({
         ) : (
           <>
             <div className={`${warnBox} space-y-1.5`}>
-              <div className="font-medium">DM sent — check your Nostr client.</div>
-              <div>Reply with any text. Your signature on that DM is the proof.</div>
+              <div className="font-medium">Message sent — open your Nostr client.</div>
+              <div>Reply with any text. Your signature on that reply is the proof.</div>
               {operatorHash && (
                 <div>
                   Sender fingerprint: <span className="font-mono">🔒 {operatorHash}</span>
@@ -265,8 +328,8 @@ export default function NpubGate({
                 <div className={`uppercase tracking-wider text-[10px] ${muted}`}>Confirmation code</div>
                 <div className="font-mono text-base select-all">{pendingProof}</div>
                 <div className={`leading-relaxed ${muted}`}>
-                  The same code appears in the DM. <b>Approve the DM only if the codes match.</b> If they differ — or the
-                  DM points you somewhere other than this site — do not reply.
+                  The same code appears in the message. <b>Approve it only if the codes match.</b> If they differ — or
+                  the message points you somewhere other than this site — do not reply.
                 </div>
               </div>
             )}
@@ -274,7 +337,7 @@ export default function NpubGate({
               {busy ? "Checking…" : "I've replied — verify"}
             </button>
             <button type="button" onClick={() => void begin()} disabled={busy} className={ghost}>
-              Resend DM
+              Resend
             </button>
             <button type="button" onClick={reset} disabled={busy} className={`w-full text-xs py-1.5 ${muted}`}>
               Use a different npub
@@ -285,6 +348,9 @@ export default function NpubGate({
         {error && <Trouble raw={error} appName={appName} />}
         {note && <div className={`text-xs text-center italic ${muted}`}>{note}</div>}
       </div>
+
+      {steps && <SignInSteps stage={gateStage(stage, busy)} classNames={{ ...STEPS_LOOK, ...c.steps }} />}
+      {links && <SignInLinks credit={linksCredit} classNames={{ ...LINKS_LOOK, ...c.links }} />}
     </div>
   );
 }
