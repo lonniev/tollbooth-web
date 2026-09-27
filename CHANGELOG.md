@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.7.0] - 2026-09-27
+
+### Changed
+- The sign-in sequence is a picture, not a list. `SignInSteps` runs left to
+  right in tiles that wrap three to a row, each with one emoji, a label of a
+  few words and the actor as a caption, with a `connector` between tiles;
+  the tile under way is drawn in ink, the rest recede. Every `SignInStep`
+  now carries a `glyph`.
+- `SignInLinks` shows each app's own mark (`SignInLink.logo`, a bundled
+  96 px data URI — no third-party request on sign-in): 0xchat's and Pricing
+  Studio's, side by side on wide screens.
+- The gate's field reads "Enter npub (secure) or nsec (convenient)" with
+  "npub1…" as its placeholder; the "we send a message…" line appears only
+  once an npub is typed; "Need a new identity?" introduces the key button.
+  Owner's review of 1.6.0: "just a wall of text… left to right, not top down…
+  small relevant emoticons… brand logos."
+
 ## [1.6.0] - 2026-09-27
 
 ### Added
