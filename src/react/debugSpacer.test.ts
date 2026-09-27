@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
-import { DEBUG_BAR_PX, debugSpacerHeight, debugSpacerPx } from "./debugSpacer.ts";
+import { DEBUG_BAR_PX, debugSpacerHeight, debugSpacerPx, debugSpacerRoom } from "./debugSpacer.ts";
 
 describe("the room the DebugPanel keeps", () => {
   it("reserves the collapsed bar until the panel is measured", () => {
@@ -28,7 +28,7 @@ describe("the DebugPanel's spacer", () => {
   const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "DebugPanel.tsx"), "utf8");
 
   it("renders an in-flow spacer beside the fixed bar, sized from the measured height", () => {
-    assert.match(src, /<div aria-hidden="true" data-tb-debug-spacer=""[^>]*height: debugSpacerHeight\(barHeight\)/);
+    assert.match(src, /<div aria-hidden="true" data-tb-debug-spacer=""[^>]*height: debugSpacerRoom\(open, barHeight\)/);
     assert.match(src, /<div ref=\{barRef\} className="pointer-events-none fixed inset-x-0 bottom-0/);
     // The spacer is a sibling of the fixed bar, not inside it.
     assert.ok(src.indexOf("data-tb-debug-spacer") < src.indexOf("ref={barRef}"));
@@ -49,5 +49,14 @@ describe("the DebugPanel's spacer", () => {
   it("never lays an invisible full-width layer over the page", () => {
     assert.match(src, /pointer-events-none fixed inset-x-0/);
     assert.doesNotMatch(src, /data-tb-debug-spacer=""[^>]*(?:fixed|absolute)/);
+  });
+});
+
+describe("the collapsed tab is an overlay, not a row", () => {
+  it("takes no room while collapsed and its full height while open", () => {
+    assert.equal(debugSpacerRoom(false, 320), "0px");
+    assert.equal(debugSpacerRoom(false, null), "0px");
+    assert.equal(debugSpacerRoom(true, 320), "calc(320px + env(safe-area-inset-bottom, 0px))");
+    assert.equal(debugSpacerRoom(true, null), `calc(${DEBUG_BAR_PX}px + env(safe-area-inset-bottom, 0px))`);
   });
 });

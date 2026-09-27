@@ -14,8 +14,8 @@
  * Touch-first: every control is a real button at least 40px square, nothing
  * hides behind hover, and the page under the bar stays tappable.
  *
- * The panel keeps its own space: beside the fixed bar it renders an in-flow
- * spacer as tall as the bar is right now (collapsed or open, measured with a
+ * While open, the panel keeps its own space: beside the fixed bar it renders
+ * an in-flow spacer as tall as the log is right now (measured with a
  * ResizeObserver) plus the iOS safe-area inset, so the page's last line can
  * always scroll clear of it. Mount it LAST in the app shell so that spacer is
  * the last thing in the page's flow.
@@ -33,7 +33,7 @@ import {
   type DebugSeverity,
 } from "../debugLog.ts";
 import { readStored, writeStored } from "../storage.ts";
-import { debugSpacerHeight, debugSpacerPx } from "./debugSpacer.ts";
+import { debugSpacerPx, debugSpacerRoom } from "./debugSpacer.ts";
 import { useDebugLog } from "./useDebugLog.ts";
 
 export interface DebugPanelProps {
@@ -140,8 +140,8 @@ export default function DebugPanel({
 
   return (
     <>
-      {/* In-flow: the page's own room for the bar, so nothing it holds sits under it. */}
-      <div aria-hidden="true" data-tb-debug-spacer="" style={{ height: debugSpacerHeight(barHeight), flexShrink: 0 }} />
+      {/* In-flow room for the OPEN log only; the collapsed tab overlays the page. */}
+      <div aria-hidden="true" data-tb-debug-spacer="" style={{ height: debugSpacerRoom(open, barHeight), flexShrink: 0 }} />
       <div ref={barRef} className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex flex-col items-end">
         {/* The controls sit above the log, never over it, so Hide is always reachable. */}
         <div className="pointer-events-auto flex flex-wrap justify-end gap-1 pr-3">
