@@ -67,24 +67,29 @@ export interface NpubGateProps {
   classNames?: NpubGateClassNames;
 }
 
+// Left to right, three tiles to a row, wrapping; the tile under way is the
+// only one drawn in ink and accent — the rest recede.
 const STEPS_LOOK: SignInStepsClassNames = {
-  root: "mt-6 space-y-1.5",
-  step: "grid grid-cols-[1.5rem_auto_1fr] items-baseline gap-x-2 rounded-lg border px-3 py-1.5 text-xs transition-colors",
-  done: "border-transparent text-[var(--tb-muted)] opacity-70",
-  current: "border-[var(--tb-accent)] bg-[var(--tb-surface)] text-[var(--tb-ink)]",
-  todo: "border-transparent text-[var(--tb-muted)]",
-  index: "font-mono text-[10px] tabular-nums",
-  actor: "font-medium",
-  label: "",
+  root: "mt-6 grid grid-cols-3 gap-y-3",
+  step: "relative flex flex-col items-center px-1 text-center transition-colors",
+  done: "text-[var(--tb-muted)] opacity-60",
+  current: "text-[var(--tb-ink)]",
+  todo: "text-[var(--tb-muted)]",
+  glyph: "text-2xl leading-none",
+  label: "mt-1 text-[11px] leading-tight font-medium",
+  actor: "text-[10px] leading-tight opacity-70",
+  connector: "absolute right-[-0.35rem] top-2 text-base leading-none text-[var(--tb-muted)] opacity-50 [li:nth-child(3n)_&]:hidden",
 };
 
 const LINKS_LOOK: SignInLinksClassNames = {
   root: "mt-6 space-y-2",
   lead: `text-xs ${muted}`,
-  list: "space-y-1.5",
-  link: `${card} block px-3 py-2.5 hover:border-[var(--tb-accent)] transition-colors`,
+  list: "grid grid-cols-1 sm:grid-cols-2 gap-2",
+  link: `${card} flex items-center gap-3 px-3 py-2.5 hover:border-[var(--tb-accent)] transition-colors`,
+  logo: "h-10 w-10 shrink-0 rounded-[10px]",
+  text: "min-w-0",
   name: "block text-sm font-medium",
-  line: `block text-xs ${muted}`,
+  line: `block text-xs leading-snug ${muted}`,
   credit: `text-[10px] leading-relaxed ${muted}`,
 };
 
@@ -269,7 +274,7 @@ export default function NpubGate({
         {stage === "begin" ? (
           <>
             <label className={`block text-xs uppercase tracking-wider ${muted}`} htmlFor="tb-npub-field">
-              Paste your npub or nsec
+              Enter npub (secure) or nsec (convenient)
             </label>
             <input
               id="tb-npub-field"
@@ -284,7 +289,7 @@ export default function NpubGate({
                 if (isNsec) signInWithNsec();
                 else void begin();
               }}
-              placeholder="npub1… (a message to your client) or nsec1… (instant)"
+              placeholder="npub1…"
               spellCheck={false}
               autoCapitalize="off"
               autoCorrect="off"
@@ -303,11 +308,13 @@ export default function NpubGate({
             >
               {busy ? "Sending…" : isNpub ? "Send message" : "Sign in"}
             </button>
-            <p className={`text-xs ${muted}`}>
-              {isNsec
-                ? "Your nsec stays in this browser and signs each call."
-                : "We send a message to your npub. Approve it from your Nostr client — your signature is the proof."}
-            </p>
+            {isNsec && <p className={`text-xs ${muted}`}>Your nsec stays in this browser and signs each call.</p>}
+            {isNpub && (
+              <p className={`text-xs ${muted}`}>
+                We send a message to your npub. Approve it from your Nostr client — your signature is the proof.
+              </p>
+            )}
+            <p className={`text-xs pt-1 ${muted}`}>Need a new identity?</p>
             <button type="button" onClick={generateKey} className={ghost}>
               Generate a new key
             </button>
