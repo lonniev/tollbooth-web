@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.7.1] - 2026-09-27
+
+### Fixed
+- The collapsed Debug tab is an overlay, not a row. `DebugPanel` reserved an
+  in-flow spacer as tall as the tab even while collapsed, which took a whole
+  row from every screen (owner: "we want an overlay and not a row stealer").
+  The spacer now exists only while the log is open, when it is tall enough
+  to hide a page's last line; collapsed, the tab floats in the corner.
+  `debugSpacerRoom(open, measured)` is the rule, tested.
+
 ## [1.7.0] - 2026-09-27
 
 ### Changed
