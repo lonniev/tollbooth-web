@@ -247,6 +247,20 @@ function Nav() {
   `classNames.spinning`), is disabled and `aria-busy` while `onRefresh`'s
   promise runs or `busy` is set; `label` is the tooltip and accessible name.
 
+### Sign-in gate
+
+`NpubGate` (or `AppShell`'s `gateOptions`) takes `welcome` — the site's own
+words about what this place is for, above the card. Under the card it shows
+`SignInSteps`, the nine-step sequence (you enter your npub; this page asks the
+operator for a proof; a message reaches your Nostr client; you approve it for
+a time you choose; your signed reply travels back; you tap Verify; the
+operator checks the signature and hands the page a proof; the page unlocks)
+with the step under way lit from the gate's real stage, and `SignInLinks` —
+0xchat and Pricing Studio on the App Store, with the trademark credit
+(`linksCredit={false}` where the page's footer already carries it). Both are
+headless and exported on their own; `classNames.steps` / `classNames.links`
+restyle them inside the gate. `steps={false}` / `links={false}` remove them.
+
 ### Debug panel
 
 `callTool` logs to a shared, scrubbed ring buffer; `DebugPanel` shows it as a
