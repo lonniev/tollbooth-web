@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.6.0] - 2026-09-27
+
+### Added
+- `NpubGate` welcomes the visitor and shows them the way. `welcome` takes the
+  site's own words about what this place is for, above the card; a register
+  line names the network — Tollbooth DPYC™, DPYC™ — Don't Pester Your
+  Customer™: no email, no password, no KYC. Below the card, `SignInSteps`
+  draws the nine-step sequence (you, this page, the operator, your Nostr
+  client) with the step under way lit from the gate's real stage, and
+  `SignInLinks` offers the two tools a newcomer needs: 0xchat and Pricing
+  Studio, available on the App Store, with the trademark credit. Both are
+  exported headless (`classNames` per part, `data-state` and `aria-current`
+  on the steps) with `SIGN_IN_STEPS`, `stepState`, `gateStage`,
+  `SIGN_IN_LINKS` for a site that draws its own. `steps`, `links` and
+  `linksCredit` switch each off; `NpubGateProps` and `NpubGateClassNames`
+  are exported at last.
+- `AppShell` takes `gateOptions` and hands them to its gate.
+
+### Changed
+- The gate's fixed copy speaks the visitor's language: "message" and
+  "reply", never "DM"; "Send message" and "Resend" on the buttons.
+
 ## [1.5.1] - 2026-09-26
 
 ### Fixed

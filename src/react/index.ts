@@ -41,7 +41,20 @@ export {
   type OperatorFundingStatusProps,
   type PatronFundingStatusProps,
 } from "./FundingStatus.tsx";
-export { default as NpubGate } from "./NpubGate.tsx";
+export { default as NpubGate, type NpubGateClassNames, type NpubGateProps } from "./NpubGate.tsx";
+export { default as SignInSteps, type SignInStepsClassNames, type SignInStepsProps } from "./SignInSteps.tsx";
+export {
+  gateStage,
+  SIGN_IN_ACTORS,
+  SIGN_IN_STEPS,
+  stepState,
+  type SignInActor,
+  type SignInStage,
+  type SignInStep,
+  type SignInStepState,
+} from "./signInFlow.ts";
+export { default as SignInLinks, type SignInLinksClassNames, type SignInLinksProps } from "./SignInLinks.tsx";
+export { SIGN_IN_LINKS, SIGN_IN_LINKS_CREDIT, type SignInLink } from "./signInTools.ts";
 export { default as NostrProfilePanel } from "./NostrProfilePanel.tsx";
 export {
   PageControls,
