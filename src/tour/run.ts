@@ -140,7 +140,10 @@ export function offerTour(hooks: OfferHooks, words = OFFER_WORDS): Offer {
       yes.type = "button";
       yes.className = "tb-tour-yes";
       yes.textContent = words.yes;
-      yes.addEventListener("click", () => { answered = true; d.destroy(); hooks.onYes(); });
+      // The tour starts on the next tick. Started inside this click, the
+      // click would go on to the new tour's outside-click listener and close
+      // it before it was seen.
+      yes.addEventListener("click", () => { answered = true; d.destroy(); window.setTimeout(hooks.onYes, 0); });
       row.append(no, yes);
       popover.wrapper.appendChild(row);
     },
