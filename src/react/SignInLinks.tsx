@@ -44,7 +44,7 @@ export default function SignInLinks({
   classNames: c = {},
 }: SignInLinksProps) {
   return (
-    <nav aria-label="Tools for signing in" className={c.root}>
+    <nav aria-label="Tools for signing in" className={c.root} data-tour="tb.gate.links">
       {lead && <p className={c.lead}>{lead}</p>}
       <ul className={c.list}>
         {links.map((l) => (

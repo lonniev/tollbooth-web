@@ -261,6 +261,48 @@ with the step under way lit from the gate's real stage, and `SignInLinks` —
 headless and exported on their own; `classNames.steps` / `classNames.links`
 restyle them inside the gate. `steps={false}` / `links={false}` remove them.
 
+### Guided tour
+
+A page can walk itself through: small popovers in turn, each pointing at a
+control and saying what it is for. The package carries the mechanics — the
+popover (driver.js), the preference, who sees it, the offer, the copy lint
+and the two tours every site shares (the sign-in gate and the account page's
+panels). A site supplies its `data-tour` names and its own words.
+
+```tsx
+import { signInTour, accountTour, type Tour } from "@tollbooth-dpyc/web";
+import { TourProvider, useTour, useTourSwitch, useTourReplay, tourTarget } from "@tollbooth-dpyc/web/react";
+
+const TOURS: Record<string, Tour> = {
+  signin: signInTour(),
+  account: accountTour("account", [{ target: "account.sound", title: "Sound", says: "The hive hums. Switch it off here." }]),
+  play: { page: "play", steps: [
+    { target: "play.practice", title: "Practice", says: "A round against the house, free. Tap it to learn the moves." },
+  ]},
+};
+
+<TourProvider tours={TOURS}>…</TourProvider>          // once, around the app
+useTour("play", { actions: { "open-lobby": () => setMode("live") } });  // once per page
+<button {...tourTarget("play.practice")}>Practice</button>
+```
+
+Who sees it: a new device starts with the live tutorial on; a device that
+already holds a patron npub starts with it off. On a page that is due, after
+ten seconds untouched (`configureTollbooth({ tourIdleMs })`, or
+`TourProvider idleMs`), a centred popover asks whether they would like a tour;
+Yes starts it, No marks the page. A step whose control is absent is skipped;
+a step with `before` has the page open something first, by the name the page
+registered in `actions`. "Stop the tutorial" sits in every popover. The site's
+own switch and replay button take their mechanics from `useTourSwitch()` and
+`useTourReplay()`.
+
+Import `@tollbooth-dpyc/web/tour.css` beside `theme.css`; the popover takes the
+site's `--tb-*` tokens, and `.tb-tour` can be restyled further. The package's
+markup carries `tb.gate.*` and `tb.account.*` names (`TB_TARGETS`); the two
+shared tours point at them. `lintTours(TOURS)` in a site's test holds the copy
+to the voice: one or two short sentences saying what a thing is, never what it
+is not.
+
 ### Debug panel
 
 `callTool` logs to a shared, scrubbed ring buffer; `DebugPanel` shows it as a

@@ -51,3 +51,18 @@ export {
   type DebugLogOptions,
   type DebugSeverity,
 } from "./debugLog.ts";
+export type { Tour, TourActions, TourStep } from "./tour/types.ts";
+export {
+  fromStored as tourPrefsFromStored,
+  markToured,
+  replayAll,
+  replayPage,
+  shouldRun,
+  stopAll,
+  TOUR_DEFAULTS,
+  type TourPrefs,
+} from "./tour/state.ts";
+export { ACTIVITY_EVENTS, DEFAULT_IDLE_MS, idleThreshold, offerDue } from "./tour/idle.ts";
+export { lintStep, lintTour, lintTours, MAX_SAYS, MAX_SENTENCES, MAX_TITLE } from "./tour/lint.ts";
+export { accountPanelsSteps, accountTour, signInTour, TB_TARGETS } from "./tour/tours.ts";
+export { onTourChange, readTourPrefs, settleTourPrefs, tourStorageKey, writeTourPrefs } from "./tourPrefs.ts";

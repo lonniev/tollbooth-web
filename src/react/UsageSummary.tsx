@@ -108,7 +108,7 @@ export default function UsageSummary({
   const shown = facts ? figures.filter((f) => f !== "expired" || facts.expired > 0) : [];
 
   return (
-    <section className={c.root}>
+    <section className={c.root} data-tour="tb.account.usage">
       <div className={c.header}>
         <div className={c.heading}>{heading ?? `Last ${days} days`}</div>
         {refreshLabel !== null && (
