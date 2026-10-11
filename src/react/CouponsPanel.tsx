@@ -146,7 +146,7 @@ export default function CouponsPanel({
   }
 
   return (
-    <section className={c.root}>
+    <section className={c.root} data-tour="tb.account.coupons">
       {heading && <div className={c.heading}>{heading}</div>}
       {intro && <p className={c.intro}>{intro}</p>}
 

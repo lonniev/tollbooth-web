@@ -116,3 +116,13 @@ export { useDebugLog } from "./useDebugLog.ts";
 export { useTheme } from "./useTheme.ts";
 export { useTimezone } from "./useTimezone.ts";
 export { useTopUp, type TopUp, type UseTopUpOptions } from "./useTopUp.ts";
+export {
+  TourProvider,
+  tourTarget,
+  useTour,
+  useTourReplay,
+  useTourSwitch,
+  type TourProviderProps,
+  type UseTourOptions,
+} from "./useTour.tsx";
+export { buildTour, offerTour, OFFER_WORDS, type Offer, type OfferHooks, type OfferWords, type TourHooks, type TourRun } from "../tour/run.ts";

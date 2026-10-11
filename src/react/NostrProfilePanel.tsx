@@ -132,7 +132,7 @@ export default function NostrProfilePanel({
   }
 
   return (
-    <div className={`${card} px-4 py-3`}>
+    <div className={`${card} px-4 py-3`} data-tour="tb.account.profile">
       <div className="flex items-start gap-3">
         <div className="relative flex-none">
           <Avatar value={profile.picture || avatarFor(npub)} size={56} />

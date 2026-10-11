@@ -278,6 +278,7 @@ export default function NpubGate({
             </label>
             <input
               id="tb-npub-field"
+              data-tour="tb.gate.npub"
               type={isNsec ? "password" : "text"}
               value={value}
               onChange={(e) => {
@@ -305,6 +306,7 @@ export default function NpubGate({
               onClick={() => (isNsec ? signInWithNsec() : void begin())}
               disabled={!valid || busy}
               className={primary}
+              data-tour="tb.gate.send"
             >
               {busy ? "Sending…" : isNpub ? "Send message" : "Sign in"}
             </button>
@@ -340,7 +342,7 @@ export default function NpubGate({
                 </div>
               </div>
             )}
-            <button type="button" onClick={() => void finish()} disabled={busy} className={primary}>
+            <button type="button" onClick={() => void finish()} disabled={busy} className={primary} data-tour="tb.gate.verify">
               {busy ? "Checking…" : "I've replied — verify"}
             </button>
             <button type="button" onClick={() => void begin()} disabled={busy} className={ghost}>

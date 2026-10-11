@@ -30,13 +30,16 @@ export interface TollboothConfig {
   quietTools?: string[];
   /** Avatar glyphs in this site's voice. Defaults to a general set. */
   avatarChoices?: string[];
+  /** How long a page sits untouched before its guided tour is offered, in ms. Defaults to 10 s. */
+  tourIdleMs?: number;
 }
 
 interface Resolved
-  extends Required<Omit<TollboothConfig, "extraBootstrapTools" | "quietTools" | "avatarChoices">> {
+  extends Required<Omit<TollboothConfig, "extraBootstrapTools" | "quietTools" | "avatarChoices" | "tourIdleMs">> {
   extraBootstrapTools: string[];
   quietTools: string[];
   avatarChoices?: string[];
+  tourIdleMs?: number;
 }
 
 let current: Resolved | null = null;
@@ -53,6 +56,7 @@ export function configureTollbooth(config: TollboothConfig): void {
     extraBootstrapTools: config.extraBootstrapTools ?? [],
     quietTools: config.quietTools ?? [],
     avatarChoices: config.avatarChoices,
+    tourIdleMs: config.tourIdleMs,
   };
 }
 

@@ -196,7 +196,7 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
 
   if (!revealed) {
     return (
-      <div className={`${card} px-4 py-3`}>
+      <div className={`${card} px-4 py-3`} data-tour="tb.account.sessionKey">
         <div className="eyebrow mb-1">Session key</div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <p className={`min-w-[14rem] flex-1 text-[12.5px] leading-snug ${muted}`}>
@@ -217,7 +217,7 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
   }
 
   return (
-    <div className={`relative ${card} px-4 py-3`}>
+    <div className={`relative ${card} px-4 py-3`} data-tour="tb.account.sessionKey">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div className="eyebrow mb-1">Session key</div>
         <button

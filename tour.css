@@ -1,0 +1,103 @@
+/*
+ * The guided tour's popover, in the site's own tokens.
+ *
+ * driver.js draws it; these rules give it the site's surface, ink and line
+ * through the --tb-* variables theme.css defines, and the structure the
+ * tour adds: the "Stop the tutorial" link under the buttons, and the Yes/No
+ * pair on the offer. Colours are the site's; a site may restyle `.tb-tour`
+ * further (the title's font, say) in its own stylesheet.
+ */
+
+@import "driver.js/dist/driver.css";
+
+.driver-popover.tb-tour {
+  font-family: inherit;
+  color: var(--tb-ink);
+  background-color: var(--tb-surface);
+  border: 1px solid var(--tb-line);
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+  max-width: min(320px, calc(100vw - 24px));
+  padding: 14px 16px 12px;
+}
+.tb-tour .driver-popover-title {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--tb-ink);
+}
+.tb-tour .driver-popover-description {
+  margin-top: 6px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--tb-ink);
+}
+.tb-tour .driver-popover-close-btn {
+  top: 2px;
+  right: 2px;
+  width: 36px;
+  height: 36px;
+  color: var(--tb-muted);
+}
+.tb-tour .driver-popover-close-btn:hover,
+.tb-tour .driver-popover-close-btn:focus { color: var(--tb-ink); }
+.tb-tour .driver-popover-footer { margin-top: 12px; gap: 8px; }
+.tb-tour .driver-popover-progress-text {
+  font-size: 11px;
+  color: var(--tb-muted);
+}
+.tb-tour .driver-popover-footer-btn,
+.tb-tour .tb-tour-yes,
+.tb-tour .tb-tour-no {
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--tb-line);
+  background-color: var(--tb-surface);
+  color: var(--tb-muted);
+  cursor: pointer;
+}
+.tb-tour .driver-popover-next-btn,
+.tb-tour .tb-tour-yes {
+  border-color: var(--tb-accent);
+  background-color: var(--tb-accent);
+  color: var(--tb-on-accent);
+}
+.tb-tour .driver-popover-footer-btn:hover,
+.tb-tour .driver-popover-footer-btn:focus,
+.tb-tour .tb-tour-no:hover,
+.tb-tour .tb-tour-no:focus { background-color: var(--tb-surface-2); }
+.tb-tour .driver-popover-next-btn:hover,
+.tb-tour .driver-popover-next-btn:focus,
+.tb-tour .tb-tour-yes:hover,
+.tb-tour .tb-tour-yes:focus { background-color: var(--tb-accent); }
+.tb-tour .tb-tour-stop {
+  display: block;
+  margin-top: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 11.5px;
+  color: var(--tb-muted);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.tb-tour .tb-tour-answer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+/* The offer has no element to point at; it sits in the middle of the page. */
+.tb-tour.tb-tour-offer .driver-popover-arrow { display: none; }
+/* The arrow takes the surface colour on whichever side it points from. */
+.tb-tour .driver-popover-arrow-side-left { border-left-color: var(--tb-surface); }
+.tb-tour .driver-popover-arrow-side-right { border-right-color: var(--tb-surface); }
+.tb-tour .driver-popover-arrow-side-top { border-top-color: var(--tb-surface); }
+.tb-tour .driver-popover-arrow-side-bottom { border-bottom-color: var(--tb-surface); }

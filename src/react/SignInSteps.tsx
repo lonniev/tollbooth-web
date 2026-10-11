@@ -55,7 +55,7 @@ export default function SignInSteps({
   classNames: c = {},
 }: SignInStepsProps) {
   return (
-    <ol aria-label={label} className={c.root}>
+    <ol aria-label={label} className={c.root} data-tour="tb.gate.steps">
       {steps.map((s, i) => {
         const state = stepState(s, stage);
         return (
