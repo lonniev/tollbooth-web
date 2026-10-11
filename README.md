@@ -300,8 +300,8 @@ Import `@tollbooth-dpyc/web/tour.css` beside `theme.css`; the popover takes the
 site's `--tb-*` tokens, and `.tb-tour` can be restyled further. The package's
 markup carries `tb.gate.*` and `tb.account.*` names (`TB_TARGETS`); the two
 shared tours point at them. `lintTours(TOURS)` in a site's test holds the copy
-to the voice: one or two short sentences saying what a thing is, never what it
-is not.
+to the voice: one or two short sentences saying what a thing is. A sentence
+carrying "not", "no", "never", "instead of" or "rather than" fails it.
 
 ### Debug panel
 
