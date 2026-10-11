@@ -44,6 +44,16 @@ function present(s: TourStep): boolean {
 
 export function buildTour(tour: Tour, hooks: TourHooks): TourRun {
   let silent = false;
+  // The step at or after `from` that can be shown: its control is on the
+  // page, or its page action will put it there. driver.js's own skipping of
+  // a missing element loses its place when the FIRST steps are missing, so
+  // the tour moves by index and decides for itself.
+  const showable = (from: number): number =>
+    tour.steps.findIndex((s, j) => j >= from && (Boolean(s.before) || present(s)));
+  const showableBack = (from: number): number => {
+    for (let j = from; j >= 0; j--) if (present(tour.steps[j])) return j;
+    return -1;
+  };
   const steps: DriveStep[] = tour.steps.map((s) => ({
     // driver.js types a finder as returning an Element; one that finds
     // nothing returns null, which it treats as a missing element and skips.
@@ -80,14 +90,18 @@ export function buildTour(tour: Tour, hooks: TourHooks): TourRun {
       popover.wrapper.appendChild(stop);
     },
     async onNextClick() {
-      // The next step that can be shown: one whose control is on the page,
-      // or one whose page action will put it there. With none left the tour
-      // is over — driver.js will not step past a missing last element.
+      // With no showable step left the tour is over.
       const i = d.getActiveIndex() ?? 0;
-      const next = tour.steps.slice(i + 1).find((s) => s.before || present(s));
-      if (!next) { d.destroy(); return; }
+      const n = showable(i + 1);
+      if (n < 0) { d.destroy(); return; }
+      const next = tour.steps[n];
       if (next.before) await hooks.run(next.before);
-      d.moveNext();
+      d.moveTo(n);
+    },
+    onPrevClick() {
+      const i = d.getActiveIndex() ?? 0;
+      const b = showableBack(i - 1);
+      if (b >= 0) d.moveTo(b);
     },
     onDestroyed() {
       if (!silent) hooks.onEnd();
@@ -96,9 +110,11 @@ export function buildTour(tour: Tour, hooks: TourHooks): TourRun {
 
   return {
     start() {
-      const first = tour.steps[0];
-      if (first?.before) void Promise.resolve(hooks.run(first.before)).then(() => d.drive());
-      else d.drive();
+      const i = showable(0);
+      if (i < 0) { hooks.onEnd(); return; }
+      const first = tour.steps[i];
+      if (first.before) void Promise.resolve(hooks.run(first.before)).then(() => d.drive(i));
+      else d.drive(i);
     },
     stop(quiet = true) {
       silent = quiet;
