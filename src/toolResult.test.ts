@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { errorText, looksFailed, proofBounceMessage, readToolResult } from "./toolResult.ts";
+import { deadGrantMessage, errorText, looksFailed, proofBounceMessage, readToolResult } from "./toolResult.ts";
 
 test("structured content wins, and images ride alongside it", () => {
   const r = readToolResult({
@@ -33,6 +33,31 @@ test("other failures are not bounces", () => {
   assert.equal(proofBounceMessage({ success: false, error_code: "tool_input_invalid" }), null);
   assert.equal(proofBounceMessage({ success: true, error_code: "proof_required" }), null);
   assert.equal(proofBounceMessage("text"), null);
+});
+
+// What a Bee's Knees profile got on 2026-10-16, on every call, while the page
+// still said the patron was signed in.
+const EXPIRED = {
+  success: false, error_code: "proof_invalid", reason: "expired",
+  error: "Invalid proof grant: the grant has expired. Call request_npub_proof and receive_npub_proof for a fresh grant.",
+};
+
+test("an expired or revoked grant is dead", () => {
+  assert.equal(deadGrantMessage(EXPIRED), EXPIRED.error);
+  assert.ok(deadGrantMessage({ ...EXPIRED, reason: "revoked" }));
+  assert.ok(deadGrantMessage({ ...EXPIRED, reason: "operator_mismatch" }));
+  assert.ok(deadGrantMessage({ ...EXPIRED, error_code: "PROOF_INVALID" }));
+});
+
+test("a service that cannot check the grant has not refused it", () => {
+  assert.equal(deadGrantMessage({ ...EXPIRED, reason: "revocations_unavailable" }), null);
+  assert.equal(deadGrantMessage({ ...EXPIRED, reason: "operator_unknown" }), null);
+});
+
+test("only a refused proof is a dead grant", () => {
+  assert.equal(deadGrantMessage({ ...EXPIRED, success: true }), null);
+  assert.equal(deadGrantMessage({ success: false, error_code: "proof_required" }), null);
+  assert.equal(deadGrantMessage("text"), null);
 });
 
 test("error text joins text blocks and never comes back empty", () => {
