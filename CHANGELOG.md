@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [1.8.1] — 2026-10-16
+
+### Fixed
+
+- A stored proof grant the service refuses for good (`proof_invalid`: expired, revoked, another npub or operator, malformed) now signs the patron out, from any call including best-effort ones. Before, only `proof_required` and `proof_refresh_needed` did, so a patron whose grant had expired stayed "signed in" while every page failed. A session key's inline proof and the service-side `operator_unknown` / `revocations_unavailable` still never sign anyone out.
+
 ## [1.8.0] — 2026-10-11
 
 ### Added
