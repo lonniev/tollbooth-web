@@ -26,6 +26,7 @@ import { isTransportFailure, NetworkError } from "./networkError.ts";
 import { clearSessionNsec, hasSessionNsec, sessionNsecNpub } from "./sessionNsec.ts";
 import {
   errorText,
+  deadGrantMessage,
   looksFailed,
   proofBounceMessage,
   readToolResult,
@@ -89,16 +90,16 @@ async function getClient(): Promise<Client> {
  * derives to the signed-in npub, else the cached DM token. A session key left
  * from a previous identity is evicted rather than allowed to sign.
  */
-function proofFor(tool: string): string {
+function proofFor(tool: string): { token: string; inline: boolean } {
   try {
     const npub = getStoredNpub();
     const sessionNpub = hasSessionNsec() ? sessionNsecNpub() : null;
-    if (sessionNpub && sessionNpub === npub) return signInlineProof(toolName(tool));
+    if (sessionNpub && sessionNpub === npub) return { token: signInlineProof(toolName(tool)), inline: true };
     if (sessionNpub) clearSessionNsec();
   } catch {
     /* fall through to the cached token */
   }
-  return getStoredProof();
+  return { token: getStoredProof(), inline: false };
 }
 
 export { isNetworkError, NetworkError } from "./networkError.ts";
@@ -136,8 +137,9 @@ function emitProofExpired(message: string): void {
 
 export interface CallOptions {
   /**
-   * A non-essential call — diagnostics, personalization. It never logs the
-   * patron out, whatever it gets back.
+   * A non-essential call — diagnostics, personalization, a board polled all
+   * match. A soft proof miss here never logs the patron out; a stored grant
+   * the service refused for good (expired, revoked) still does.
    */
   bestEffort?: boolean;
   timeoutMs?: number;
@@ -169,9 +171,10 @@ export async function callToolWithContent<T = unknown>(
   if (!quiet) debugPush("call", `${name}(${redact(JSON.stringify(args)).slice(0, 140)})`);
 
   const bootstrap = STANDARD_BOOTSTRAP.includes(tool) || cfg.extraBootstrapTools.includes(tool);
-  const merged = bootstrap
-    ? { ...args }
-    : { npub: getStoredNpub(), dpop_token: proofFor(tool), ...args };
+  const proof = bootstrap ? null : proofFor(tool);
+  const merged = proof
+    ? { npub: getStoredNpub(), dpop_token: proof.token, ...args }
+    : { ...args };
 
   let result: RawToolResult;
   try {
@@ -205,17 +208,20 @@ export async function callToolWithContent<T = unknown>(
     debugPush(looksFailed(payload) ? "error" : "result", `${name} → ${redact(String(preview)).slice(0, 220)}${tail}`);
   }
 
-  if (!opts.bestEffort) {
-    const bounced = proofBounceMessage(payload);
-    if (bounced !== null) {
-      // The token just refused is the same one the recent-login shortcut
-      // would replay, so it goes too, or a returning patron re-bounces.
-      const npub = getStoredNpub();
-      clearStoredProof();
-      if (npub) forgetRecentLogin(npub);
-      emitProofExpired(bounced);
-      throw new ProofRequiredError(bounced);
-    }
+  // A stored grant the service refused for good signs the patron out even
+  // from a best-effort call: that is not a blip, and staying "signed in" on a
+  // dead grant leaves every page failing with nothing to tell them why.
+  const bounced =
+    (opts.bestEffort ? null : proofBounceMessage(payload)) ??
+    (proof && !proof.inline && proof.token ? deadGrantMessage(payload) : null);
+  if (bounced !== null) {
+    // The token just refused is the same one the recent-login shortcut
+    // would replay, so it goes too, or a returning patron re-bounces.
+    const npub = getStoredNpub();
+    clearStoredProof();
+    if (npub) forgetRecentLogin(npub);
+    emitProofExpired(bounced);
+    throw new ProofRequiredError(bounced);
   }
   return { data: payload as T, images };
 }

@@ -77,6 +77,32 @@ export function proofBounceMessage(payload: unknown): string | null {
   return null;
 }
 
+/**
+ * Grant refusals that say nothing about the grant: the service could not
+ * establish its own identity, or could not read its revocation list. Both are
+ * the service's fault and retryable, so the patron stays signed in.
+ */
+const GRANT_STILL_GOOD = new Set(["operator_unknown", "revocations_unavailable"]);
+
+/**
+ * A stored proof grant the service refused for good: `{success: false,
+ * error_code: proof_invalid, reason}` where the reason is about the grant —
+ * expired, revoked, issued for another npub or operator, malformed. Retrying
+ * with it can never succeed, so the patron is signed out.
+ *
+ * Only meaningful when the call carried the stored grant. A session key's
+ * inline proof shares the code and even the word `expired` (outside its
+ * window), but it is signed afresh for the next call and loses nothing.
+ */
+export function deadGrantMessage(payload: unknown): string | null {
+  if (!payload || typeof payload !== "object") return null;
+  const p = payload as Record<string, unknown>;
+  const code = String(p.error_code ?? "").toLowerCase();
+  if (p.success !== false || code !== "proof_invalid") return null;
+  if (GRANT_STILL_GOOD.has(String(p.reason ?? "").toLowerCase())) return null;
+  return String(p.error ?? "Your sign-in has expired.");
+}
+
 /** Whether a payload reports failure, for the debug log's colouring. */
 export function looksFailed(payload: unknown): boolean {
   if (!payload || typeof payload !== "object") return false;
