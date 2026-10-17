@@ -11,16 +11,24 @@
  *
  * Only the headers MCP needs are forwarded upstream. Cookies and anything else
  * the browser attached stay behind.
+ *
+ * Every request upstream carries a bearer. An operator with holder bearer on
+ * refuses a request without one; a page that holds no holder token is an
+ * anonymous caller, so the proxy says so with `Bearer anonymous` and the page
+ * proves itself with `dpop_token` as before. A page that does hold a token
+ * sends it, and it is forwarded untouched.
  */
 
 export const CORS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "content-type, mcp-session-id, accept, last-event-id",
-  "Access-Control-Expose-Headers": "mcp-session-id",
+  "Access-Control-Allow-Headers": "content-type, mcp-session-id, accept, last-event-id, authorization",
+  "Access-Control-Expose-Headers": "mcp-session-id, www-authenticate",
 };
 
-const FORWARDED = new Set(["content-type", "accept", "mcp-session-id", "last-event-id"]);
+const FORWARDED = new Set(["content-type", "accept", "mcp-session-id", "last-event-id", "authorization"]);
+
+export const ANONYMOUS_BEARER = "Bearer anonymous";
 
 type Fetch = (input: string, init: RequestInit & { duplex?: string }) => Promise<Response>;
 
@@ -37,6 +45,7 @@ export function makeMcpProxy(upstream: string, fetchImpl: Fetch = fetch) {
     for (const [k, v] of req.headers) {
       if (FORWARDED.has(k.toLowerCase())) headers.set(k, v);
     }
+    if (!headers.has("authorization")) headers.set("Authorization", ANONYMOUS_BEARER);
     headers.set("Host", host);
 
     const init: RequestInit & { duplex?: string } = { method: req.method, headers };

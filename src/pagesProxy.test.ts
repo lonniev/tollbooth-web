@@ -13,7 +13,8 @@ test("a preflight is answered here and never reaches the operator", async () => 
   });
   const r = await proxy({ request: new Request("https://site.test/mcp", { method: "OPTIONS" }) });
   assert.equal(r.status, 204);
-  assert.equal(r.headers.get("Access-Control-Expose-Headers"), "mcp-session-id");
+  assert.equal(r.headers.get("Access-Control-Expose-Headers"), "mcp-session-id, www-authenticate");
+  assert.match(r.headers.get("Access-Control-Allow-Headers") ?? "", /authorization/);
   assert.equal(called, false);
 });
 
@@ -44,4 +45,30 @@ test("an unreachable operator is a 502 the page can read", async () => {
   const r = await proxy({ request: new Request("https://site.test/mcp", { method: "GET" }) });
   assert.equal(r.status, 502);
   assert.match(await r.text(), /Proxy error/);
+});
+
+test("a page with no token reaches the operator as an anonymous caller", async () => {
+  let seen: Headers | undefined;
+  const proxy = makeMcpProxy(UPSTREAM, async (_url, init) => {
+    seen = init.headers as Headers;
+    return new Response("{}");
+  });
+  await proxy({ request: new Request("https://site.test/mcp", { method: "POST", body: "{}" }) });
+  assert.equal(seen?.get("authorization"), "Bearer anonymous");
+});
+
+test("a page that holds a token has it forwarded untouched", async () => {
+  let seen: Headers | undefined;
+  const proxy = makeMcpProxy(UPSTREAM, async (_url, init) => {
+    seen = init.headers as Headers;
+    return new Response("{}");
+  });
+  await proxy({
+    request: new Request("https://site.test/mcp", {
+      method: "POST",
+      body: "{}",
+      headers: { authorization: "Bearer dpyc_ha_abc" },
+    }),
+  });
+  assert.equal(seen?.get("authorization"), "Bearer dpyc_ha_abc");
 });
