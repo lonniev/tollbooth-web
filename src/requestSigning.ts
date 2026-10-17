@@ -7,6 +7,7 @@
 
 import { finalizeEvent } from "nostr-tools";
 
+import { holderBearer } from "./holder.ts";
 import { getStoredNpub } from "./identity.ts";
 import { clearSessionNsec, getSessionNsecBytes, hasSessionNsec, sessionNsecNpub } from "./sessionNsec.ts";
 
@@ -63,12 +64,20 @@ export function signsForSignedInNpub(): boolean {
   return false;
 }
 
-/** `fetch` for the MCP transport: signs the request when this tab holds the key. */
+/**
+ * `fetch` for the MCP transport: the request carries who it may act as — this
+ * tab's key when it holds one, else this tab's holder connection, else nobody
+ * (the site's proxy then marks it anonymous).
+ */
 export const signingFetch: typeof fetch = async (input, init) => {
-  if (!signsForSignedInNpub()) return fetch(input, init);
-  const request = new Request(input, init);
-  const body = typeof init?.body === "string" ? init.body : "";
   const headers = new Headers(init?.headers);
-  headers.set("Authorization", await signRequest(request.method, request.url, body, getSessionNsecBytes()));
+  if (signsForSignedInNpub()) {
+    const request = new Request(input, init);
+    const body = typeof init?.body === "string" ? init.body : "";
+    headers.set("Authorization", await signRequest(request.method, request.url, body, getSessionNsecBytes()));
+  } else {
+    const bearer = await holderBearer();
+    if (bearer) headers.set("Authorization", `Bearer ${bearer}`);
+  }
   return fetch(input, { ...init, headers });
 };
