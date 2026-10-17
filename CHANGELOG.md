@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [1.8.2] — 2026-10-17
+
+### Fixed
+
+- The Pages proxy sends every request upstream with a bearer: the page's own `Authorization` when it has one, else `Bearer anonymous`, so an operator with tollbooth-dpyc holder bearer on keeps answering every web app. `authorization` is now an allowed CORS header and `www-authenticate` is exposed.
+
 ## [1.8.1] — 2026-10-16
 
 ### Fixed

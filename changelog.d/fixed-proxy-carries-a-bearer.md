@@ -1,1 +1,0 @@
-- The Pages proxy sends every request upstream with a bearer: the page's own `Authorization` when it has one, else `Bearer anonymous`, so an operator with tollbooth-dpyc holder bearer on keeps answering every web app. `authorization` is now an allowed CORS header and `www-authenticate` is exposed.
