@@ -3,9 +3,9 @@
  *
  * 1. One @modelcontextprotocol/sdk Client over StreamableHTTP, shared by the
  *    whole page. The SDK handles the initialize handshake and the session.
- * 2. Auth is the uniform npub proof, by one of two tactics, invisible to
- *    callers: a session nsec signs a fresh kind-27235 proof per call, bound to
- *    the runtime tool name; otherwise the DM proof token cached at
+ * 2. Identity rides on the connection, invisible to callers: while this tab
+ *    holds the signed-in npub's key, every request is signed with it (NIP-98)
+ *    and a call names only the npub. Otherwise the DM proof token cached at
  *    `receive_npub_proof` is sent as is.
  * 3. Bootstrap tools take no envelope and are safe before sign-in.
  */
@@ -21,9 +21,8 @@ import {
   getStoredNpub,
   getStoredProof,
 } from "./identity.ts";
-import { signInlineProof } from "./inlineProof.ts";
 import { isTransportFailure, NetworkError } from "./networkError.ts";
-import { clearSessionNsec, hasSessionNsec, sessionNsecNpub } from "./sessionNsec.ts";
+import { signingFetch, signsForSignedInNpub } from "./requestSigning.ts";
 import {
   errorText,
   deadGrantMessage,
@@ -74,7 +73,7 @@ async function getClient(): Promise<Client> {
     // call, and nothing reached the server until the page was reloaded.
     connecting = (async () => {
       const c = new Client({ name: `${tollboothConfig().slug}-frontend`, version: "1" });
-      await c.connect(new StreamableHTTPClientTransport(new URL(mcpUrl())));
+      await c.connect(new StreamableHTTPClientTransport(new URL(mcpUrl()), { fetch: signingFetch }));
       client = c;
     })().finally(() => {
       connecting = null;
@@ -86,20 +85,16 @@ async function getClient(): Promise<Client> {
 }
 
 /**
- * The proof for one call: a fresh inline proof when this tab's session key
- * derives to the signed-in npub, else the cached DM token. A session key left
- * from a previous identity is evicted rather than allowed to sign.
+ * What a call adds to prove the npub: nothing when the request itself is
+ * signed with the signed-in npub's key, else the cached DM token.
  */
-function proofFor(tool: string): { token: string; inline: boolean } {
+function proofFor(): { dpop_token?: string } {
   try {
-    const npub = getStoredNpub();
-    const sessionNpub = hasSessionNsec() ? sessionNsecNpub() : null;
-    if (sessionNpub && sessionNpub === npub) return { token: signInlineProof(toolName(tool)), inline: true };
-    if (sessionNpub) clearSessionNsec();
+    if (signsForSignedInNpub()) return {};
   } catch {
     /* fall through to the cached token */
   }
-  return { token: getStoredProof(), inline: false };
+  return { dpop_token: getStoredProof() };
 }
 
 export { isNetworkError, NetworkError } from "./networkError.ts";
@@ -171,10 +166,8 @@ export async function callToolWithContent<T = unknown>(
   if (!quiet) debugPush("call", `${name}(${redact(JSON.stringify(args)).slice(0, 140)})`);
 
   const bootstrap = STANDARD_BOOTSTRAP.includes(tool) || cfg.extraBootstrapTools.includes(tool);
-  const proof = bootstrap ? null : proofFor(tool);
-  const merged = proof
-    ? { npub: getStoredNpub(), dpop_token: proof.token, ...args }
-    : { ...args };
+  const proof = bootstrap ? null : proofFor();
+  const merged = proof ? { npub: getStoredNpub(), ...proof, ...args } : { ...args };
 
   let result: RawToolResult;
   try {
@@ -213,7 +206,7 @@ export async function callToolWithContent<T = unknown>(
   // dead grant leaves every page failing with nothing to tell them why.
   const bounced =
     (opts.bestEffort ? null : proofBounceMessage(payload)) ??
-    (proof && !proof.inline && proof.token ? deadGrantMessage(payload) : null);
+    (proof?.dpop_token ? deadGrantMessage(payload) : null);
   if (bounced !== null) {
     // The token just refused is the same one the recent-login shortcut
     // would replay, so it goes too, or a returning patron re-bounces.

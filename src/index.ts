@@ -20,7 +20,7 @@ export {
   sessionNsecNpub,
   setSessionNsec,
 } from "./sessionNsec.ts";
-export { signInlineProof } from "./inlineProof.ts";
+export { signRequest } from "./requestSigning.ts";
 export { sessionKeyClaimVisible } from "./sessionKeyClaim.ts";
 export { handOffMode, shareOrDownload, type ShareOutcome } from "./shareFile.ts";
 export { canSignFor, isProven, type Claim } from "./signedIn.ts";

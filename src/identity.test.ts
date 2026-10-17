@@ -15,7 +15,6 @@ import {
   setStoredNpub,
   setStoredProof,
 } from "./identity.ts";
-import { signInlineProof } from "./inlineProof.ts";
 import { sessionNsecNpub, setSessionNsec } from "./sessionNsec.ts";
 
 class MemoryStorage {
@@ -88,18 +87,6 @@ test("blocked storage reads as nothing stored instead of throwing", () => {
   assert.equal(getStoredNpub(), "");
   assert.equal(isLoggedIn(), false);
   setStoredNpub(NPUB); // must not throw
-});
-
-test("an inline proof is a valid kind-27235 bound to the runtime tool name", () => {
-  const sk = generateSecretKey();
-  const ev = JSON.parse(signInlineProof(toolName("snapshot_display"), sk));
-  assert.equal(ev.kind, 27235);
-  assert.deepEqual(ev.tags[0], ["u", "chart_snapshot_display"]);
-  assert.equal(ev.tags[1][0], "nonce");
-  assert.equal(ev.pubkey, getPublicKey(sk));
-  assert.equal(verifyEvent(ev), true);
-  // Sanity: the same helper nostr-tools uses to sign produces what we verify.
-  assert.equal(verifyEvent(finalizeEvent({ kind: 1, created_at: 0, tags: [], content: "" }, sk)), true);
 });
 
 test("a slug that could smuggle a separator is refused", () => {
