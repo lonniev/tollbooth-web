@@ -25,6 +25,7 @@ import {
   setStoredProof,
   type RecentLogin,
 } from "../identity.ts";
+import { completeHolderConnect, connectAsHolder, holderEnabled, isHolder } from "../holder.ts";
 import { setSessionNsec } from "../sessionNsec.ts";
 import { readSignInFailure } from "../signInSituation.ts";
 import { receiveNpubProof, requestNpubProof } from "../standardTools.ts";
@@ -165,16 +166,39 @@ export default function NpubGate({
     }
   }
 
-  async function begin() {
-    if (!isNpub) {
+  // Back from connecting to the operator: carry on with the DM it was for.
+  const resumed = useRef(false);
+  useEffect(() => {
+    if (resumed.current) return;
+    resumed.current = true;
+    completeHolderConnect()
+      .then((npub) => {
+        if (npub) {
+          setValue(npub);
+          void begin(npub);
+        }
+      })
+      .catch((e: Error) => setError(e.message));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function begin(npubArg?: string) {
+    const npubToProve = npubArg ?? trimmed;
+    if (!(npubToProve.startsWith("npub1") && npubToProve.length >= 60)) {
       setError("Enter a valid npub1… key.");
       return;
     }
     setBusy(true);
     setError("");
     try {
+      // The grant will stay with the operator, so this tab connects to it
+      // first; the browser comes straight back here and the DM goes out.
+      if (holderEnabled() && !isHolder()) {
+        await connectAsHolder(npubToProve);
+        return;
+      }
       const r = await requestNpubProof(
-        trimmed,
+        npubToProve,
         globalThis.location.origin,
         `You requested to sign in to ${appName} (${globalThis.location.host}).`,
       );
@@ -182,7 +206,7 @@ export default function NpubGate({
       if (!r.dpop_token) return setError("The service did not return a session phrase. Try again.");
       // Remembered for the field only. The identity is written by `finish()`,
       // once the human has answered the DM.
-      setLastTypedNpub(trimmed);
+      setLastTypedNpub(npubToProve);
       setPendingProof(r.dpop_token);
       setStage("awaiting");
     } catch (e) {
@@ -203,7 +227,9 @@ export default function NpubGate({
         setStage("awaiting");
         return;
       }
-      const token = r.dpop_token || pendingProof;
+      // A holder's grant stays with the operator; only a page that is not a
+      // holder keeps the token it is handed.
+      const token = r.held_by_connection ? "" : r.dpop_token || pendingProof;
       const npub = r.proven_npub || trimmed;
       setStoredNpub(npub);
       setStoredProof(token);

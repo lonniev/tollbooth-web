@@ -6,9 +6,10 @@
  * "signed in" let anyone who asked for a DM and never answered it in, as
  * themselves, unproven. Two things can back the claim:
  *
- *   - a **cached DM proof**, won by answering a Nostr challenge, or
- *   - a **session nsec** in this tab, which signs a fresh proof per call — and
- *     only counts for the npub it actually derives to.
+ *   - a **DM proof**, won by answering a Nostr challenge — held by the operator
+ *     for this tab's connection, or (before holders) cached here, or
+ *   - a **session nsec** in this tab, which signs every request — and only
+ *     counts for the npub it actually derives to.
  *
  * Pure, so it is testable without a browser.
  */
@@ -18,14 +19,16 @@ export interface Claim {
   npub: string;
   /** A cached DM proof token, if one was won and has not lapsed. */
   proof: string;
+  /** True when this tab's holder connection holds the npub, proven by DM. */
+  held: boolean;
   /** The npub this tab's session key derives to, if it holds one. */
   sessionNpub: string | null;
 }
 
 /** True only when the claimed npub is backed by something. */
-export function isProven({ npub, proof, sessionNpub }: Claim): boolean {
+export function isProven({ npub, proof, held, sessionNpub }: Claim): boolean {
   if (!npub) return false;
-  if (proof) return true;
+  if (proof || held) return true;
   return sessionNpub === npub;
 }
 

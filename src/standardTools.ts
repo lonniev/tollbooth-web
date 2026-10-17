@@ -57,6 +57,8 @@ export interface NpubProofResult {
   status?: string;
   message?: string;
   dpop_token?: string;
+  /** True when the operator kept the grant for this tab's holder connection. */
+  held_by_connection?: boolean;
   expires_in_seconds?: number;
   expires_at?: string;
   error?: string;

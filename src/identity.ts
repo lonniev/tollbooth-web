@@ -9,6 +9,7 @@
  *     unanswered challenge become a session.
  */
 
+import { forgetHolder, isHolder } from "./holder.ts";
 import { clearSessionNsec, hasSessionNsec, sessionNsecNpub } from "./sessionNsec.ts";
 import { canSignFor, isProven, type Claim } from "./signedIn.ts";
 import { readStored, removeStored, writeStored } from "./storage.ts";
@@ -110,11 +111,21 @@ export function forgetRecentLogin(npub: string): void {
 
 /** Read once and handed to the pure predicates in `signedIn.ts`. */
 export function currentClaim(): Claim {
+  const npub = getStoredNpub();
   return {
-    npub: getStoredNpub(),
+    npub,
     proof: getStoredProof(),
+    held: heldByThisTab(npub),
     sessionNpub: hasSessionNsec() ? sessionNsecNpub() : null,
   };
+}
+
+/**
+ * True when this tab's holder connection holds `npub`: a DM sign-in recorded
+ * here with no token, because the operator kept the grant.
+ */
+function heldByThisTab(npub: string): boolean {
+  return Boolean(npub) && isHolder() && getValidRecentLogins().some((e) => e.npub === npub && !e.proof);
 }
 
 export function isLoggedIn(): boolean {
@@ -133,4 +144,5 @@ export function logOut(): void {
   removeStored(NPUB);
   removeStored(PROOF);
   clearSessionNsec();
+  void forgetHolder();
 }

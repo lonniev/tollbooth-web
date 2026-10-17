@@ -21,6 +21,12 @@ export interface TollboothConfig {
    */
   mcpUrl: string;
   /**
+   * The operator's own origin, e.g. "https://goodearth-mcp.fastmcp.app". When
+   * set, a patron who signs in by DM connects as a holder there: the grant
+   * stays with the operator and the page names only the npub.
+   */
+  operatorUrl?: string;
+  /**
    * Free tools this operator adds that take no npub/proof envelope, on top of
    * the standard ones. Pydantic rejects unexpected kwargs, so a tool listed
    * here must truly not accept `npub`.
@@ -35,7 +41,8 @@ export interface TollboothConfig {
 }
 
 interface Resolved
-  extends Required<Omit<TollboothConfig, "extraBootstrapTools" | "quietTools" | "avatarChoices" | "tourIdleMs">> {
+  extends Required<Omit<TollboothConfig, "extraBootstrapTools" | "quietTools" | "avatarChoices" | "tourIdleMs" | "operatorUrl">> {
+  operatorUrl?: string;
   extraBootstrapTools: string[];
   quietTools: string[];
   avatarChoices?: string[];
@@ -53,6 +60,7 @@ export function configureTollbooth(config: TollboothConfig): void {
     appName: config.appName,
     storagePrefix: config.storagePrefix ?? config.slug,
     mcpUrl: config.mcpUrl,
+    operatorUrl: config.operatorUrl,
     extraBootstrapTools: config.extraBootstrapTools ?? [],
     quietTools: config.quietTools ?? [],
     avatarChoices: config.avatarChoices,

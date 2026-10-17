@@ -15,30 +15,35 @@ const NPUB = "npub1yp8zlyv88cmxazp5zl307s97dv6vszgrcgnc";
 const OTHER = "npub1d999638crq64z";
 
 test("a DM that was sent and never answered is not a sign-in", () => {
-  assert.equal(isProven({ npub: NPUB, proof: "", sessionNpub: null }), false);
+  assert.equal(isProven({ npub: NPUB, proof: "", held: false, sessionNpub: null }), false);
 });
 
 test("an answered challenge is", () => {
-  assert.equal(isProven({ npub: NPUB, proof: "seven-amber-doorway", sessionNpub: null }), true);
+  assert.equal(isProven({ npub: NPUB, proof: "seven-amber-doorway", held: false, sessionNpub: null }), true);
 });
 
 test("a session key proves the npub it derives to, and no other", () => {
-  assert.equal(isProven({ npub: NPUB, proof: "", sessionNpub: NPUB }), true);
+  assert.equal(isProven({ npub: NPUB, proof: "", held: false, sessionNpub: NPUB }), true);
   assert.equal(
-    isProven({ npub: NPUB, proof: "", sessionNpub: OTHER }),
+    isProven({ npub: NPUB, proof: "", held: false, sessionNpub: OTHER }),
     false,
     "a key left from a previous identity proves nothing about this one",
   );
 });
 
 test("no npub is no session, whatever else is lying around", () => {
-  assert.equal(isProven({ npub: "", proof: "a stale token", sessionNpub: OTHER }), false);
+  assert.equal(isProven({ npub: "", proof: "a stale token", held: false, sessionNpub: OTHER }), false);
 });
 
 test("signing for yourself is narrower than being proven", () => {
   // Living on a cached proof is a real session; it just cannot sign, which is
   // the distinction the pages that spend money have to make.
-  const cached = { npub: NPUB, proof: "seven-amber-doorway", sessionNpub: null };
+  const cached = { npub: NPUB, proof: "seven-amber-doorway", held: false, sessionNpub: null };
   assert.equal(isProven(cached), true);
   assert.equal(canSignFor(cached), false);
+});
+
+test("an npub this tab's holder connection holds is proven", () => {
+  assert.equal(isProven({ npub: NPUB, proof: "", held: true, sessionNpub: null }), true);
+  assert.equal(isProven({ npub: "", proof: "", held: true, sessionNpub: null }), false);
 });
