@@ -1,1 +1,0 @@
-- While a page holds the signed-in npub's key, every request to the operator is signed with it (NIP-98 `Authorization: Nostr`, bound to method, URL and body hash) and tool calls carry only `npub` — no proof in the arguments. Needs operators on tollbooth-dpyc ≥ 0.102.0. `signInlineProof` is gone; `signRequest` replaces it.

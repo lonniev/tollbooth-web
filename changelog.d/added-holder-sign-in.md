@@ -1,1 +1,0 @@
-- A patron who signs in by DM connects as a *holder* when the site sets `operatorUrl`: one standard OAuth round trip to the operator (no login page), the grant stays with the operator, and the page names only the npub on each call. Tokens refresh on their own; signing out disconnects the holder.

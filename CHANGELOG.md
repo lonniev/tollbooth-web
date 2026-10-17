@@ -2,6 +2,16 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [1.9.0] — 2026-10-17
+
+### Added
+
+- A patron who signs in by DM connects as a *holder* when the site sets `operatorUrl`: one standard OAuth round trip to the operator (no login page), the grant stays with the operator, and the page names only the npub on each call. Tokens refresh on their own; signing out disconnects the holder.
+
+### Changed
+
+- While a page holds the signed-in npub's key, every request to the operator is signed with it (NIP-98 `Authorization: Nostr`, bound to method, URL and body hash) and tool calls carry only `npub` — no proof in the arguments. Needs operators on tollbooth-dpyc ≥ 0.102.0. `signInlineProof` is gone; `signRequest` replaces it.
+
 ## [1.8.2] — 2026-10-17
 
 ### Fixed
