@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [2.0.1] — 2026-10-18
+
+### Fixed
+
+- DM sign-in now comes back to the page it started on. A site whose `/` is not its sign-in page (The Bee's Knees) lost the operator's reply and looped back to sign-in without sending the DM.
+
 ## [2.0.0] — 2026-10-17
 
 ### Changed
