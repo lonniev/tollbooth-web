@@ -2,6 +2,18 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [2.0.0] — 2026-10-17
+
+### Changed
+
+- **Breaking:** identity rides only on the connection, for tollbooth-dpyc 0.103 operators. A DM sign-in makes the tab a holder, and the operator keeps the proof. The page stores no proof token, sends no `dpop_token`, and a site without `operatorUrl` offers sign-in with a key only.
+- **Breaking:** the Courier phrase is `nonce`. `requestNpubProof` returns `nonce`, `receiveNpubProof(patronNpub, nonce)` succeeds only when `held_by_connection`, and `checkProofStatus(patronNpub)` takes no token.
+- **Breaking:** `recordRecentLogin(npub, expiresInSec)`. A recent login is reusable only while this tab is a holder.
+
+### Removed
+
+- `getStoredProof`, `setStoredProof`, `clearStoredProof`, `RecentLogin.proof` and `Claim.proof`. The `dm_proof` funding row is now `held`, with the statuses `valid`, `lapsed`, `not_held` and `unknown`.
+
 ## [1.9.0] — 2026-10-17
 
 ### Added
