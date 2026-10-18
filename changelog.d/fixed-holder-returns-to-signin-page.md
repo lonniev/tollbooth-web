@@ -1,1 +1,0 @@
-- DM sign-in now comes back to the page it started on. A site whose `/` is not its sign-in page (The Bee's Knees) lost the operator's reply and looped back to sign-in without sending the DM.
