@@ -65,6 +65,16 @@ test("connecting registers, sends the browser to authorize with PKCE, and keeps 
   assert.equal(await holderBearer(), "dpyc_ha_1");
 });
 
+test("the browser comes back to the page the sign-in started on", async () => {
+  (globalThis.location as { pathname: string }).pathname = "/signin";
+  const authorize = await connect();
+  assert.equal(authorize.searchParams.get("redirect_uri"), "https://site.example/signin");
+  assert.deepEqual(JSON.parse(calls[0].body).redirect_uris, ["https://site.example/signin"]);
+  tokenReplies.push({ access_token: "dpyc_ha_1", refresh_token: "dpyc_hr_1", expires_in: 3600 });
+  assert.equal(await completeHolderConnect(), "npub1alice");
+  assert.equal(new URLSearchParams(calls.at(-1)!.body).get("redirect_uri"), "https://site.example/signin");
+});
+
 test("a lapsing access token is refreshed, and the new pair is kept", async () => {
   await connect();
   tokenReplies.push({ access_token: "dpyc_ha_1", refresh_token: "dpyc_hr_1", expires_in: 30 });
