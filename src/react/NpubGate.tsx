@@ -3,7 +3,10 @@
  *
  *   begin → request_npub_proof → awaiting reply → receive_npub_proof → app
  *
- * Success is not a `verified` flag but "no `error` and a token came back".
+ * Success is not a `verified` flag but the operator saying it now holds the
+ * npub for this tab's connection (`held_by_connection`). A DM sign-in therefore
+ * needs a holder connection first; a site without `operatorUrl` offers the
+ * session key only.
  *
  * Around the card: the site's `welcome` (its own words about what this place
  * is for), the network's register line, and — below — `SignInSteps`, which
@@ -22,7 +25,6 @@ import {
   recordRecentLogin,
   setLastTypedNpub,
   setStoredNpub,
-  setStoredProof,
   type RecentLogin,
 } from "../identity.ts";
 import { completeHolderConnect, connectAsHolder, holderEnabled, isHolder } from "../holder.ts";
@@ -109,7 +111,7 @@ export default function NpubGate({
   // Prefilled from what was typed last, NOT from the stored identity.
   const [value, setValue] = useState(getLastTypedNpub());
   const [stage, setStage] = useState<Stage>("begin");
-  const [pendingProof, setPendingProof] = useState("");
+  const [nonce, setNonce] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [note, setNote] = useState("");
@@ -133,8 +135,7 @@ export default function NpubGate({
 
   function reuseRecent(entry: RecentLogin) {
     setStoredNpub(entry.npub);
-    setStoredProof(entry.proof);
-    recordRecentLogin(entry.npub, entry.proof, Math.floor((entry.expiresAt - Date.now()) / 1000));
+    recordRecentLogin(entry.npub, Math.floor((entry.expiresAt - Date.now()) / 1000));
     onLogin();
   }
 
@@ -191,9 +192,13 @@ export default function NpubGate({
     setBusy(true);
     setError("");
     try {
-      // The grant will stay with the operator, so this tab connects to it
+      // The proof will stay with the operator, so this tab connects to it
       // first; the browser comes straight back here and the DM goes out.
-      if (holderEnabled() && !isHolder()) {
+      if (!holderEnabled()) {
+        setError("This site signs in with a key only — paste an nsec, or make one.");
+        return;
+      }
+      if (!isHolder()) {
         await connectAsHolder(npubToProve);
         return;
       }
@@ -203,11 +208,11 @@ export default function NpubGate({
         `You requested to sign in to ${appName} (${globalThis.location.host}).`,
       );
       if (r.error) return setError(r.error);
-      if (!r.dpop_token) return setError("The service did not return a session phrase. Try again.");
+      if (!r.nonce) return setError("The service did not return a session phrase. Try again.");
       // Remembered for the field only. The identity is written by `finish()`,
       // once the human has answered the DM.
       setLastTypedNpub(npubToProve);
-      setPendingProof(r.dpop_token);
+      setNonce(r.nonce);
       setStage("awaiting");
     } catch (e) {
       setError((e as Error).message);
@@ -221,22 +226,18 @@ export default function NpubGate({
     setError("");
     setStage("checking");
     try {
-      const r = await receiveNpubProof(trimmed, pendingProof);
-      if (r.error) {
-        setError(r.error);
+      const r = await receiveNpubProof(trimmed, nonce);
+      if (r.error || !r.held_by_connection) {
+        setError(r.error || "The service did not keep the proof for this page. Try again.");
         setStage("awaiting");
         return;
       }
-      // A holder's grant stays with the operator; only a page that is not a
-      // holder keeps the token it is handed.
-      const token = r.held_by_connection ? "" : r.dpop_token || pendingProof;
       const npub = r.proven_npub || trimmed;
       setStoredNpub(npub);
-      setStoredProof(token);
       if (r.expires_in_seconds && r.expires_in_seconds > 0) {
-        recordRecentLogin(npub, token, r.expires_in_seconds);
+        recordRecentLogin(npub, r.expires_in_seconds);
         const h = Math.floor(r.expires_in_seconds / 3600);
-        setNote(`Proof cached for ~${h > 0 ? `${h}h` : `${Math.round(r.expires_in_seconds / 60)}m`}.`);
+        setNote(`Proof held for ~${h > 0 ? `${h}h` : `${Math.round(r.expires_in_seconds / 60)}m`}.`);
       }
       onLogin();
     } catch (e) {
@@ -249,7 +250,7 @@ export default function NpubGate({
 
   function reset() {
     setStage("begin");
-    setPendingProof("");
+    setNonce("");
     setError("");
   }
 
@@ -274,7 +275,7 @@ export default function NpubGate({
                   type="button"
                   onClick={() => reuseRecent(e)}
                   disabled={busy}
-                  title={`Re-enter as ${e.npub} on the cached proof`}
+                  title={`Re-enter as ${e.npub} on the proof the service holds`}
                   className={`${card} flex-1 flex items-center justify-between px-3 py-2.5 text-left hover:border-[var(--tb-accent)]`}
                 >
                   <span className="font-mono text-xs truncate">{e.npub.slice(0, 12)}…{e.npub.slice(-6)}</span>
@@ -358,10 +359,10 @@ export default function NpubGate({
                 </div>
               )}
             </div>
-            {pendingProof && (
+            {nonce && (
               <div className="rounded-lg p-3 text-xs border border-[var(--tb-accent)] space-y-2">
                 <div className={`uppercase tracking-wider text-[10px] ${muted}`}>Confirmation code</div>
-                <div className="font-mono text-base select-all">{pendingProof}</div>
+                <div className="font-mono text-base select-all">{nonce}</div>
                 <div className={`leading-relaxed ${muted}`}>
                   The same code appears in the message. <b>Approve it only if the codes match.</b> If they differ — or
                   the message points you somewhere other than this site — do not reply.

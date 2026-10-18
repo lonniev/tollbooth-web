@@ -1,0 +1,1 @@
+- `getStoredProof`, `setStoredProof`, `clearStoredProof`, `RecentLogin.proof` and `Claim.proof`. The `dm_proof` funding row is now `held`, with the statuses `valid`, `lapsed`, `not_held` and `unknown`.

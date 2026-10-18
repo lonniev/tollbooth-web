@@ -4,10 +4,10 @@
  * An npub is public — it is on every note its owner ever wrote — so the npub
  * alone is a claim, never a credential. A shell that read "we know an npub" as
  * "signed in" let anyone who asked for a DM and never answered it in, as
- * themselves, unproven. Two things can back the claim:
+ * themselves, unproven. Two things can back the claim, both on the connection:
  *
  *   - a **DM proof**, won by answering a Nostr challenge — held by the operator
- *     for this tab's connection, or (before holders) cached here, or
+ *     for this tab's holder connection, or
  *   - a **session nsec** in this tab, which signs every request — and only
  *     counts for the npub it actually derives to.
  *
@@ -17,8 +17,6 @@
 export interface Claim {
   /** The npub the interface is showing, proven or not. */
   npub: string;
-  /** A cached DM proof token, if one was won and has not lapsed. */
-  proof: string;
   /** True when this tab's holder connection holds the npub, proven by DM. */
   held: boolean;
   /** The npub this tab's session key derives to, if it holds one. */
@@ -26,10 +24,8 @@ export interface Claim {
 }
 
 /** True only when the claimed npub is backed by something. */
-export function isProven({ npub, proof, held, sessionNpub }: Claim): boolean {
-  if (!npub) return false;
-  if (proof || held) return true;
-  return sessionNpub === npub;
+export function isProven({ npub, held, sessionNpub }: Claim): boolean {
+  return Boolean(npub) && (held || sessionNpub === npub);
 }
 
 /** True when this tab can sign a fresh proof for the npub it is claiming. */

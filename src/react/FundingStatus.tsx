@@ -191,10 +191,15 @@ function failedBalance(e: unknown): CheckBalanceResult {
 async function proofKind(): Promise<ProofKind> {
   const claim = currentClaim();
   if (canSignFor(claim)) return { kind: "session_nsec" };
-  if (!claim.proof) return { kind: "none" };
-  const s = await checkProofStatus(claim.npub, claim.proof).catch(() => null);
-  const status = s?.status === "valid" || s?.status === "expired" ? s.status : "unknown";
-  return { kind: "dm_proof", status, expiresInSec: s?.expires_in_seconds ?? null };
+  if (!claim.held) return { kind: "none" };
+  const s = await checkProofStatus(claim.npub).catch(() => null);
+  return { kind: "held", status: heldStatus(s?.status), expiresInSec: s?.expires_in_seconds ?? null };
+}
+
+function heldStatus(status: string | undefined): "valid" | "lapsed" | "not_held" | "unknown" {
+  if (status === "valid" || status === "not_held") return status;
+  if (status === "expired" || status === "revoked" || status === "invalid") return "lapsed";
+  return "unknown";
 }
 
 /** The patron's own health: sign-in proof and credit balance. */

@@ -18,18 +18,19 @@ const NOW = Date.parse(AT);
 const HOUR = 3600;
 
 describe("patron rows", () => {
-  it("never lapses a session key; blocks a missing or expired proof", () => {
+  it("never lapses a session key; blocks a missing, lapsed or dropped proof", () => {
     assert.equal(composeProofRow({ kind: "session_nsec" }, AT).state, "ok");
     assert.equal(composeProofRow({ kind: "none" }, AT).state, "blocked");
-    assert.equal(composeProofRow({ kind: "dm_proof", status: "expired" }, AT).state, "blocked");
-    assert.equal(composeProofRow({ kind: "dm_proof", status: "unknown" }, AT).state, "warning");
+    assert.equal(composeProofRow({ kind: "held", status: "lapsed" }, AT).state, "blocked");
+    assert.equal(composeProofRow({ kind: "held", status: "not_held" }, AT).state, "blocked");
+    assert.equal(composeProofRow({ kind: "held", status: "unknown" }, AT).state, "warning");
   });
 
   it("warns on a proof ending within 48 hours", () => {
-    const soon = composeProofRow({ kind: "dm_proof", status: "valid", expiresInSec: 5 * HOUR }, AT);
+    const soon = composeProofRow({ kind: "held", status: "valid", expiresInSec: 5 * HOUR }, AT);
     assert.equal(soon.state, "warning");
     assert.match(soon.detail, /5h/);
-    assert.equal(composeProofRow({ kind: "dm_proof", status: "valid", expiresInSec: 72 * HOUR }, AT).state, "ok");
+    assert.equal(composeProofRow({ kind: "held", status: "valid", expiresInSec: 72 * HOUR }, AT).state, "ok");
   });
 
   it("blocks an empty balance and honours the thresholds", () => {

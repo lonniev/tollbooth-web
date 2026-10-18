@@ -26,7 +26,6 @@ test("an image-only answer is an empty object, not the raw envelope", () => {
 test("a proof bounce is recognised whatever case the code arrives in", () => {
   // An uppercase comparison once meant the bounce never fired at all.
   assert.equal(proofBounceMessage({ success: false, error_code: "PROOF_REQUIRED", error: "Sign in" }), "Sign in");
-  assert.equal(proofBounceMessage({ success: false, error_code: "proof_refresh_needed" }), "Sign-in required.");
 });
 
 test("other failures are not bounces", () => {

@@ -7,7 +7,7 @@
  * that flips the view can still be read and copied afterward.
  *
  * Every message is scrubbed on the way in: an nsec, a 64-hex key, a bearer
- * token, the value of any secret-named field (dpop_token, proof, poison,
+ * token, the value of any secret-named field (nonce, proof, poison,
  * password, api_key, …), and a secret inside a URL (a query token, a
  * bearer-like path segment, userinfo) never reach the buffer, the clipboard
  * or storage.
@@ -48,10 +48,10 @@ const REDACTED = "[redacted]";
 
 /** Field names whose value is a secret wherever it appears. */
 const SECRET_FIELD =
-  "(?:nsec|ncryptsec|dpop_token|proof|poison|password|passphrase|secret|token|authorization|api_?key|private_?key|client_secret|[a-z0-9_]*_(?:nsec|token|secret|password|passphrase|api_?key|private_?key))";
+  "(?:nsec|ncryptsec|nonce|proof|poison|password|passphrase|secret|token|authorization|api_?key|private_?key|client_secret|[a-z0-9_]*_(?:nsec|token|secret|password|passphrase|api_?key|private_?key))";
 
-// `"dpop_token":"…"`, `\"dpop_token\":\"…\"` (JSON inside a JSON string),
-// `dpop_token=…` (a query string) and `dpop_token: '…'` (a Python repr). A
+// `"nonce":"…"`, `\"nonce\":\"…\"` (JSON inside a JSON string),
+// `nonce=…` (a query string) and `nonce: '…'` (a Python repr). A
 // quoted value is taken whole — spaces, escaped quotes and the other kind of
 // quote included — up to its own closing quote or the end of a truncated line;
 // a bare one up to a delimiter. Stopping at the first quote of either kind let
@@ -84,7 +84,7 @@ function scrubbed(_match: string, head: string, quote: string | undefined): stri
 
 /** Query/fragment parameter names whose value is a secret (matched whole). */
 const URL_SECRET_PARAM =
-  /([?&#;](?:token|access_token|refresh_token|id_token|auth|authorization|key|api_key|apikey|secret|client_secret|password|pass|sig|signature|code|proof|dpop_token|session|sessionid|nsec)=)[^&#;\s"'\\<>]*/gi;
+  /([?&#;](?:token|access_token|refresh_token|id_token|auth|authorization|key|api_key|apikey|secret|client_secret|password|pass|sig|signature|code|proof|nonce|session|sessionid|nsec)=)[^&#;\s"'\\<>]*/gi;
 
 // A URL up to whitespace, a quote, an escape or an angle bracket — so one
 // inside JSON (or JSON inside JSON) ends at its own closing quote.
@@ -249,7 +249,7 @@ export type DebugSeverity = "ok" | "notice" | "failure";
 // correctly and the patron has a step to take (sign in, top up). These SDK
 // error codes read as a notice and stay out of the failure count.
 const NOTICE_CODE =
-  /error_code\\?"\s*:\s*\\?"(npub_missing|proof_missing|proof_required|proof_refresh_needed|dpop_token_missing|oauth_not_yet_authorized|oauth_token_expired|upstream_auth_refresh_needed|insufficient_balance|authority_insufficient_balance|upstream_subscription_required|operator_llm_unfunded)\\?"/i;
+  /error_code\\?"\s*:\s*\\?"(npub_missing|proof_required|nonce_missing|oauth_not_yet_authorized|oauth_token_expired|upstream_auth_refresh_needed|insufficient_balance|authority_insufficient_balance|upstream_subscription_required|operator_llm_unfunded)\\?"/i;
 
 function isFailure(entry: DebugEntry): boolean {
   if (entry.type === "error") return true;

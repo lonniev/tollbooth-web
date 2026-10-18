@@ -62,16 +62,16 @@ export function readToolResult(result: RawToolResult): ReadResult {
 }
 
 /**
- * A soft proof failure: `{success: false, error_code: proof_required |
- * proof_refresh_needed}` with no isError flag. The wheel's codes are lowercase
- * snake_case; an earlier uppercase comparison never matched, so the bounce
- * silently never fired. Normalised here, once.
+ * A soft proof failure: `{success: false, error_code: proof_required}` with no
+ * isError flag — the connection does not prove the npub. The wheel's codes are
+ * lowercase snake_case; an earlier uppercase comparison never matched, so the
+ * bounce silently never fired. Normalised here, once.
  */
 export function proofBounceMessage(payload: unknown): string | null {
   if (!payload || typeof payload !== "object") return null;
   const p = payload as Record<string, unknown>;
   const code = String(p.error_code ?? "").toLowerCase();
-  if (p.success === false && (code === "proof_required" || code === "proof_refresh_needed")) {
+  if (p.success === false && code === "proof_required") {
     return String(p.error ?? "Sign-in required.");
   }
   return null;
@@ -85,14 +85,14 @@ export function proofBounceMessage(payload: unknown): string | null {
 const GRANT_STILL_GOOD = new Set(["operator_unknown", "revocations_unavailable"]);
 
 /**
- * A stored proof grant the service refused for good: `{success: false,
+ * A held proof grant the service refused for good: `{success: false,
  * error_code: proof_invalid, reason}` where the reason is about the grant —
  * expired, revoked, issued for another npub or operator, malformed. Retrying
- * with it can never succeed, so the patron is signed out.
+ * on it can never succeed, so the patron is signed out.
  *
- * Only meaningful when the call carried the stored grant. A session key's
- * inline proof shares the code and even the word `expired` (outside its
- * window), but it is signed afresh for the next call and loses nothing.
+ * Only meaningful when the call rode this tab's holder. A signed request
+ * shares the code and even the word `expired` (outside its window), but it is
+ * signed afresh for the next call and loses nothing.
  */
 export function deadGrantMessage(payload: unknown): string | null {
   if (!payload || typeof payload !== "object") return null;

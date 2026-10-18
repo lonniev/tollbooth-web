@@ -56,8 +56,9 @@ export interface NpubProofResult {
   proven_npub?: string;
   status?: string;
   message?: string;
-  dpop_token?: string;
-  /** True when the operator kept the grant for this tab's holder connection. */
+  /** From `request_npub_proof`: the phrase the DM shows; it names the reply. */
+  nonce?: string;
+  /** From `receive_npub_proof`: the operator now holds the npub for this tab's connection. */
   held_by_connection?: boolean;
   expires_in_seconds?: number;
   expires_at?: string;
@@ -91,29 +92,32 @@ export function requestNpubProof(
 }
 
 /**
- * Step 2: drain DMs for the signed reply to step 1. Call only after the human
- * says they replied — it is destructive, so never poll it.
+ * Step 2: drain DMs for the signed reply to step 1, naming it by the `nonce`
+ * step 1 returned. The operator keeps the proof for this tab's holder
+ * connection. Call only after the human says they replied — it is
+ * destructive, so never poll it.
  */
-export function receiveNpubProof(patronNpub: string, dpopToken: string, opts?: CallOptions): Promise<NpubProofResult> {
+export function receiveNpubProof(patronNpub: string, nonce: string, opts?: CallOptions): Promise<NpubProofResult> {
   return callTool<NpubProofResult>(
     "receive_npub_proof",
-    { patron_npub: patronNpub, dpop_token: dpopToken },
+    { patron_npub: patronNpub, nonce },
     opts,
   );
 }
 
 export interface ProofStatusResult {
   success?: boolean;
-  status?: "valid" | "expired" | "unknown" | string;
+  status?: "valid" | "expired" | "invalid" | "revoked" | "not_held" | string;
   expires_in_seconds?: number | null;
   error?: string;
   error_code?: string;
 }
 
-export function checkProofStatus(patronNpub: string, dpopToken: string, opts?: CallOptions): Promise<ProofStatusResult> {
+/** Whether this tab's connection proves `patronNpub`, and until when. */
+export function checkProofStatus(patronNpub: string, opts?: CallOptions): Promise<ProofStatusResult> {
   return callTool<ProofStatusResult>(
     "check_proof_status",
-    { patron_npub: patronNpub, dpop_token: dpopToken },
+    { patron_npub: patronNpub },
     { bestEffort: true, ...opts },
   );
 }

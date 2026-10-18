@@ -33,7 +33,7 @@ describe("redaction", () => {
 
   it("scrubs the value of secret-named fields in JSON", () => {
     const out = redact(
-      JSON.stringify({ npub: "npub1abc", dpop_token: "tok-123", proof: "p-9", poison: "blue fox", api_key: "sk-1" }),
+      JSON.stringify({ npub: "npub1abc", nonce: "tok-123", proof: "p-9", poison: "blue fox", api_key: "sk-1" }),
     );
     for (const secret of ["tok-123", "p-9", "blue", "sk-1"]) assert.ok(!out.includes(secret), `${secret} leaked: ${out}`);
     assert.match(out, /"npub":"npub1abc"/);
@@ -72,13 +72,13 @@ describe("redaction", () => {
   });
 
   it("leaves error codes that merely name a secret alone", () => {
-    const line = '{"success":false,"error_code":"dpop_token_missing","tokens_used":5}';
+    const line = '{"success":false,"error_code":"nonce_missing","tokens_used":5}';
     assert.equal(redact(line), line);
   });
 
   it("is applied by debugPush, so the store and Copy never hold a secret", () => {
     clearDebug();
-    debugPush("call", `receive_npub_proof({"dpop_token":"secret-phrase","nsec":"${NSEC}"})`);
+    debugPush("call", `receive_npub_proof({"nonce":"secret-phrase","nsec":"${NSEC}"})`);
     const text = debugLogText();
     assert.ok(!text.includes("secret-phrase"));
     assert.ok(!text.includes(NSEC));
