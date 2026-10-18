@@ -33,6 +33,8 @@ interface Pending {
   state: string;
   /** What the sign-in was doing when the browser left, to resume on return. */
   resume: string;
+  /** The page the sign-in started on, which the operator sends the browser back to. */
+  redirectUri: string;
 }
 
 function operator(): string {
@@ -46,8 +48,12 @@ export function holderEnabled(): boolean {
   return Boolean(tollboothConfig().operatorUrl);
 }
 
+/**
+ * Back to the page the sign-in started on, since that page finishes it: a site
+ * whose `/` is not the sign-in page would otherwise drop the code on the floor.
+ */
 function redirectUri(): string {
-  return `${globalThis.location.origin}/`;
+  return `${globalThis.location.origin}${globalThis.location.pathname}`;
 }
 
 function readTokens(): Tokens | null {
@@ -73,13 +79,13 @@ async function challengeFor(verifier: string): Promise<string> {
   return btoa(String.fromCharCode(...digest)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-async function register(): Promise<string> {
+async function register(redirect: string): Promise<string> {
   const r = await fetch(`${operator()}/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       client_name: tollboothConfig().appName,
-      redirect_uris: [redirectUri()],
+      redirect_uris: [redirect],
       grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],
       token_endpoint_auth_method: "none",
@@ -115,16 +121,17 @@ export function isHolder(): boolean {
  * sends it straight back. `resume` comes back from `completeHolderConnect`.
  */
 export async function connectAsHolder(resume: string): Promise<void> {
-  const clientId = readTokens()?.clientId || (await register());
+  const redirect = redirectUri();
+  const clientId = readTokens()?.clientId || (await register(redirect));
   const verifier = randomUrlSafe(48);
   const state = randomUrlSafe(16);
-  const pending: Pending = { clientId, verifier, state, resume };
+  const pending: Pending = { clientId, verifier, state, resume, redirectUri: redirect };
   globalThis.sessionStorage.setItem(PENDING, JSON.stringify(pending));
   const url = new URL(`${operator()}/authorize`);
   url.search = new URLSearchParams({
     response_type: "code",
     client_id: clientId,
-    redirect_uri: redirectUri(),
+    redirect_uri: redirect,
     state,
     code_challenge: await challengeFor(verifier),
     code_challenge_method: "S256",
@@ -148,7 +155,7 @@ export async function completeHolderConnect(): Promise<string | null> {
   globalThis.history.replaceState(null, "", globalThis.location.pathname);
   if (params.get("state") !== pending.state) throw new Error("The service's reply did not match this sign-in.");
   writeTokens(await token(
-    { grant_type: "authorization_code", code, redirect_uri: redirectUri(), code_verifier: pending.verifier },
+    { grant_type: "authorization_code", code, redirect_uri: pending.redirectUri, code_verifier: pending.verifier },
     pending.clientId,
   ));
   return pending.resume;
