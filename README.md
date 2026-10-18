@@ -5,8 +5,9 @@ the shared code every operator front end needs, so a site holds only its own
 features. It is the peer of the `tollbooth-dpyc` Python wheel.
 
 - **npub sign-in** — a Nostr DM challenge, or an in-browser session key
-- **proofs** — the npub/`dpop_token` envelope on every paid call, a fresh
-  kind-27235 inline proof when the tab holds a session key
+- **identity on the connection** — every request signed with the tab's session
+  key (NIP-98), or carried by the tab's holder connection, whose npubs a DM
+  proved; a call names only the npub
 - **MCP client** — one shared connection to the operator, typed wrappers for
   the standard tools (balance, top-up, statement, price, profile)
 - **React components** — `AppShell` / `useAppShell`, `SiteNav`, `AccountPage`,

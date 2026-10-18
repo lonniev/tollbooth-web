@@ -1,0 +1,3 @@
+- **Breaking:** identity rides only on the connection, for tollbooth-dpyc 0.103 operators. A DM sign-in makes the tab a holder, and the operator keeps the proof. The page stores no proof token, sends no `dpop_token`, and a site without `operatorUrl` offers sign-in with a key only.
+- **Breaking:** the Courier phrase is `nonce`. `requestNpubProof` returns `nonce`, `receiveNpubProof(patronNpub, nonce)` succeeds only when `held_by_connection`, and `checkProofStatus(patronNpub)` takes no token.
+- **Breaking:** `recordRecentLogin(npub, expiresInSec)`. A recent login is reusable only while this tab is a holder.

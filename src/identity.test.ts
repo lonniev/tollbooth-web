@@ -13,7 +13,6 @@ import {
   recordRecentLogin,
   setLastTypedNpub,
   setStoredNpub,
-  setStoredProof,
 } from "./identity.ts";
 import { sessionNsecNpub, setSessionNsec } from "./sessionNsec.ts";
 
@@ -47,11 +46,26 @@ test("typing an npub is not signing in", () => {
   assert.equal(isLoggedIn(), false);
 });
 
-test("an npub with a cached proof is signed in, but cannot sign", () => {
+/** Make this tab a holder, as completing the OAuth connect would. */
+function beHolder() {
+  storage.setItem("chart:holder:v1", JSON.stringify({
+    clientId: "c", accessToken: "dpyc_ha_x", refreshToken: "dpyc_hr_x", expiresAt: Date.now() + 3600_000,
+  }));
+}
+
+test("an npub this tab's holder holds is signed in, but cannot sign", () => {
+  beHolder();
   setStoredNpub(NPUB);
-  setStoredProof("seven-amber-doorway");
+  recordRecentLogin(NPUB, 3600);
   assert.equal(isLoggedIn(), true);
   assert.equal(canSign(), false);
+});
+
+test("a recent login is no sign-in on a tab that is not a holder", () => {
+  setStoredNpub(NPUB);
+  recordRecentLogin(NPUB, 3600);
+  assert.equal(getValidRecentLogins().length, 0);
+  assert.equal(isLoggedIn(), false);
 });
 
 test("a session key signs in as the npub it derives to", () => {
@@ -72,10 +86,11 @@ test("sign-out takes the session key too", () => {
 });
 
 test("a recent login is derated 30s and an expired one is pruned", () => {
-  recordRecentLogin(NPUB, "p", 3600);
+  beHolder();
+  recordRecentLogin(NPUB, 3600);
   const [entry] = getValidRecentLogins();
   assert.ok(entry.expiresAt <= Date.now() + 3570_000);
-  recordRecentLogin(NPUB, "p", 10); // under the derate: already expired
+  recordRecentLogin(NPUB, 10); // under the derate: already expired
   assert.equal(getValidRecentLogins().length, 0);
 });
 

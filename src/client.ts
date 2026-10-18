@@ -4,10 +4,10 @@
  * 1. One @modelcontextprotocol/sdk Client over StreamableHTTP, shared by the
  *    whole page. The SDK handles the initialize handshake and the session.
  * 2. Identity rides on the connection, invisible to callers: while this tab
- *    holds the signed-in npub's key, every request is signed with it (NIP-98)
- *    and a call names only the npub. Otherwise the DM proof token cached at
- *    `receive_npub_proof` is sent as is.
- * 3. Bootstrap tools take no envelope and are safe before sign-in.
+ *    holds the signed-in npub's key, every request is signed with it (NIP-98);
+ *    otherwise the request carries this tab's holder bearer, and the operator
+ *    holds the DM proof. A call names only the npub.
+ * 3. Bootstrap tools take no npub and are safe before sign-in.
  */
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -15,12 +15,8 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 
 import { tollboothConfig, toolName } from "./config.ts";
 import { debugPush, redact } from "./debugLog.ts";
-import {
-  clearStoredProof,
-  forgetRecentLogin,
-  getStoredNpub,
-  getStoredProof,
-} from "./identity.ts";
+import { isHolder } from "./holder.ts";
+import { forgetRecentLogin, getStoredNpub } from "./identity.ts";
 import { isTransportFailure, NetworkError } from "./networkError.ts";
 import { signingFetch, signsForSignedInNpub } from "./requestSigning.ts";
 import {
@@ -34,8 +30,8 @@ import {
 } from "./toolResult.ts";
 
 /**
- * Standard tools whose wheel signature takes no npub/proof envelope. Pydantic
- * strict mode rejects unexpected kwargs, so they must not get one.
+ * Standard tools whose wheel signature takes no `npub`. Pydantic strict mode
+ * rejects unexpected kwargs, so they must not get one.
  */
 const STANDARD_BOOTSTRAP = [
   "request_npub_proof",
@@ -84,19 +80,6 @@ async function getClient(): Promise<Client> {
   return client;
 }
 
-/**
- * What a call adds to prove the npub: nothing when the request itself is
- * signed with the signed-in npub's key, else the cached DM token.
- */
-function proofFor(): { dpop_token?: string } {
-  try {
-    if (signsForSignedInNpub()) return {};
-  } catch {
-    /* fall through to the cached token */
-  }
-  return { dpop_token: getStoredProof() };
-}
-
 export { isNetworkError, NetworkError } from "./networkError.ts";
 
 /** A paid call bounced for a lapsed or missing proof. The gate re-arms sign-in. */
@@ -112,7 +95,7 @@ const proofExpiredListeners = new Set<ProofExpiredListener>();
 
 /**
  * Subscribe to proof bounces from anywhere in the app. Without this the tree
- * never learns the token was cleared, and the patron is stranded on a page
+ * never learns the sign-in was dropped, and the patron is stranded on a page
  * whose data will not load. Returns an unsubscribe function.
  */
 export function onProofExpired(cb: ProofExpiredListener): () => void {
@@ -161,13 +144,15 @@ export async function callToolWithContent<T = unknown>(
   const cfg = tollboothConfig();
   const name = toolName(tool);
   const quiet = STANDARD_QUIET.includes(tool) || cfg.quietTools.includes(tool);
-  // `args` holds only the caller's own parameters — the envelope is added
-  // below — so it is safe to log.
+  // `args` holds only the caller's own parameters — the npub is added below —
+  // so it is safe to log.
   if (!quiet) debugPush("call", `${name}(${redact(JSON.stringify(args)).slice(0, 140)})`);
 
   const bootstrap = STANDARD_BOOTSTRAP.includes(tool) || cfg.extraBootstrapTools.includes(tool);
-  const proof = bootstrap ? null : proofFor();
-  const merged = proof ? { npub: getStoredNpub(), ...proof, ...args } : { ...args };
+  const merged = bootstrap ? { ...args } : { npub: getStoredNpub(), ...args };
+  // A call this tab's holder proves rides a grant the operator keeps; a signed
+  // call proves itself afresh and has none to lose.
+  const rodeHolder = !bootstrap && isHolder() && !signsForSignedInNpub();
 
   let result: RawToolResult;
   try {
@@ -201,17 +186,16 @@ export async function callToolWithContent<T = unknown>(
     debugPush(looksFailed(payload) ? "error" : "result", `${name} → ${redact(String(preview)).slice(0, 220)}${tail}`);
   }
 
-  // A stored grant the service refused for good signs the patron out even
-  // from a best-effort call: that is not a blip, and staying "signed in" on a
-  // dead grant leaves every page failing with nothing to tell them why.
+  // A held grant the service refused for good signs the patron out even from
+  // a best-effort call: that is not a blip, and staying "signed in" on a dead
+  // grant leaves every page failing with nothing to tell them why.
   const bounced =
     (opts.bestEffort ? null : proofBounceMessage(payload)) ??
-    (proof?.dpop_token ? deadGrantMessage(payload) : null);
+    (rodeHolder ? deadGrantMessage(payload) : null);
   if (bounced !== null) {
-    // The token just refused is the same one the recent-login shortcut
-    // would replay, so it goes too, or a returning patron re-bounces.
+    // The recent-login shortcut would re-enter on the same refused hold, so it
+    // goes too, or a returning patron re-bounces.
     const npub = getStoredNpub();
-    clearStoredProof();
     if (npub) forgetRecentLogin(npub);
     emitProofExpired(bounced);
     throw new ProofRequiredError(bounced);

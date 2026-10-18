@@ -47,7 +47,8 @@ export interface BalanceThresholds {
 /** How this tab proves who it is. */
 export type ProofKind =
   | { kind: "session_nsec" }
-  | { kind: "dm_proof"; status: "valid" | "expired" | "unknown"; expiresInSec?: number | null }
+  /** The operator holds a DM proof for this tab's holder connection. */
+  | { kind: "held"; status: "valid" | "lapsed" | "not_held" | "unknown"; expiresInSec?: number | null }
   | { kind: "none" };
 
 /** A tranche or proof ending within this window is a warning. */
@@ -84,8 +85,9 @@ export function composeProofRow(proof: ProofKind, checkedAt: string): StatusRow 
   const r = (state: StatusLevel, detail: string) => row("npub-proof", "Sign-in proof", state, detail, checkedAt);
   if (proof.kind === "session_nsec") return r("ok", "This tab's session key signs a fresh proof on every call — no expiry.");
   if (proof.kind === "none") return r("blocked", "No proof on hand — sign in again.");
-  if (proof.status === "expired") return r("blocked", "Proof has expired — sign in again to resume paid calls.");
-  if (proof.status === "unknown") return r("warning", "No server-side proof record — the next paid call may ask you to sign in again.");
+  if (proof.status === "lapsed") return r("blocked", "Proof has expired — sign in again to resume paid calls.");
+  if (proof.status === "not_held") return r("blocked", "The service no longer holds your proof — sign in again.");
+  if (proof.status === "unknown") return r("warning", "Could not read the proof's status — the next paid call may ask you to sign in again.");
   const sec = proof.expiresInSec;
   if (sec != null && sec * 1000 < WARNING_WITHIN_MS) return r("warning", `Proof valid — expires in about ${durationText(sec)}.`);
   return r("ok", sec != null && sec > 0 ? `Proof valid — expires in about ${durationText(sec)}.` : "Proof valid.");

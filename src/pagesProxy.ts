@@ -12,11 +12,10 @@
  * Only the headers MCP needs are forwarded upstream. Cookies and anything else
  * the browser attached stay behind.
  *
- * Every request upstream carries a bearer. An operator with holder bearer on
- * refuses a request without one; a page that holds no holder token is an
- * anonymous caller, so the proxy says so with `Bearer anonymous` and the page
- * proves itself with `dpop_token` as before. A page that does hold a token
- * sends it, and it is forwarded untouched.
+ * Every request upstream carries who it may act as. An operator refuses a
+ * request with no `Authorization`, so a page that neither signs (`Nostr`)
+ * nor holds a holder token is an anonymous caller, and the proxy says so with
+ * `Bearer anonymous`. A request that carries either is forwarded untouched.
  */
 
 export const CORS_HEADERS: Record<string, string> = {
