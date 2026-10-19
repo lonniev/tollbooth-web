@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [2.1.0] — 2026-10-18
+
+### Changed
+
+- DM sign-in no longer leaves the page: the tab connects to the operator by fetch (`/authorize` answered in JSON), with no browser redirect. Needs operators on tollbooth-dpyc 0.104.0 or later.
+
 ## [2.0.1] — 2026-10-18
 
 ### Fixed
