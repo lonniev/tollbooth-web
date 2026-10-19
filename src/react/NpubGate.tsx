@@ -27,7 +27,7 @@ import {
   setStoredNpub,
   type RecentLogin,
 } from "../identity.ts";
-import { completeHolderConnect, connectAsHolder, holderEnabled, isHolder } from "../holder.ts";
+import { connectAsHolder, holderEnabled, isHolder } from "../holder.ts";
 import { setSessionNsec } from "../sessionNsec.ts";
 import { readSignInFailure } from "../signInSituation.ts";
 import { receiveNpubProof, requestNpubProof } from "../standardTools.ts";
@@ -167,24 +167,8 @@ export default function NpubGate({
     }
   }
 
-  // Back from connecting to the operator: carry on with the DM it was for.
-  const resumed = useRef(false);
-  useEffect(() => {
-    if (resumed.current) return;
-    resumed.current = true;
-    completeHolderConnect()
-      .then((npub) => {
-        if (npub) {
-          setValue(npub);
-          void begin(npub);
-        }
-      })
-      .catch((e: Error) => setError(e.message));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  async function begin(npubArg?: string) {
-    const npubToProve = npubArg ?? trimmed;
+  async function begin() {
+    const npubToProve = trimmed;
     if (!(npubToProve.startsWith("npub1") && npubToProve.length >= 60)) {
       setError("Enter a valid npub1… key.");
       return;
@@ -193,15 +177,12 @@ export default function NpubGate({
     setError("");
     try {
       // The proof will stay with the operator, so this tab connects to it
-      // first; the browser comes straight back here and the DM goes out.
+      // first, by fetch, and the DM goes out.
       if (!holderEnabled()) {
         setError("This site signs in with a key only — paste an nsec, or make one.");
         return;
       }
-      if (!isHolder()) {
-        await connectAsHolder(npubToProve);
-        return;
-      }
+      if (!isHolder()) await connectAsHolder();
       const r = await requestNpubProof(
         npubToProve,
         globalThis.location.origin,

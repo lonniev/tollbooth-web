@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { beforeEach, test } from "node:test";
 
 import { configureTollbooth } from "./config.ts";
-import { completeHolderConnect, connectAsHolder, holderBearer, isHolder } from "./holder.ts";
+import { connectAsHolder, holderBearer, isHolder } from "./holder.ts";
 import { signingFetch } from "./requestSigning.ts";
 
 class MemoryStorage {
@@ -14,8 +14,9 @@ class MemoryStorage {
 
 const OPERATOR = "https://op.example";
 let calls: { url: string; body: string; headers: Headers }[] = [];
-let assigned = "";
 let tokenReplies: unknown[] = [];
+/** What /authorize answers: the issued redirect for the state it was asked with, by default. */
+let authorizeReply: (url: URL) => Response;
 
 function define(name: string, value: unknown) {
   Object.defineProperty(globalThis, name, { value, configurable: true, writable: true });
@@ -23,77 +24,68 @@ function define(name: string, value: unknown) {
 
 beforeEach(() => {
   calls = [];
-  assigned = "";
   tokenReplies = [];
+  authorizeReply = (url) =>
+    Response.json({ redirect_uri: `https://site.example/?code=abc&state=${url.searchParams.get("state")}` });
   define("localStorage", new MemoryStorage());
   define("sessionStorage", new MemoryStorage());
   define("location", {
-    origin: "https://site.example", pathname: "/", search: "",
-    assign: (u: string) => { assigned = u; },
+    origin: "https://site.example", pathname: "/signin", search: "",
+    assign: () => { throw new Error("the page must not leave itself"); },
   });
-  define("history", { replaceState: () => {} });
   define("fetch", async (input: string | URL | Request, init?: RequestInit) => {
     const url = String(input);
     calls.push({ url, body: String(init?.body ?? ""), headers: new Headers(init?.headers) });
     if (url.endsWith("/register")) return Response.json({ client_id: "c1" }, { status: 201 });
+    if (url.startsWith(`${OPERATOR}/authorize`)) return authorizeReply(new URL(url));
     if (url.endsWith("/token")) return Response.json(tokenReplies.shift());
     return new Response("{}");
   });
   configureTollbooth({ slug: "chart", appName: "ChartRemotely", mcpUrl: "/mcp", operatorUrl: OPERATOR });
 });
 
-async function connect() {
-  await connectAsHolder("npub1alice");
-  const authorize = new URL(assigned);
-  (globalThis.location as { search: string }).search = `?code=abc&state=${authorize.searchParams.get("state")}`;
-  return authorize;
-}
-
-test("connecting registers, sends the browser to authorize with PKCE, and keeps the code exchange for the return", async () => {
-  const authorize = await connect();
-  assert.equal(authorize.origin + authorize.pathname, `${OPERATOR}/authorize`);
-  assert.equal(authorize.searchParams.get("code_challenge_method"), "S256");
-  assert.equal(authorize.searchParams.get("redirect_uri"), "https://site.example/");
-  assert.equal(authorize.searchParams.get("resource"), `${OPERATOR}/mcp`);
-
+test("connecting registers, takes a code from authorize by fetch with PKCE, and exchanges it in place", async () => {
   tokenReplies.push({ access_token: "dpyc_ha_1", refresh_token: "dpyc_hr_1", expires_in: 3600 });
-  assert.equal(await completeHolderConnect(), "npub1alice");
+  await connectAsHolder();
+  const authorize = calls.find((c) => c.url.startsWith(`${OPERATOR}/authorize`))!;
+  const asked = new URL(authorize.url);
+  assert.equal(authorize.headers.get("accept"), "application/json");
+  assert.equal(asked.searchParams.get("code_challenge_method"), "S256");
+  assert.equal(asked.searchParams.get("redirect_uri"), "https://site.example/");
+  assert.equal(asked.searchParams.get("resource"), `${OPERATOR}/mcp`);
   assert.ok(isHolder());
   const exchange = new URLSearchParams(calls.at(-1)!.body);
   assert.equal(exchange.get("grant_type"), "authorization_code");
+  assert.equal(exchange.get("code"), "abc");
   assert.ok(exchange.get("code_verifier"));
   assert.equal(await holderBearer(), "dpyc_ha_1");
 });
 
-test("the browser comes back to the page the sign-in started on", async () => {
-  (globalThis.location as { pathname: string }).pathname = "/signin";
-  const authorize = await connect();
-  assert.equal(authorize.searchParams.get("redirect_uri"), "https://site.example/signin");
-  assert.deepEqual(JSON.parse(calls[0].body).redirect_uris, ["https://site.example/signin"]);
-  tokenReplies.push({ access_token: "dpyc_ha_1", refresh_token: "dpyc_hr_1", expires_in: 3600 });
-  assert.equal(await completeHolderConnect(), "npub1alice");
-  assert.equal(new URLSearchParams(calls.at(-1)!.body).get("redirect_uri"), "https://site.example/signin");
+test("a reply for another sign-in is refused, and nothing is kept", async () => {
+  authorizeReply = () => Response.json({ redirect_uri: "https://site.example/?code=abc&state=other" });
+  await assert.rejects(connectAsHolder(), /did not match/);
+  assert.equal(isHolder(), false);
+});
+
+test("a refusal from authorize is said in the service's words", async () => {
+  authorizeReply = () =>
+    Response.json({ error: "invalid_request", error_description: "Unknown client." }, { status: 400 });
+  await assert.rejects(connectAsHolder(), /Unknown client/);
+  assert.equal(isHolder(), false);
 });
 
 test("a lapsing access token is refreshed, and the new pair is kept", async () => {
-  await connect();
   tokenReplies.push({ access_token: "dpyc_ha_1", refresh_token: "dpyc_hr_1", expires_in: 30 });
-  await completeHolderConnect();
+  await connectAsHolder();
   tokenReplies.push({ access_token: "dpyc_ha_2", refresh_token: "dpyc_hr_2", expires_in: 3600 });
   assert.equal(await holderBearer(), "dpyc_ha_2");
   assert.equal(new URLSearchParams(calls.at(-1)!.body).get("refresh_token"), "dpyc_hr_1");
   assert.equal(await holderBearer(), "dpyc_ha_2");
 });
 
-test("a page load that is not a return does nothing", async () => {
-  assert.equal(await completeHolderConnect(), null);
-  assert.equal(isHolder(), false);
-});
-
 test("a holder tab's requests carry its bearer", async () => {
-  await connect();
   tokenReplies.push({ access_token: "dpyc_ha_1", refresh_token: "dpyc_hr_1", expires_in: 3600 });
-  await completeHolderConnect();
+  await connectAsHolder();
   await signingFetch("https://site.example/mcp", { method: "POST", body: "{}" });
   assert.equal(calls.at(-1)!.headers.get("authorization"), "Bearer dpyc_ha_1");
 });
