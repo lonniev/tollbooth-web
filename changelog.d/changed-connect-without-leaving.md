@@ -1,0 +1,1 @@
+- DM sign-in no longer leaves the page: the tab connects to the operator by fetch (`/authorize` answered in JSON), with no browser redirect. Needs operators on tollbooth-dpyc 0.104.0 or later.

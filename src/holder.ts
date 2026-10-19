@@ -5,17 +5,17 @@
  * the connection's OAuth tokens and names the npub on each call.
  *
  * Becoming a holder is the OAuth Authorization Code flow every MCP client
- * runs: register, send the browser to the operator's `/authorize` (it approves
- * at once, since a holder holds nothing until a DM proves an npub into it),
- * and exchange the code it hands back. Tokens refresh on their own; a refresh
- * token is single-use, so each refresh stores the pair it returns.
+ * runs, done by fetch: register, ask the operator's `/authorize` for a code
+ * (it approves at once, since a holder holds nothing until a DM proves an npub
+ * into it, and answers a page in JSON), and exchange the code. The page never
+ * leaves itself. Tokens refresh on their own; a refresh token is single-use,
+ * so each refresh stores the pair it returns.
  */
 
 import { tollboothConfig } from "./config.ts";
 import { readStored, removeStored, writeStored } from "./storage.ts";
 
 const TOKENS = "holder:v1";
-const PENDING = "holder_pending:v1";
 /** Refresh this long before the access token lapses. */
 const REFRESH_EARLY_MS = 60_000;
 
@@ -25,16 +25,6 @@ interface Tokens {
   refreshToken: string;
   /** Unix ms. */
   expiresAt: number;
-}
-
-interface Pending {
-  clientId: string;
-  verifier: string;
-  state: string;
-  /** What the sign-in was doing when the browser left, to resume on return. */
-  resume: string;
-  /** The page the sign-in started on, which the operator sends the browser back to. */
-  redirectUri: string;
 }
 
 function operator(): string {
@@ -48,12 +38,9 @@ export function holderEnabled(): boolean {
   return Boolean(tollboothConfig().operatorUrl);
 }
 
-/**
- * Back to the page the sign-in started on, since that page finishes it: a site
- * whose `/` is not the sign-in page would otherwise drop the code on the floor.
- */
+/** The address the code is issued to. Registered and named, never visited. */
 function redirectUri(): string {
-  return `${globalThis.location.origin}${globalThis.location.pathname}`;
+  return `${globalThis.location.origin}/`;
 }
 
 function readTokens(): Tokens | null {
@@ -79,13 +66,13 @@ async function challengeFor(verifier: string): Promise<string> {
   return btoa(String.fromCharCode(...digest)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-async function register(redirect: string): Promise<string> {
+async function register(): Promise<string> {
   const r = await fetch(`${operator()}/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       client_name: tollboothConfig().appName,
-      redirect_uris: [redirect],
+      redirect_uris: [redirectUri()],
       grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],
       token_endpoint_auth_method: "none",
@@ -116,49 +103,34 @@ export function isHolder(): boolean {
   return readTokens() !== null;
 }
 
-/**
- * Become a holder: register and send the browser to the operator, which
- * sends it straight back. `resume` comes back from `completeHolderConnect`.
- */
-export async function connectAsHolder(resume: string): Promise<void> {
-  const redirect = redirectUri();
-  const clientId = readTokens()?.clientId || (await register(redirect));
+/** Become a holder: register, take a code from the operator by fetch, and exchange it. */
+export async function connectAsHolder(): Promise<void> {
+  const clientId = readTokens()?.clientId || (await register());
   const verifier = randomUrlSafe(48);
   const state = randomUrlSafe(16);
-  const pending: Pending = { clientId, verifier, state, resume, redirectUri: redirect };
-  globalThis.sessionStorage.setItem(PENDING, JSON.stringify(pending));
   const url = new URL(`${operator()}/authorize`);
   url.search = new URLSearchParams({
     response_type: "code",
     client_id: clientId,
-    redirect_uri: redirect,
+    redirect_uri: redirectUri(),
     state,
     code_challenge: await challengeFor(verifier),
     code_challenge_method: "S256",
     resource: `${operator()}/mcp`,
   }).toString();
-  globalThis.location.assign(url.toString());
-}
-
-/**
- * On return from the operator: exchange the code, store the tokens, tidy the
- * address bar, and hand back what the sign-in was doing. Null when this page
- * load is not a return.
- */
-export async function completeHolderConnect(): Promise<string | null> {
-  const params = new URLSearchParams(globalThis.location.search);
-  const code = params.get("code");
-  const raw = globalThis.sessionStorage.getItem(PENDING);
-  if (!code || !raw) return null;
-  globalThis.sessionStorage.removeItem(PENDING);
-  const pending = JSON.parse(raw) as Pending;
-  globalThis.history.replaceState(null, "", globalThis.location.pathname);
-  if (params.get("state") !== pending.state) throw new Error("The service's reply did not match this sign-in.");
+  const r = await fetch(url, { headers: { Accept: "application/json" } });
+  const answer = await r.json().catch(() => ({}));
+  if (!r.ok || typeof answer.redirect_uri !== "string") {
+    throw new Error(answer.error_description || `The service would not connect this page (${r.status}).`);
+  }
+  const issued = new URL(answer.redirect_uri).searchParams;
+  if (issued.get("state") !== state) throw new Error("The service's reply did not match this sign-in.");
+  const code = issued.get("code");
+  if (!code) throw new Error(issued.get("error_description") || "The service did not connect this page.");
   writeTokens(await token(
-    { grant_type: "authorization_code", code, redirect_uri: pending.redirectUri, code_verifier: pending.verifier },
-    pending.clientId,
+    { grant_type: "authorization_code", code, redirect_uri: redirectUri(), code_verifier: verifier },
+    clientId,
   ));
-  return pending.resume;
 }
 
 /** The bearer for the next request, refreshed when it is about to lapse; null when not a holder. */
