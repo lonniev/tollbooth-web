@@ -12,7 +12,7 @@ features. It is the peer of the `tollbooth-dpyc` Python wheel.
   the standard tools (balance, top-up, statement, price, profile)
 - **React components** — `AppShell` / `useAppShell`, `SiteNav`, `AccountPage`,
   `RefreshButton`, `NpubGate`, `NostrProfilePanel`, `SessionKeyClaim`, `WalletCard`,
-  `WalletPage`, `CouponsPanel`, `UsageSummary`, `PatronFundingStatus` /
+  `WalletPage`, `CouponsPanel`, `UsageSummary`, `PriceSheet`, `PatronFundingStatus` /
   `OperatorFundingStatus`, `BuildInfoPanel`, `TimezonePicker`, `TableFilter`,
   `SortHeader` / `PageControls` / `TableShell`, `ThemeToggle`, `ErrorBoundary`,
   `AvatarPicker`, `DebugPanel`, `QuoteScroller`, `useSession`, `useTopUp`,
@@ -115,6 +115,33 @@ action stays a chip. `TableFilter`'s panel slides itself back on screen on a
 phone; `clearPlacement="panel"` puts Clear inside it. Every standard-tool
 wrapper takes the same optional `CallOptions` as `callTool`, last
 (`listCanonicalIdentities({ bestEffort: true })`).
+
+### Price sheet
+
+`PriceSheet` is an optional page that lists every tool a patron can call, with
+what it does and its current fare, read live from `get_pricing_model`. It also
+shows how long a tranche of credit lasts. Tools are grouped by fare, cheapest
+first, and the free tools fold away underneath. The call is free and needs no
+sign-in, so a visitor can read the sheet before buying anything.
+
+This component ships with its own look, so the sheet reads the same at every
+operator. It uses only the `--tb-*` tokens, so a site's palette and dark mode
+carry over. Import its stylesheet beside `theme.css`, give it the site's fonts
+if you like, and add a route:
+
+```css
+@import "@tollbooth-dpyc/web/theme.css";
+@import "@tollbooth-dpyc/web/price-sheet.css";
+.tb-ps { --tb-ps-display-font: var(--font-display); --tb-ps-data-font: var(--font-data); }
+```
+
+```tsx
+<Route path="/prices" element={<PriceSheet />} />
+```
+
+Operator-only and unpriced tools are left out unless you pass `restricted` or
+`unpriced`. `label` renames a tool, and `before` and `children` hold site
+content. `priceSheet(model, { slug })` is the same reading without React.
 
 `useTopUp` is the wallet's top-up on its own (purchase_credits → invoice →
 check_payment, polled while the tab is visible) for a site drawing its own.

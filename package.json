@@ -26,12 +26,14 @@
       "default": "./dist/pagesProxy.js"
     },
     "./theme.css": "./theme.css",
-    "./tour.css": "./tour.css"
+    "./tour.css": "./tour.css",
+    "./price-sheet.css": "./price-sheet.css"
   },
   "files": [
     "dist",
     "theme.css",
     "tour.css",
+    "price-sheet.css",
     "README.md",
     "LICENSE"
   ],

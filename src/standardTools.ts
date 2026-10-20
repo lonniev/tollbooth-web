@@ -523,6 +523,8 @@ export interface PricingModelResult {
   is_active?: boolean | null;
   tools?: ToolPrice[] | null;
   tranche_lifetime?: { target_usage_pct: number; ttl_days?: number; min_days?: number; max_days?: number };
+  /** The operator's expiry decision, named so "never decided" and "decided: never" differ. */
+  expiration?: { state: "unchosen" | "never" | "days"; days?: number };
   error?: string;
 }
 

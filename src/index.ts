@@ -33,6 +33,22 @@ export * from "./table.ts";
 export * from "./theme.ts";
 export * from "./timezone.ts";
 export { usageFacts, type ToolSpend, type UsageFacts } from "./usage.ts";
+export {
+  expiryPolicy,
+  filterSheet,
+  OFFER_LABELS,
+  priceSheet,
+  sheetPrice,
+  toolMatches,
+  toolTitle,
+  type ExpiryPolicy,
+  type PriceBand,
+  type PriceSheet,
+  type PriceSheetOptions,
+  type SheetOffer,
+  type SheetPrice,
+  type SheetTool,
+} from "./priceSheet.ts";
 export { buildFacts, type BuildFacts } from "./buildInfo.ts";
 export * from "./funding.ts";
 export { errorReport } from "./errorReport.ts";

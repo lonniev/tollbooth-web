@@ -1,0 +1,433 @@
+/*
+ * The price sheet's look, in the site's own tokens.
+ *
+ * Every colour is a --tb-* variable from theme.css, so a site's palette and
+ * dark mode carry over unchanged. Two more variables take the site's type:
+ *
+ *   --tb-ps-display-font   the title and the fares      (default: inherit)
+ *   --tb-ps-data-font      tool names                   (default: monospace)
+ *
+ * e.g. `.tb-ps { --tb-ps-display-font: var(--font-display); }`. Anything else
+ * is restyled through `.tb-ps-*` in the site's own stylesheet.
+ */
+
+.tb-ps {
+  --tb-ps-display-font: inherit;
+  --tb-ps-data-font: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --tb-ps-radius: 16px;
+  --tb-ps-fare-col: 7.5rem;
+  --tb-ps-wash: color-mix(in srgb, var(--tb-accent) 9%, var(--tb-surface));
+  --tb-ps-card: color-mix(in srgb, var(--tb-surface-2) 70%, var(--tb-surface));
+
+  color: var(--tb-ink);
+  max-width: 64rem;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+
+.tb-ps-head {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1.25rem 1rem;
+  padding: 1.75rem 1.75rem 1.5rem;
+  border-radius: calc(var(--tb-ps-radius) + 6px);
+  border: 1px solid var(--tb-line);
+  background:
+    radial-gradient(120% 140% at 100% 0%, var(--tb-ps-wash) 0%, transparent 60%),
+    linear-gradient(180deg, var(--tb-surface) 0%, var(--tb-surface) 100%);
+  overflow: hidden;
+}
+.tb-ps-titles { min-width: 0; }
+.tb-ps-eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tb-accent);
+}
+.tb-ps-title {
+  margin: 0.25rem 0 0;
+  font-family: var(--tb-ps-display-font);
+  font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.6rem);
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+.tb-ps-model {
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+  color: var(--tb-muted);
+}
+.tb-ps-refresh {
+  align-self: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--tb-line);
+  background: var(--tb-surface);
+  color: var(--tb-muted);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tb-ps-refresh:hover:not(:disabled) { color: var(--tb-ink); border-color: var(--tb-accent); }
+.tb-ps-refresh:disabled { opacity: 0.6; cursor: default; }
+@media (prefers-reduced-motion: no-preference) {
+  .tb-ps-spin { animation: tb-ps-spin 0.9s linear infinite; }
+}
+@keyframes tb-ps-spin { to { transform: rotate(360deg); } }
+
+.tb-ps-facts {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.75rem;
+}
+.tb-ps-fact {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--tb-ps-radius);
+  background: color-mix(in srgb, var(--tb-surface) 82%, transparent);
+  border: 1px solid var(--tb-line);
+  backdrop-filter: blur(4px);
+}
+.tb-ps-fact-title { font-weight: 600; font-size: 0.95rem; line-height: 1.25; }
+.tb-ps-fact-line { margin-top: 0.15rem; font-size: 0.8rem; line-height: 1.35; color: var(--tb-muted); }
+
+/* The credit-life ring: a full accent ring for days, the same for never, a
+   dashed muted one while the operator has not chosen. */
+.tb-ps-ring { flex: none; width: 3.25rem; height: 3.25rem; }
+.tb-ps-ring circle {
+  fill: color-mix(in srgb, var(--tb-accent) 10%, transparent);
+  stroke: var(--tb-accent);
+  stroke-width: 2.5;
+}
+.tb-ps-ring text {
+  fill: var(--tb-ink);
+  font-family: var(--tb-ps-display-font);
+  font-size: 19px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.tb-ps-fact[data-expiry="never"] .tb-ps-ring text { font-size: 24px; }
+.tb-ps-fact[data-expiry="unchosen"] .tb-ps-ring circle {
+  fill: transparent;
+  stroke: var(--tb-muted);
+  stroke-dasharray: 4 4;
+}
+.tb-ps-fact[data-expiry="unchosen"] .tb-ps-ring text { fill: var(--tb-muted); font-size: 24px; }
+
+.tb-ps-span {
+  flex: none;
+  min-width: 3.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+.tb-ps-span-n {
+  font-family: var(--tb-ps-display-font);
+  font-size: 1.35rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tb-ps-span-u {
+  margin-top: 0.2rem;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tb-muted);
+}
+
+/* ── Search ─────────────────────────────────────────────────────────────── */
+
+.tb-ps-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.9rem;
+  min-height: 2.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--tb-line);
+  background: var(--tb-surface);
+  color: var(--tb-muted);
+  max-width: 24rem;
+}
+.tb-ps-search:focus-within { border-color: var(--tb-accent); }
+.tb-ps-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--tb-ink);
+  font: inherit;
+  font-size: 0.92rem;
+}
+
+/* ── The ladder: one rung per fare ──────────────────────────────────────── */
+
+.tb-ps-ladder {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+/* The rail the fares hang on. */
+.tb-ps-ladder::before {
+  content: "";
+  position: absolute;
+  top: 0.9rem;
+  bottom: 0.9rem;
+  left: calc(var(--tb-ps-fare-col) + 0.75rem);
+  width: 1px;
+  background: linear-gradient(var(--tb-line), var(--tb-line) 85%, transparent);
+}
+.tb-ps-band {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--tb-ps-fare-col) 1fr;
+  column-gap: 1.5rem;
+  align-items: start;
+}
+/* The rung's knot on the rail. */
+.tb-ps-band::before {
+  content: "";
+  position: absolute;
+  top: 0.8rem;
+  left: calc(var(--tb-ps-fare-col) + 0.75rem - 4.5px);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--tb-surface);
+  border: 2px solid var(--tb-accent);
+}
+
+.tb-ps-fare {
+  position: sticky;
+  top: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  padding-top: 0.15rem;
+}
+.tb-ps-fare-n {
+  font-family: var(--tb-ps-display-font);
+  font-size: 2rem;
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.tb-ps-fare-u {
+  margin-top: 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tb-muted);
+}
+.tb-ps-fare-note {
+  margin-top: 0.3rem;
+  font-size: 0.72rem;
+  color: var(--tb-muted);
+}
+
+.tb-ps-tools {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 0.75rem;
+}
+.tb-ps-tool {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.95rem 1.05rem 0.85rem;
+  border-radius: var(--tb-ps-radius);
+  background: var(--tb-ps-card);
+  border: 1px solid color-mix(in srgb, var(--tb-line) 70%, transparent);
+  transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s;
+}
+.tb-ps-tool:hover {
+  border-color: color-mix(in srgb, var(--tb-accent) 55%, var(--tb-line));
+  box-shadow: 0 6px 22px -14px color-mix(in srgb, var(--tb-accent) 70%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tb-ps-tool:hover { transform: translateY(-1px); }
+}
+.tb-ps-tool-title {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.tb-ps-tool-intent {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--tb-muted);
+}
+.tb-ps-tool-foot {
+  margin-top: auto;
+  padding-top: 0.35rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+}
+.tb-ps-tool-name {
+  font-family: var(--tb-ps-data-font);
+  font-size: 0.7rem;
+  color: var(--tb-muted);
+  overflow-wrap: anywhere;
+  margin-right: auto;
+}
+.tb-ps-offer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--tb-ok);
+  background: color-mix(in srgb, var(--tb-ok) 12%, transparent);
+}
+.tb-ps-offer[data-offer="surge_pricing"] {
+  color: var(--tb-warn-ink);
+  background: var(--tb-warn-bg);
+}
+
+/* ── Free tools ─────────────────────────────────────────────────────────── */
+
+.tb-ps-free {
+  border-radius: var(--tb-ps-radius);
+  border: 1px solid var(--tb-line);
+  background: var(--tb-surface);
+}
+.tb-ps-free summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 1.1rem;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+}
+.tb-ps-free summary::-webkit-details-marker { display: none; }
+.tb-ps-free summary::after {
+  content: "";
+  margin-left: auto;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid var(--tb-muted);
+  border-bottom: 2px solid var(--tb-muted);
+  transform: rotate(45deg);
+  transition: transform 0.18s;
+}
+.tb-ps-free[open] summary::after { transform: rotate(225deg); }
+.tb-ps-free-title {
+  font-family: var(--tb-ps-display-font);
+  font-size: 1.05rem;
+}
+.tb-ps-count {
+  min-width: 1.6rem;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--tb-accent);
+  background: color-mix(in srgb, var(--tb-accent) 12%, transparent);
+}
+.tb-ps-free-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 1.1rem 1.1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 0.15rem 1.5rem;
+}
+.tb-ps-free-list li {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0;
+  border-top: 1px solid color-mix(in srgb, var(--tb-line) 60%, transparent);
+}
+.tb-ps-free-name { font-size: 0.86rem; font-weight: 600; }
+.tb-ps-free-intent { font-size: 0.78rem; line-height: 1.4; color: var(--tb-muted); }
+
+/* ── States ─────────────────────────────────────────────────────────────── */
+
+.tb-ps-error {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  color: var(--tb-err-ink);
+  background: var(--tb-err-bg);
+  border: 1px solid var(--tb-err-line);
+}
+.tb-ps-empty { margin: 0; color: var(--tb-muted); font-size: 0.9rem; }
+
+.tb-ps-skeleton { display: flex; flex-direction: column; gap: 1.5rem; }
+.tb-ps-skel-band {
+  display: grid;
+  grid-template-columns: var(--tb-ps-fare-col) repeat(2, 1fr);
+  gap: 1.5rem 0.75rem;
+}
+.tb-ps-skel-fare,
+.tb-ps-skel-card {
+  border-radius: var(--tb-ps-radius);
+  background: var(--tb-surface-2);
+}
+.tb-ps-skel-fare { height: 2.5rem; width: 70%; justify-self: end; }
+.tb-ps-skel-card { height: 6.5rem; }
+@media (prefers-reduced-motion: no-preference) {
+  .tb-ps-skel-fare,
+  .tb-ps-skel-card { animation: tb-ps-pulse 1.4s ease-in-out infinite; }
+}
+@keyframes tb-ps-pulse { 50% { opacity: 0.5; } }
+
+/* ── Phone: the fare sits above its tools, the rail goes ───────────────── */
+
+@media (max-width: 40rem) {
+  .tb-ps { gap: 1.25rem; }
+  .tb-ps-head { padding: 1.25rem 1.1rem 1.1rem; }
+  .tb-ps-ladder::before,
+  .tb-ps-band::before { display: none; }
+  .tb-ps-band { grid-template-columns: 1fr; row-gap: 0.6rem; }
+  .tb-ps-fare {
+    position: static;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 0.45rem;
+    text-align: left;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--tb-line);
+  }
+  .tb-ps-fare-n { font-size: 1.6rem; }
+  .tb-ps-fare-u,
+  .tb-ps-fare-note { margin-top: 0; }
+  .tb-ps-tools { grid-template-columns: 1fr; }
+  .tb-ps-skel-band { grid-template-columns: 1fr; }
+  .tb-ps-skel-fare { justify-self: start; width: 30%; }
+  .tb-ps-search { max-width: none; }
+}
