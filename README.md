@@ -139,6 +139,8 @@ if you like, and add a route:
 <Route path="/prices" element={<PriceSheet />} />
 ```
 
+Hovering a card, or focusing it (a tap on a phone), shows the tool's call
+syntax from `tools/list`: each parameter with its type, default and purpose.
 Operator-only and unpriced tools are left out unless you pass `restricted` or
 `unpriced`. `label` renames a tool, and `before` and `children` hold site
 content. `priceSheet(model, { slug })` is the same reading without React.

@@ -2,6 +2,7 @@ export { configureTollbooth, tollboothConfig, toolName, type TollboothConfig } f
 export {
   callTool,
   callToolWithContent,
+  listTools,
   isNetworkError,
   NetworkError,
   onProofExpired,
@@ -49,6 +50,14 @@ export {
   type SheetPrice,
   type SheetTool,
 } from "./priceSheet.ts";
+export {
+  schemaType,
+  signatureLines,
+  toolSignature,
+  type JsonSchema,
+  type SignatureParam,
+  type ToolSchema,
+} from "./toolSignature.ts";
 export { buildFacts, type BuildFacts } from "./buildInfo.ts";
 export * from "./funding.ts";
 export { errorReport } from "./errorReport.ts";
