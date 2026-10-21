@@ -28,6 +28,7 @@ import {
   type ImageBlock,
   type RawToolResult,
 } from "./toolResult.ts";
+import type { ToolSchema } from "./toolSignature.ts";
 
 /**
  * Standard tools whose wheel signature takes no `npub`. Pydantic strict mode
@@ -201,6 +202,28 @@ export async function callToolWithContent<T = unknown>(
     throw new ProofRequiredError(bounced);
   }
   return { data: payload as T, images };
+}
+
+/**
+ * Every tool the operator lists, with its input schema — the call syntax a
+ * price sheet or a help page shows. Free, and needs no sign-in: it is the MCP
+ * `tools/list`, not a tool call. Pages through the whole list.
+ */
+export async function listTools(): Promise<ToolSchema[]> {
+  const out: ToolSchema[] = [];
+  let cursor: string | undefined;
+  try {
+    const c = await getClient();
+    do {
+      const page = await c.listTools(cursor ? { cursor } : undefined);
+      out.push(...(page.tools as ToolSchema[]));
+      cursor = page.nextCursor;
+    } while (cursor);
+  } catch (e) {
+    if (isTransportFailure(e)) throw new NetworkError("tools/list", e);
+    throw e;
+  }
+  return out;
 }
 
 export async function callTool<T = unknown>(

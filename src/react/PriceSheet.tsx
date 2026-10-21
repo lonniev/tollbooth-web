@@ -13,10 +13,15 @@
  * the free tools fold away beneath. `get_pricing_model` is free and needs no
  * sign-in, so the page works for a visitor. Optional: a site that wants it
  * routes to it.
+ *
+ * Hovering a tool's card, or focusing it (a tap on a phone), opens its call
+ * syntax: every parameter with its type, default and purpose, read from the
+ * MCP `tools/list`. That read is best-effort; without it the cards still show.
  */
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { Clock, Gift, Hash, Heart, Package, PartyPopper, RefreshCw, Search, Ticket, TrendingUp } from "lucide-react";
+import { listTools } from "../client.ts";
 import { tollboothConfig } from "../config.ts";
 import {
   filterSheet,
@@ -27,6 +32,7 @@ import {
   type SheetTool,
 } from "../priceSheet.ts";
 import { getPricingModel, type PricingModelResult } from "../standardTools.ts";
+import { signatureLines, toolSignature, type ToolSchema } from "../toolSignature.ts";
 import { formatSats } from "../wallet.ts";
 import RefreshButton from "./RefreshButton.tsx";
 import { cx } from "./cx.ts";
@@ -38,6 +44,8 @@ export interface PriceSheetProps {
   eyebrow?: ReactNode;
   /** A model already in hand. Without one the sheet reads `get_pricing_model`. */
   model?: PricingModelResult;
+  /** Tool schemas already in hand. Without them the sheet reads `tools/list`; null for no call syntax. */
+  schemas?: ToolSchema[] | null;
   /** Include operator-only tools. Default false: a patron cannot call them. */
   restricted?: boolean;
   /** Include tools the operator has not priced yet. Default false. */
@@ -72,6 +80,7 @@ export default function PriceSheet({
   heading,
   eyebrow = "Price sheet",
   model: given,
+  schemas: givenSchemas,
   restricted = false,
   unpriced = false,
   label = (t) => t.title,
@@ -85,6 +94,7 @@ export default function PriceSheet({
   const [model, setModel] = useState<PricingModelResult | null>(given ?? null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [schemas, setSchemas] = useState<ToolSchema[] | null>(givenSchemas ?? null);
 
   const load = useCallback(async () => {
     try {
@@ -103,6 +113,24 @@ export default function PriceSheet({
     if (given) setModel(given);
     else void load();
   }, [given, load]);
+
+  useEffect(() => {
+    if (givenSchemas !== undefined) {
+      setSchemas(givenSchemas);
+      return;
+    }
+    let live = true;
+    // Best-effort: the call syntax is a help, and the fares stand without it.
+    listTools().then(
+      (s) => live && setSchemas(s),
+      () => undefined,
+    );
+    return () => {
+      live = false;
+    };
+  }, [givenSchemas]);
+
+  const byName = useMemo(() => new Map((schemas ?? []).map((s) => [s.name, s])), [schemas]);
 
   const sheet = useMemo(
     () => (model ? priceSheet(model, { slug, restricted, unpriced }) : null),
@@ -166,7 +194,7 @@ export default function PriceSheet({
                   <Fare price={band.price} />
                   <ul className="tb-ps-tools">
                     {band.tools.map((t) => (
-                      <ToolCard key={t.id} tool={t} label={label} />
+                      <ToolCard key={t.id} tool={t} label={label} schema={byName.get(t.fullName)} />
                     ))}
                   </ul>
                 </li>
@@ -288,9 +316,23 @@ function Fare({ price }: { price: SheetPrice }) {
   }
 }
 
-function ToolCard({ tool, label }: { tool: SheetTool; label: (t: SheetTool) => ReactNode }) {
+function ToolCard({
+  tool,
+  label,
+  schema,
+}: {
+  tool: SheetTool;
+  label: (t: SheetTool) => ReactNode;
+  schema?: ToolSchema;
+}) {
+  const popId = useId();
   return (
-    <li className="tb-ps-tool">
+    <li
+      className="tb-ps-tool"
+      data-has-call={schema ? "" : undefined}
+      tabIndex={schema ? 0 : undefined}
+      aria-describedby={schema ? popId : undefined}
+    >
       <h3 className="tb-ps-tool-title">{label(tool)}</h3>
       {tool.intent && <p className="tb-ps-tool-intent">{tool.intent}</p>}
       <div className="tb-ps-tool-foot">
@@ -305,7 +347,33 @@ function ToolCard({ tool, label }: { tool: SheetTool; label: (t: SheetTool) => R
           );
         })}
       </div>
+      {schema && <CallSyntax id={popId} schema={schema} />}
     </li>
+  );
+}
+
+function CallSyntax({ id, schema }: { id: string; schema: ToolSchema }) {
+  const params = toolSignature(schema.inputSchema);
+  const described = params.filter((p) => p.description);
+  return (
+    <div id={id} role="tooltip" className="tb-ps-call">
+      <pre className="tb-ps-call-sig">
+        <code>{signatureLines(schema.name, params).join("\n")}</code>
+      </pre>
+      {described.length > 0 && (
+        <dl className="tb-ps-call-params">
+          {described.map((p) => (
+            <div key={p.name}>
+              <dt>
+                {p.name}
+                {!p.required && <span className="tb-ps-call-opt">optional</span>}
+              </dt>
+              <dd>{p.description}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </div>
   );
 }
 
