@@ -20,7 +20,7 @@
  */
 
 import { useCallback, useEffect, useId, useMemo, useState, type ReactNode } from "react";
-import { Clock, Gift, Hash, Heart, Package, PartyPopper, RefreshCw, Search, Ticket, TrendingUp } from "lucide-react";
+import { Bitcoin, Clock, Gift, Hash, Heart, Package, PartyPopper, RefreshCw, Search, Ticket, TrendingUp } from "lucide-react";
 import { listTools } from "../client.ts";
 import { tollboothConfig } from "../config.ts";
 import {
@@ -261,8 +261,10 @@ function FareSpan({ sheet }: { sheet: Sheet }) {
   return (
     <div className="tb-ps-fact">
       <div className="tb-ps-span">
-        <span className="tb-ps-span-n">{figure}</span>
-        <span className="tb-ps-span-u">sats</span>
+        <span className="tb-ps-span-n" aria-label={`${figure} sats`}>
+          <Btc />
+          {figure}
+        </span>
       </div>
       <div>
         <div className="tb-ps-fact-title">
@@ -279,19 +281,19 @@ function Fare({ price }: { price: SheetPrice }) {
     case "flat":
       return (
         <div className="tb-ps-fare">
-          <data className="tb-ps-fare-n" value={price.sats}>
+          <data className="tb-ps-fare-n" value={price.sats} aria-label={`${formatSats(price.sats)} sats`}>
+            <Btc />
             {formatSats(price.sats)}
           </data>
-          <span className="tb-ps-fare-u">sats</span>
         </div>
       );
     case "range":
       return (
         <div className="tb-ps-fare">
-          <span className="tb-ps-fare-n">
+          <span className="tb-ps-fare-n" aria-label={`${formatSats(price.from)} to ${formatSats(price.to)} sats`}>
+            <Btc />
             {formatSats(price.from)}–{formatSats(price.to)}
           </span>
-          <span className="tb-ps-fare-u">sats</span>
           <span className="tb-ps-fare-note">by {price.by.map((p) => p.replace(/_/g, " ")).join(", ")}</span>
         </div>
       );
@@ -302,18 +304,29 @@ function Fare({ price }: { price: SheetPrice }) {
           {price.of && <span className="tb-ps-fare-u">of {price.of.replace(/_/g, " ")}</span>}
           {(price.min !== undefined || price.max !== undefined) && (
             <span className="tb-ps-fare-note">
-              {[
-                price.min !== undefined && `min ${formatSats(price.min)}`,
-                price.max !== undefined && `max ${formatSats(price.max)}`,
-              ]
-                .filter(Boolean)
-                .join(" · ")}{" "}
-              sats
+              {price.min !== undefined && (
+                <>
+                  min <Btc />
+                  {formatSats(price.min)}
+                </>
+              )}
+              {price.min !== undefined && price.max !== undefined && " · "}
+              {price.max !== undefined && (
+                <>
+                  max <Btc />
+                  {formatSats(price.max)}
+                </>
+              )}
             </span>
           )}
         </div>
       );
   }
+}
+
+/** The sats sign, set before a figure the way $ or € would be. */
+function Btc() {
+  return <Bitcoin className="tb-ps-btc" aria-hidden />;
 }
 
 function ToolCard({

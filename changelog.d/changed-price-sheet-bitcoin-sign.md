@@ -1,0 +1,1 @@
+- The price sheet sets a small ₿ before each fare, the way a price tag sets $ or €, in place of the "sats" label beneath it.

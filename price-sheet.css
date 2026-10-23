@@ -140,14 +140,6 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.tb-ps-span-u {
-  margin-top: 0.2rem;
-  font-size: 0.66rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--tb-muted);
-}
 
 /* ── Search ─────────────────────────────────────────────────────────────── */
 
@@ -240,6 +232,23 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--tb-muted);
+}
+/* The sats sign: a small raised ₿ before the figure, as a price tag sets $. */
+.tb-ps-btc {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.5em;
+  margin-right: 0.06em;
+  vertical-align: 0.55em;
+  stroke-width: 3;
+  color: var(--tb-muted);
+}
+.tb-ps-fare-note .tb-ps-btc {
+  width: 0.95em;
+  height: 0.95em;
+  margin-right: 0;
+  vertical-align: -0.15em;
+  stroke-width: 2.25;
 }
 .tb-ps-fare-note {
   margin-top: 0.3rem;
