@@ -1,1 +1,0 @@
-- The price sheet keeps its "sats" label beneath each fare, under the ₿ sign, so 20 sats no longer reads as 20 bitcoin.
