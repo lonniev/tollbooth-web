@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [2.4.0] — 2026-10-22
+
+### Changed
+
+- The price sheet sets a small ₿ before each fare, the way a price tag sets $ or €, in place of the "sats" label beneath it.
+
 ## [2.3.0] — 2026-10-20
 
 ### Added
