@@ -140,6 +140,14 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+.tb-ps-span-u {
+  margin-top: 0.2rem;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tb-muted);
+}
 
 /* ── Search ─────────────────────────────────────────────────────────────── */
 

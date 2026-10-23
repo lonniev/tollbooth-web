@@ -265,6 +265,7 @@ function FareSpan({ sheet }: { sheet: Sheet }) {
           <Btc />
           {figure}
         </span>
+        <span className="tb-ps-span-u" aria-hidden>sats</span>
       </div>
       <div>
         <div className="tb-ps-fact-title">
@@ -285,6 +286,7 @@ function Fare({ price }: { price: SheetPrice }) {
             <Btc />
             {formatSats(price.sats)}
           </data>
+          <span className="tb-ps-fare-u" aria-hidden>sats</span>
         </div>
       );
     case "range":
@@ -294,6 +296,7 @@ function Fare({ price }: { price: SheetPrice }) {
             <Btc />
             {formatSats(price.from)}–{formatSats(price.to)}
           </span>
+          <span className="tb-ps-fare-u" aria-hidden>sats</span>
           <span className="tb-ps-fare-note">by {price.by.map((p) => p.replace(/_/g, " ")).join(", ")}</span>
         </div>
       );
@@ -316,7 +319,8 @@ function Fare({ price }: { price: SheetPrice }) {
                   max <Btc />
                   {formatSats(price.max)}
                 </>
-              )}
+              )}{" "}
+              sats
             </span>
           )}
         </div>
@@ -324,7 +328,7 @@ function Fare({ price }: { price: SheetPrice }) {
   }
 }
 
-/** The sats sign, set before a figure the way $ or € would be. */
+/** The sats sign, set before a figure the way $ or € would be; the "sats" beneath keeps it from reading as whole bitcoin. */
 function Btc() {
   return <Bitcoin className="tb-ps-btc" aria-hidden />;
 }
