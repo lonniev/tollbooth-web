@@ -53,6 +53,16 @@ const STANDARD_BOOTSTRAP = [
 
 const STANDARD_QUIET = ["service_status", "get_nostr_profile"];
 
+/**
+ * Whether a call goes without the signed-in npub. The `oracle_*` tools are
+ * the Oracle's own, passed through by every operator, and none of them acts
+ * as the caller; an npub one does take (`oracle_lookup_member`) is the
+ * caller's own argument.
+ */
+export function takesNoNpub(tool: string, extra: readonly string[] = []): boolean {
+  return STANDARD_BOOTSTRAP.includes(tool) || tool.startsWith("oracle_") || extra.includes(tool);
+}
+
 let client: Client | null = null;
 let connecting: Promise<void> | null = null;
 
@@ -149,7 +159,7 @@ export async function callToolWithContent<T = unknown>(
   // so it is safe to log.
   if (!quiet) debugPush("call", `${name}(${redact(JSON.stringify(args)).slice(0, 140)})`);
 
-  const bootstrap = STANDARD_BOOTSTRAP.includes(tool) || cfg.extraBootstrapTools.includes(tool);
+  const bootstrap = takesNoNpub(tool, cfg.extraBootstrapTools);
   const merged = bootstrap ? { ...args } : { npub: getStoredNpub(), ...args };
   // A call this tab's holder proves rides a grant the operator keeps; a signed
   // call proves itself afresh and has none to lose.
