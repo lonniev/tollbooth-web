@@ -110,6 +110,7 @@ export {
   type UsageSummaryClassNames,
   type UsageSummaryProps,
 } from "./UsageSummary.tsx";
+export { default as WalletChooser, type WalletChooserProps } from "./WalletChooser.tsx";
 export { default as WalletCard, type WalletCardProps, type WalletCardClassNames } from "./WalletCard.tsx";
 export { default as WalletPage, type WalletPageProps, type WalletPageClassNames } from "./WalletPage.tsx";
 export { useSession, type Session } from "./useSession.ts";

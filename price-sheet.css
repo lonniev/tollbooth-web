@@ -530,3 +530,71 @@
   .tb-ps-skel-fare { justify-self: start; width: 30%; }
   .tb-ps-search { max-width: none; }
 }
+
+/* ── Need a wallet? ─────────────────────────────────────────────────────
+   The door is a fact card that opens; the dialog is a bottom sheet on a
+   phone and a centred card from tablet width up. */
+.tb-wc-door { cursor: pointer; text-align: left; font: inherit; color: inherit; width: 100%; }
+.tb-wc-door:hover, .tb-wc-door:focus-visible { border-color: var(--tb-accent); }
+.tb-wc-door > span:last-child { display: flex; flex-direction: column; }
+.tb-wc-door-mark {
+  flex: none; display: grid; place-items: center; width: 3.25rem; height: 3.25rem;
+  border-radius: 50%; border: 2.5px solid var(--tb-accent); color: var(--tb-accent);
+  background: color-mix(in srgb, var(--tb-accent) 10%, transparent);
+}
+.tb-wc-scrim {
+  position: fixed; inset: 0; z-index: 1000; display: flex; align-items: flex-end; justify-content: center;
+  background: color-mix(in srgb, var(--tb-ink) 40%, transparent);
+}
+.tb-wc-sheet {
+  width: 100%; max-height: 88vh; overflow: auto; outline: none;
+  padding: 1.1rem 1rem 1.25rem; border-radius: 1rem 1rem 0 0;
+  background: var(--tb-surface); color: var(--tb-ink); border: 1px solid var(--tb-line);
+  box-shadow: 0 12px 40px color-mix(in srgb, var(--tb-ink) 25%, transparent);
+}
+@media (min-width: 640px) {
+  .tb-wc-scrim { align-items: center; padding: 1.5rem; }
+  .tb-wc-sheet { max-width: 34rem; border-radius: 1rem; padding: 1.25rem 1.4rem 1.4rem; }
+}
+.tb-wc-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.tb-wc-title { margin: 0; font-family: var(--tb-ps-display-font, inherit); font-size: 1.3rem; font-weight: 600; }
+.tb-wc-close {
+  display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border: 0; border-radius: 0.5rem;
+  background: transparent; color: var(--tb-muted); cursor: pointer;
+}
+.tb-wc-close:hover { background: var(--tb-surface-2); color: var(--tb-ink); }
+.tb-wc-steps {
+  list-style: none; margin: 0.9rem 0 1rem; padding: 0; display: grid; gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+}
+.tb-wc-steps li {
+  padding: 0.6rem 0.7rem; border-radius: 0.6rem; background: var(--tb-surface-2);
+  font-size: 0.85rem; line-height: 1.35;
+}
+.tb-wc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+.tb-wc-card {
+  display: flex; gap: 0.8rem; align-items: flex-start; padding: 0.8rem;
+  border: 1px solid var(--tb-line); border-radius: 0.75rem;
+}
+.tb-wc-logo { flex: none; border-radius: 0.6rem; }
+.tb-wc-body { min-width: 0; flex: 1; }
+.tb-wc-name { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; font-weight: 600; }
+.tb-wc-pick {
+  font-size: 0.7rem; font-weight: 600; padding: 0.1rem 0.45rem; border-radius: 999px;
+  background: var(--tb-accent); color: var(--tb-on-accent);
+}
+.tb-wc-line { margin: 0.2rem 0 0; font-size: 0.85rem; line-height: 1.35; color: var(--tb-muted); }
+.tb-wc-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.45rem; }
+.tb-wc-chip {
+  font-size: 0.72rem; padding: 0.12rem 0.5rem; border-radius: 999px;
+  border: 1px solid var(--tb-line); color: var(--tb-muted);
+}
+.tb-wc-links { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
+.tb-wc-links a {
+  display: inline-flex; align-items: center; min-height: 2.5rem; padding: 0 0.85rem;
+  border-radius: 999px; border: 1px solid var(--tb-accent); color: var(--tb-accent);
+  font-size: 0.82rem; font-weight: 500; text-decoration: none;
+}
+.tb-wc-links a:first-child { background: var(--tb-accent); color: var(--tb-on-accent); }
+.tb-wc-note { margin: 0.85rem 0 0; font-size: 0.78rem; color: var(--tb-muted); }
+.tb-wc-credit { margin: 0.35rem 0 0; font-size: 0.68rem; color: var(--tb-muted); }

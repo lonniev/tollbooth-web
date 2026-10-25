@@ -22,7 +22,8 @@
 import { useCallback, useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { Bitcoin, Clock, Gift, Hash, Heart, Package, PartyPopper, RefreshCw, Search, Ticket, TrendingUp } from "lucide-react";
 import { listTools } from "../client.ts";
-import { tollboothConfig } from "../config.ts";
+import { tollboothConfig, toolName } from "../config.ts";
+import { LIGHTNING_WALLETS_TOOL } from "../lightningWallets.ts";
 import {
   filterSheet,
   priceSheet,
@@ -35,6 +36,7 @@ import { getPricingModel, type PricingModelResult } from "../standardTools.ts";
 import { signatureLines, toolSignature, type ToolSchema } from "../toolSignature.ts";
 import { formatSats } from "../wallet.ts";
 import RefreshButton from "./RefreshButton.tsx";
+import WalletChooser from "./WalletChooser.tsx";
 import { cx } from "./cx.ts";
 
 export interface PriceSheetProps {
@@ -56,6 +58,8 @@ export interface PriceSheetProps {
   searchFrom?: number;
   /** Start with the free tools unfolded. Default false. */
   freeOpen?: boolean;
+  /** Offer "Need a wallet?" beside the facts, where the operator serves the list. Default true. */
+  walletHelp?: boolean;
   /** Site content under the header. */
   before?: ReactNode;
   /** Site content at the end. */
@@ -86,6 +90,7 @@ export default function PriceSheet({
   label = (t) => t.title,
   searchFrom = 12,
   freeOpen = false,
+  walletHelp = true,
   before,
   children,
   className,
@@ -160,6 +165,7 @@ export default function PriceSheet({
           <div className="tb-ps-facts">
             <CreditLife expiry={sheet.expiry} />
             <FareSpan sheet={sheet} />
+            {walletHelp && byName.has(toolName(LIGHTNING_WALLETS_TOOL)) && <WalletChooser />}
           </div>
         )}
       </header>
