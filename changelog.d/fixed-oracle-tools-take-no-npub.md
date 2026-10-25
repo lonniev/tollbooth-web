@@ -1,1 +1,0 @@
-- Calls to an `oracle_*` tool no longer add the signed-in npub, which those tools refused. That's why "Need a wallet?" said the list didn't load.
