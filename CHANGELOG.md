@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [2.5.1] — 2026-10-25
+
+### Fixed
+
+- Calls to an `oracle_*` tool no longer add the signed-in npub, which those tools refused. That's why "Need a wallet?" said the list didn't load.
+
 ## [2.5.0] — 2026-10-25
 
 ### Added
