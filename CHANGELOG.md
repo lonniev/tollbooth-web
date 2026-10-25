@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [2.5.0] — 2026-10-25
+
+### Added
+
+- `WalletChooser`: a "Need a wallet?" card on the price sheet. It opens the steps from no wallet to paid, and the wallets people use this week with their App Store, Google Play and web links, read live from the Oracle. `PriceSheet` shows it wherever the operator serves `oracle_lightning_wallets`, and `walletHelp={false}` turns it off.
+
 ## [2.4.1] — 2026-10-23
 
 ### Fixed
