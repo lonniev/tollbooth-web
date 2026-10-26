@@ -2,6 +2,14 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [2.6.0] — 2026-10-25
+
+### Changed
+
+- A top-up's Pay button now opens the patron's own Lightning wallet on the invoice (`lightning:` + BOLT11), and BTCPay's checkout stays beside it for its QR code. New `payLink(invoice)` gives sites the same link.
+- An open invoice now says "Watching for your payment." while the page checks it, and the button reads "Check now". The page checks every 7 s (was 5 s), and `useTopUp` returns `watching`.
+- "Need a wallet?" shows custody and card buying as plain text, and offers only the store the device installs from: App Store on iPhone, iPad and Mac, Google Play on Android, and neither elsewhere.
+
 ## [2.5.1] — 2026-10-25
 
 ### Fixed
