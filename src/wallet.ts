@@ -67,6 +67,20 @@ export function invoiceFrom(result: PurchaseCreditsResult, asked: number): Invoi
   };
 }
 
+/** A BOLT11 invoice: `ln`, then letters and digits only. */
+const BOLT11 = /^ln[a-z0-9]+$/i;
+
+/**
+ * The link that opens the patron's own wallet on this invoice: `lightning:`
+ * plus the BOLT11, so a tap on a phone goes straight to Strike, Phoenix or
+ * whichever wallet is installed. Without a BOLT11 it is BTCPay's checkout,
+ * and with neither it is null.
+ */
+export function payLink(invoice: Invoice): string | null {
+  if (invoice.bolt11 && BOLT11.test(invoice.bolt11)) return `lightning:${invoice.bolt11}`;
+  return invoice.checkoutLink;
+}
+
 /** A whole number of sats worth invoicing, from what the patron typed; else null. */
 export function parseSats(input: string | number): number | null {
   const n = typeof input === "number" ? input : Number(String(input).replace(/[\s,_]/g, ""));

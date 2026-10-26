@@ -23,7 +23,7 @@ import {
   type CheckBalanceResult,
   type CreditTranche,
 } from "../standardTools.ts";
-import { amountReducer, formatSats, parseSats, presetChosen } from "../wallet.ts";
+import { amountReducer, formatSats, parseSats, payLink, presetChosen } from "../wallet.ts";
 import CouponsPanel, { type CouponsPanelProps } from "./CouponsPanel.tsx";
 import { useTopUp, type UseTopUpOptions } from "./useTopUp.ts";
 import { cx } from "./cx.ts";
@@ -46,8 +46,8 @@ export interface WalletPageClassNames {
   /** Every action. */
   chip?: string;
   /**
-   * The action that moves a top-up forward — "Create invoice", then "Open
-   * checkout" — in place of `chip`, for a site that gives it its accent.
+   * The action that moves a top-up forward — "Create invoice", then "Open in
+   * wallet" — in place of `chip`, for a site that gives it its accent.
    * Default: `chip`.
    */
   primary?: string;
@@ -287,8 +287,18 @@ function TopUpSection({
           <p className={c.status}>Invoice for {formatSats(state.invoice.sats)} sats</p>
           {state.invoice.bolt11 && <div className={c.bolt11}>{state.invoice.bolt11}</div>}
           <div className={c.chips}>
+            {state.invoice.bolt11 && (
+              <a href={payLink(state.invoice) ?? "#"} className={primary}>
+                Open in wallet
+              </a>
+            )}
             {state.invoice.checkoutLink && (
-              <a href={state.invoice.checkoutLink} target="_blank" rel="noreferrer" className={primary}>
+              <a
+                href={state.invoice.checkoutLink}
+                target="_blank"
+                rel="noreferrer"
+                className={state.invoice.bolt11 ? c.chip : primary}
+              >
                 Open checkout
               </a>
             )}
