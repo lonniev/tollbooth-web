@@ -76,7 +76,21 @@ export async function lightningWallets(): Promise<LightningWallets | null> {
   return shapeWallets(await callTool(LIGHTNING_WALLETS_TOOL, {}));
 }
 
-/** The custody chip's words. */
+/** Which app store this device installs from: Apple's, Google's, or neither. */
+export type Store = "apple" | "google" | null;
+
+/**
+ * The store for the device the page is on. iPhone, iPad and Mac take the App
+ * Store (an iPad may name itself a Mac); Android takes Google Play. Anything
+ * else gets neither, and the wallet's website says where to find it.
+ */
+export function storeFor(userAgent: string): Store {
+  if (/Android/i.test(userAgent)) return "google";
+  if (/iPhone|iPad|iPod|Macintosh/i.test(userAgent)) return "apple";
+  return null;
+}
+
+/** The custody label's words. */
 export function custodyWords(c: Custody): string {
   return c === "custodial" ? "Holds your sats for you" : c === "self-custodial" ? "Your keys, on your phone" : "Either way";
 }

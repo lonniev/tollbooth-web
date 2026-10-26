@@ -584,11 +584,7 @@
   background: var(--tb-accent); color: var(--tb-on-accent);
 }
 .tb-wc-line { margin: 0.2rem 0 0; font-size: 0.85rem; line-height: 1.35; color: var(--tb-muted); }
-.tb-wc-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.45rem; }
-.tb-wc-chip {
-  font-size: 0.72rem; padding: 0.12rem 0.5rem; border-radius: 999px;
-  border: 1px solid var(--tb-line); color: var(--tb-muted);
-}
+.tb-wc-facts { margin: 0.35rem 0 0; font-size: 0.78rem; color: var(--tb-muted); }
 .tb-wc-links { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
 .tb-wc-links a {
   display: inline-flex; align-items: center; min-height: 2.5rem; padding: 0 0.85rem;

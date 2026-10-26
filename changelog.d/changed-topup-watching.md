@@ -1,0 +1,2 @@
+- An open invoice now says "Watching for your payment." while the page checks it, and the button reads "Check now". The page checks every 7 s (was 5 s), and `useTopUp` returns `watching`.
+- "Need a wallet?" shows custody and card buying as plain text, and offers only the store the device installs from: App Store on iPhone, iPad and Mac, Google Play on Android, and neither elsewhere.
