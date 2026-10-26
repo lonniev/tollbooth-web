@@ -8,6 +8,7 @@ import {
   couponUsesText,
   formatSats,
   invoiceFrom,
+  payLink,
   parseSats,
   paymentPhase,
   presetChosen,
@@ -128,6 +129,14 @@ describe("reading the service's answers", () => {
       sats: 500,
     });
     assert.equal(invoiceFrom({ invoice_id: "a", error: "no" }, 1), null);
+  });
+
+  it("opens the wallet on the BOLT11, else the checkout", () => {
+    const inv = { id: "a", checkoutLink: "https://pay.example/i/a", bolt11: "lnbc10n1pxyz", sats: 1 };
+    assert.equal(payLink(inv), "lightning:lnbc10n1pxyz");
+    assert.equal(payLink({ ...inv, bolt11: null }), "https://pay.example/i/a");
+    assert.equal(payLink({ ...inv, bolt11: "javascript:alert(1)" }), "https://pay.example/i/a");
+    assert.equal(payLink({ ...inv, bolt11: null, checkoutLink: null }), null);
   });
 
   it("parses typed amounts", () => {

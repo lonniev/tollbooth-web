@@ -1,0 +1,1 @@
+- A top-up's Pay button now opens the patron's own Lightning wallet on the invoice (`lightning:` + BOLT11), and BTCPay's checkout stays beside it for its QR code. New `payLink(invoice)` gives sites the same link.

@@ -15,7 +15,7 @@ import { useCallback, useEffect, useReducer, useState } from "react";
 import { RefreshCw, Zap } from "lucide-react";
 import { tollboothConfig } from "../config.ts";
 import { checkBalance } from "../standardTools.ts";
-import { amountReducer, formatSats, parseSats, presetChosen } from "../wallet.ts";
+import { amountReducer, formatSats, parseSats, payLink, presetChosen } from "../wallet.ts";
 import { card, ghost, iconButton, muted, primary } from "./ui.ts";
 import { useTopUp } from "./useTopUp.ts";
 
@@ -113,14 +113,18 @@ export default function WalletCard({ topUps = DEFAULT_TOP_UPS, classNames = {} }
       ) : (
         <div className="mt-4 space-y-2">
           <a
-            href={invoice.checkoutLink ?? (invoice.bolt11 ? `lightning:${invoice.bolt11}` : "#")}
-            target="_blank"
-            rel="noreferrer"
+            href={payLink(invoice) ?? "#"}
+            {...(invoice.bolt11 ? {} : { target: "_blank", rel: "noreferrer" })}
             className={cx(c.primary, "flex items-center justify-center gap-2")}
           >
             <Zap size={16} /> Pay {invoice.sats.toLocaleString("en-US")} sats
           </a>
           <div className="flex gap-2">
+            {invoice.bolt11 && invoice.checkoutLink && (
+              <a href={invoice.checkoutLink} target="_blank" rel="noreferrer" className={cx(c.chip, "text-center")}>
+                QR code
+              </a>
+            )}
             <button type="button" disabled={busy} onClick={check} className={c.chip}>
               I've paid — check
             </button>
