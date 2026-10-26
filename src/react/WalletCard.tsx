@@ -15,7 +15,7 @@ import { useCallback, useEffect, useReducer, useState } from "react";
 import { RefreshCw, Zap } from "lucide-react";
 import { tollboothConfig } from "../config.ts";
 import { checkBalance } from "../standardTools.ts";
-import { amountReducer, formatSats, parseSats, payLink, presetChosen } from "../wallet.ts";
+import { amountReducer, awaitingWords, formatSats, parseSats, payLink, presetChosen } from "../wallet.ts";
 import { card, ghost, iconButton, muted, primary } from "./ui.ts";
 import { useTopUp } from "./useTopUp.ts";
 
@@ -55,7 +55,7 @@ export default function WalletCard({ topUps = DEFAULT_TOP_UPS, classNames = {} }
 
   useEffect(load, [load]);
 
-  const { state, create, check, cancel } = useTopUp({ onSettled: load });
+  const { state, watching, create, check, cancel } = useTopUp({ onSettled: load });
   const [amount, pick] = useReducer(amountReducer, "");
   const sats = parseSats(amount);
   const busy = state.phase === "creating" || (state.phase === "awaiting" && state.checking);
@@ -65,8 +65,8 @@ export default function WalletCard({ topUps = DEFAULT_TOP_UPS, classNames = {} }
       ? `Paid. ${formatSats(state.credited)} sats added.`
       : state.phase === "failed"
         ? state.message
-        : state.phase === "awaiting" && state.status
-          ? `Not paid yet — ${state.status}`
+        : state.phase === "awaiting"
+          ? awaitingWords(state.status, watching)
           : state.phase === "idle"
             ? (state.message ?? "")
             : "";
@@ -126,7 +126,7 @@ export default function WalletCard({ topUps = DEFAULT_TOP_UPS, classNames = {} }
               </a>
             )}
             <button type="button" disabled={busy} onClick={check} className={c.chip}>
-              I've paid — check
+              Check now
             </button>
             <button type="button" onClick={cancel} className={cx(c.chip, "w-auto px-4")}>
               Cancel

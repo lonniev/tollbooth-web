@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { custodyWords, shapeWallets } from "./lightningWallets.ts";
+import { custodyWords, shapeWallets, storeFor } from "./lightningWallets.ts";
 
 const good = {
   id: "wos", name: "Wallet of Satoshi", line: "Easy.", custody: "self-custodial", buys_in_app: false,
@@ -35,5 +35,12 @@ describe("shapeWallets", () => {
     assert.equal(out?.rankedBy, "catalog");
     assert.equal(out?.wallets[0].custody, "either");
     assert.equal(custodyWords("custodial"), "Holds your sats for you");
+  });
+
+  it("offers only the store the device installs from", () => {
+    assert.equal(storeFor("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)"), "apple");
+    assert.equal(storeFor("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605"), "apple");
+    assert.equal(storeFor("Mozilla/5.0 (Linux; Android 15; Pixel 9)"), "google");
+    assert.equal(storeFor("Mozilla/5.0 (Windows NT 10.0; Win64; x64)"), null);
   });
 });

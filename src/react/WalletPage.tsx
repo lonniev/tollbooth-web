@@ -23,7 +23,7 @@ import {
   type CheckBalanceResult,
   type CreditTranche,
 } from "../standardTools.ts";
-import { amountReducer, formatSats, parseSats, payLink, presetChosen } from "../wallet.ts";
+import { amountReducer, awaitingWords, formatSats, parseSats, payLink, presetChosen } from "../wallet.ts";
 import CouponsPanel, { type CouponsPanelProps } from "./CouponsPanel.tsx";
 import { useTopUp, type UseTopUpOptions } from "./useTopUp.ts";
 import { cx } from "./cx.ts";
@@ -217,7 +217,7 @@ function TopUpSection({
   onSettled: () => void;
   c: WalletPageClassNames;
 }) {
-  const { state, create, check, cancel, reset } = useTopUp({ ...poll, onSettled });
+  const { state, watching, create, check, cancel, reset } = useTopUp({ ...poll, onSettled });
   const [amount, pick] = useReducer(amountReducer, "");
   const [copied, setCopied] = useState(false);
   const sats = parseSats(amount);
@@ -308,14 +308,14 @@ function TopUpSection({
               </button>
             )}
             <button type="button" disabled={state.checking} onClick={check} className={c.chip}>
-              {state.checking ? "Checking…" : "I've paid — check"}
+              {state.checking ? "Checking…" : "Check now"}
             </button>
             <button type="button" onClick={cancel} className={c.chip}>
               Cancel
             </button>
           </div>
           <p className={c.status} aria-live="polite">
-            {state.status ?? "Waiting for payment."}
+            {awaitingWords(state.status, watching)}
           </p>
         </div>
       )}

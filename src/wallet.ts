@@ -157,7 +157,8 @@ export function topUpReducer(state: TopUpState, event: TopUpEvent): TopUpState {
           return {
             ...state,
             checking: false,
-            status: r.message ?? r.status ?? null,
+            // "New" only says the invoice exists; a later word ("payment seen") is news.
+            status: r.status === "New" ? null : (r.message ?? r.status ?? null),
             checks: state.checks + 1,
           };
       }
@@ -174,6 +175,14 @@ export function topUpReducer(state: TopUpState, event: TopUpEvent): TopUpState {
     case "reset":
       return TOP_UP_IDLE;
   }
+}
+
+/**
+ * The line under an open invoice. The page checks by itself while `watching`,
+ * so it says so; once it stops, the patron's own check is the way on.
+ */
+export function awaitingWords(status: string | null, watching: boolean): string {
+  return status ?? (watching ? "Watching for your payment." : "Paid? Tap Check now.");
 }
 
 /** Whether a poll should run now: an invoice is out, nothing is in flight, and the budget is not spent. */

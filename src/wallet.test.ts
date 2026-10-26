@@ -8,6 +8,7 @@ import {
   couponUsesText,
   formatSats,
   invoiceFrom,
+  awaitingWords,
   payLink,
   parseSats,
   paymentPhase,
@@ -137,6 +138,18 @@ describe("reading the service's answers", () => {
     assert.equal(payLink({ ...inv, bolt11: null }), "https://pay.example/i/a");
     assert.equal(payLink({ ...inv, bolt11: "javascript:alert(1)" }), "https://pay.example/i/a");
     assert.equal(payLink({ ...inv, bolt11: null, checkoutLink: null }), null);
+  });
+
+  it("says the page is watching, until it stops", () => {
+    assert.equal(awaitingWords(null, true), "Watching for your payment.");
+    assert.equal(awaitingWords(null, false), "Paid? Tap Check now.");
+    assert.equal(awaitingWords("Payment seen.", true), "Payment seen.");
+  });
+
+  it("drops BTCPay's New word, keeps later news", () => {
+    const out = run([{ type: "create", sats: 1 }, { type: "created", result: { invoice_id: "a" } }]);
+    const s = run([{ type: "checked", result: { status: "New", message: "Invoice created, awaiting payment." } }], out);
+    assert.ok(s.phase === "awaiting" && s.status === null);
   });
 
   it("parses typed amounts", () => {

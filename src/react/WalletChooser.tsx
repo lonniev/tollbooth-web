@@ -11,7 +11,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { Wallet, X } from "lucide-react";
-import { custodyWords, lightningWallets, type LightningWallets } from "../lightningWallets.ts";
+import { custodyWords, lightningWallets, storeFor, type LightningWallets } from "../lightningWallets.ts";
 import { cx } from "./cx.ts";
 
 export interface WalletChooserProps {
@@ -47,6 +47,7 @@ function WalletDialog({ onClose }: { onClose: () => void }) {
   const box = useRef<HTMLDivElement>(null);
   const [list, setList] = useState<LightningWallets | null>(null);
   const [failed, setFailed] = useState(false);
+  const store = typeof navigator === "undefined" ? null : storeFor(navigator.userAgent);
 
   useEffect(() => { box.current?.focus(); }, []);
   useEffect(() => {
@@ -95,13 +96,13 @@ function WalletDialog({ onClose }: { onClose: () => void }) {
                       {w.pinned && <span className="tb-wc-pick">Our pick</span>}
                     </div>
                     <p className="tb-wc-line">{w.line}</p>
-                    <div className="tb-wc-chips">
-                      <span className="tb-wc-chip">{custodyWords(w.custody)}</span>
-                      {w.buysInApp && <span className="tb-wc-chip">Buy sats with a card</span>}
-                    </div>
+                    <p className="tb-wc-facts">
+                      {custodyWords(w.custody)}
+                      {w.buysInApp && " · Buy sats with a card"}
+                    </p>
                     <div className="tb-wc-links">
-                      {w.appStore && <a href={w.appStore} target="_blank" rel="noopener noreferrer">App Store</a>}
-                      {w.googlePlay && <a href={w.googlePlay} target="_blank" rel="noopener noreferrer">Google Play</a>}
+                      {store === "apple" && w.appStore && <a href={w.appStore} target="_blank" rel="noopener noreferrer">App Store</a>}
+                      {store === "google" && w.googlePlay && <a href={w.googlePlay} target="_blank" rel="noopener noreferrer">Google Play</a>}
                       <a href={w.homepage} target="_blank" rel="noopener noreferrer">Website</a>
                     </div>
                   </div>

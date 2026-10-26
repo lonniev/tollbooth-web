@@ -5,7 +5,8 @@
  * The state machine is `topUpReducer` (framework-free, tested). This adds the
  * calls and the polling: while an invoice is out and the tab is visible,
  * check_payment runs every `pollMs` — it is free and safe to repeat — up to
- * `maxChecks` times, after which the patron's own "check" still works.
+ * `maxChecks` times, after which the patron's own "Check now" still works.
+ * `watching` says whether it is still checking, so the page can say so.
  */
 
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
@@ -13,9 +14,9 @@ import { checkPayment, purchaseCredits } from "../standardTools.ts";
 import { shouldPoll, TOP_UP_IDLE, topUpReducer, type TopUpState } from "../wallet.ts";
 
 export interface UseTopUpOptions {
-  /** How often to check an open invoice, in ms. 0 turns polling off. Default 5000. */
+  /** How often to check an open invoice, in ms. 0 turns polling off. Default 7000: a payment takes about 10 s to settle. */
   pollMs?: number;
-  /** Stop polling after this many checks. Default 60 (five minutes at the default rate). */
+  /** Stop polling after this many checks. Default 60 (seven minutes at the default rate). */
   maxChecks?: number;
   /** Called once when an invoice settles, with the sats credited — refresh a balance here. */
   onSettled?: (credited: number) => void;
@@ -23,6 +24,8 @@ export interface UseTopUpOptions {
 
 export interface TopUp {
   state: TopUpState;
+  /** True while the page is checking the open invoice by itself. */
+  watching: boolean;
   /** Ask the service for an invoice of `sats`. Ignored while one is being made or is out. */
   create: (sats: number) => void;
   /** Check the open invoice now. */
@@ -41,7 +44,7 @@ function tabHidden(): boolean {
   return typeof document !== "undefined" && document.visibilityState === "hidden";
 }
 
-export function useTopUp({ pollMs = 5000, maxChecks = 60, onSettled }: UseTopUpOptions = {}): TopUp {
+export function useTopUp({ pollMs = 7000, maxChecks = 60, onSettled }: UseTopUpOptions = {}): TopUp {
   const [state, dispatch] = useReducer(topUpReducer, TOP_UP_IDLE);
   const latest = useRef(state);
   latest.current = state;
@@ -100,5 +103,6 @@ export function useTopUp({ pollMs = 5000, maxChecks = 60, onSettled }: UseTopUpO
     if (state.phase === "settled") settledRef.current?.(state.credited);
   }, [state]);
 
-  return { state, create, check, cancel, reset };
+  const watching = pollMs > 0 && state.phase === "awaiting" && state.checks < maxChecks;
+  return { state, watching, create, check, cancel, reset };
 }
