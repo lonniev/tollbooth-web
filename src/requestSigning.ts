@@ -7,7 +7,7 @@
 
 import { finalizeEvent } from "nostr-tools";
 
-import { holderBearer } from "./holder.ts";
+import { holderBearer, reconnectAfterRefusal } from "./holder.ts";
 import { getStoredNpub } from "./identity.ts";
 import { clearSessionNsec, getSessionNsecBytes, hasSessionNsec, sessionNsecNpub } from "./sessionNsec.ts";
 
@@ -75,9 +75,23 @@ export const signingFetch: typeof fetch = async (input, init) => {
     const request = new Request(input, init);
     const body = typeof init?.body === "string" ? init.body : "";
     headers.set("Authorization", await signRequest(request.method, request.url, body, getSessionNsecBytes()));
-  } else {
-    const bearer = await holderBearer();
-    if (bearer) headers.set("Authorization", `Bearer ${bearer}`);
+    return fetch(input, { ...init, headers });
   }
+  const bearer = await holderBearer();
+  if (!bearer) return fetch(input, { ...init, headers });
+  headers.set("Authorization", `Bearer ${bearer}`);
+  const answer = await fetch(input, { ...init, headers });
+  // A 401 means the operator no longer knows this holder, and the request
+  // never ran. Connect afresh and send it once more; a page left holding a
+  // dead bearer could otherwise never sign in again.
+  if (answer.status !== 401 || !replayable(input, init)) return answer;
+  const next = await reconnectAfterRefusal(bearer);
+  if (!next) return answer;
+  headers.set("Authorization", `Bearer ${next}`);
   return fetch(input, { ...init, headers });
 };
+
+/** A request whose body can be sent twice: none, or a string. */
+function replayable(input: RequestInfo | URL, init?: RequestInit): boolean {
+  return !(input instanceof Request) && (init?.body == null || typeof init.body === "string");
+}
