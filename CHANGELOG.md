@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [2.6.1] — 2026-10-27
+
+### Fixed
+
+- A page waking after an hour no longer signs its patron out. Calls that found the holder token lapsing each refreshed it, the operator read the second spent refresh token as theft and disconnected the holder, and the page kept sending the dead bearer. Now one refresh runs at a time across every tab, and a bearer the operator answers with 401 is replaced by a fresh connection and the request sent once more.
+
 ## [2.6.0] — 2026-10-25
 
 ### Changed
