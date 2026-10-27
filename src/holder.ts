@@ -10,12 +10,21 @@
  * into it, and answers a page in JSON), and exchange the code. The page never
  * leaves itself. Tokens refresh on their own; a refresh token is single-use,
  * so each refresh stores the pair it returns.
+ *
+ * Only one refresh may be in flight, across every tab on the site. The
+ * operator reads a spent refresh token coming back as theft and disconnects
+ * the holder, so two calls racing to refresh the same pair — a page waking
+ * after an hour and loading its panels at once — cost the patron the whole
+ * connection. Concurrent callers here share one refresh, and a Web Lock
+ * serialises tabs, each re-reading the store once it holds the lock.
  */
 
 import { tollboothConfig } from "./config.ts";
-import { readStored, removeStored, writeStored } from "./storage.ts";
+import { key, readStored, removeStored, writeStored } from "./storage.ts";
 
 const TOKENS = "holder:v1";
+/** The DM sign-ins this holder holds; they go with it. See identity.ts. */
+export const RECENT_LOGINS = "recent-logins:v1";
 /** Refresh this long before the access token lapses. */
 const REFRESH_EARLY_MS = 60_000;
 
@@ -41,6 +50,15 @@ export function holderEnabled(): boolean {
 /** The address the code is issued to. Registered and named, never visited. */
 function redirectUri(): string {
   return `${globalThis.location.origin}/`;
+}
+
+/** The operator answered the token endpoint with a refusal, not a network fault. */
+class TokenRefused extends Error {
+  readonly status: number;
+  constructor(status: number) {
+    super(`The service refused the connection (${status}).`);
+    this.status = status;
+  }
 }
 
 function readTokens(): Tokens | null {
@@ -88,7 +106,7 @@ async function token(form: Record<string, string>, clientId: string): Promise<To
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ ...form, client_id: clientId, resource: `${operator()}/mcp` }),
   });
-  if (!r.ok) throw new Error(`The service refused the connection (${r.status}).`);
+  if (!r.ok) throw new TokenRefused(r.status);
   const t = await r.json();
   return {
     clientId,
@@ -137,21 +155,70 @@ export async function connectAsHolder(): Promise<void> {
 export async function holderBearer(): Promise<string | null> {
   const t = readTokens();
   if (!t) return null;
-  if (t.expiresAt - REFRESH_EARLY_MS > Date.now()) return t.accessToken;
+  if (fresh(t)) return t.accessToken;
+  refreshing ??= withTokenLock(refresh).finally(() => { refreshing = null; });
+  return refreshing;
+}
+
+let refreshing: Promise<string | null> | null = null;
+
+function fresh(t: Tokens): boolean {
+  return t.expiresAt - REFRESH_EARLY_MS > Date.now();
+}
+
+/** Run `fn` holding this site's token lock, so no two tabs refresh one pair. */
+function withTokenLock<T>(fn: () => Promise<T>): Promise<T> {
+  const locks = globalThis.navigator?.locks;
+  return locks ? locks.request(key(TOKENS), fn) : fn();
+}
+
+async function refresh(): Promise<string | null> {
+  // Another tab may have refreshed while this one waited for the lock.
+  const t = readTokens();
+  if (!t) return null;
+  if (fresh(t)) return t.accessToken;
   try {
-    const fresh = await token({ grant_type: "refresh_token", refresh_token: t.refreshToken }, t.clientId);
-    writeTokens(fresh);
-    return fresh.accessToken;
-  } catch {
-    removeStored(TOKENS);
+    const next = await token({ grant_type: "refresh_token", refresh_token: t.refreshToken }, t.clientId);
+    writeTokens(next);
+    return next.accessToken;
+  } catch (e) {
+    // A refusal ends this holder; a network fault leaves it for the next try.
+    if (e instanceof TokenRefused) dropHolder();
     return null;
   }
+}
+
+/** Forget this tab's holder and the sign-ins it held, without telling the operator. */
+function dropHolder(): void {
+  removeStored(TOKENS);
+  removeStored(RECENT_LOGINS);
+}
+
+/**
+ * The operator answered `bearer` with 401: it no longer knows this holder.
+ * Connect afresh and return the new bearer, or null when this tab was not
+ * riding that bearer or cannot reconnect. The sign-ins the old holder held
+ * are gone with it; the patron proves them again.
+ */
+export async function reconnectAfterRefusal(bearer: string): Promise<string | null> {
+  return withTokenLock(async () => {
+    const t = readTokens();
+    // Another call already replaced it: use the new one.
+    if (t && t.accessToken !== bearer) return fresh(t) ? t.accessToken : null;
+    dropHolder();
+    try {
+      await connectAsHolder();
+    } catch {
+      return null;
+    }
+    return readTokens()?.accessToken ?? null;
+  });
 }
 
 /** Disconnect: the operator forgets this holder and every npub it held. */
 export async function forgetHolder(): Promise<void> {
   const t = readTokens();
-  removeStored(TOKENS);
+  dropHolder();
   if (!t) return;
   try {
     await fetch(`${operator()}/revoke`, {

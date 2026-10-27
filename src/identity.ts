@@ -12,14 +12,13 @@
  * connection. The page itself keeps no proof.
  */
 
-import { forgetHolder, isHolder } from "./holder.ts";
+import { RECENT_LOGINS as RECENT, forgetHolder, isHolder } from "./holder.ts";
 import { clearSessionNsec, hasSessionNsec, sessionNsecNpub } from "./sessionNsec.ts";
 import { canSignFor, isProven, type Claim } from "./signedIn.ts";
 import { readStored, removeStored, writeStored } from "./storage.ts";
 
 const NPUB = "patron_npub:v1";
 const LAST_TYPED = "last_typed_npub:v1";
-const RECENT = "recent-logins:v1";
 const MAX_RECENT = 5;
 
 export function getStoredNpub(): string {
