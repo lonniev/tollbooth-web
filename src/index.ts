@@ -34,6 +34,7 @@ export * from "./lightningWallets.ts";
 export * from "./table.ts";
 export * from "./theme.ts";
 export * from "./timezone.ts";
+export * from "./properties.ts";
 export { usageFacts, type ToolSpend, type UsageFacts } from "./usage.ts";
 export {
   expiryPolicy,

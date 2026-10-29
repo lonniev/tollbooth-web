@@ -117,6 +117,12 @@ export { useSession, type Session } from "./useSession.ts";
 export { useDebugLog } from "./useDebugLog.ts";
 export { useTheme } from "./useTheme.ts";
 export { useTimezone } from "./useTimezone.ts";
+export { useProperty } from "./useProperty.ts";
+export {
+  default as OperatorProperties,
+  type OperatorPropertiesClassNames,
+  type OperatorPropertiesProps,
+} from "./OperatorProperties.tsx";
 export { useTopUp, type TopUp, type UseTopUpOptions } from "./useTopUp.ts";
 export {
   TourProvider,

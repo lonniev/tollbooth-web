@@ -11,6 +11,8 @@
  * Lifted from eXcalibur's `lib/timezone.ts` (roastify held a copy).
  */
 
+import { propertyChanged } from "./properties.ts";
+import { mirrorProperty } from "./propertyMirrors.ts";
 import { readStored, writeStored, key } from "./storage.ts";
 
 export type TimezonePref = "auto" | (string & {});
@@ -86,13 +88,27 @@ export function readTimezonePref(): TimezonePref {
 
 const listeners = new Set<(pref: TimezonePref) => void>();
 
-/** Store the preference (normalized) and tell every listener on the page. */
-export function writeTimezonePref(next: string): TimezonePref {
+function storeTimezonePref(next: string): TimezonePref {
   const value = normalizeTimezonePref(next);
   writeStored(PREF, value);
   listeners.forEach((fn) => fn(value));
   return value;
 }
+
+/**
+ * Store the preference (normalized), tell every listener on the page, and
+ * keep it with the signed-in account: it is the `timezone` property.
+ */
+export function writeTimezonePref(next: string): TimezonePref {
+  const value = storeTimezonePref(next);
+  propertyChanged("timezone", value);
+  return value;
+}
+
+mirrorProperty("timezone", {
+  read: () => (readStored(PREF) ? readTimezonePref() : undefined),
+  write: (v) => void storeTimezonePref(typeof v === "string" ? v : "auto"),
+});
 
 /** Hear every `writeTimezonePref` on this page. Returns an unsubscribe. */
 export function onTimezoneChange(fn: (pref: TimezonePref) => void): () => void {

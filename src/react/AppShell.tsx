@@ -17,13 +17,18 @@
  * site keeps no session context of its own.
  *
  * Also done here, once: the stored theme applied before paint and followed
- * across tabs; the npub's kind-0 picture seeded as its avatar; `DebugPanel`
+ * across tabs; the npub's kind-0 picture seeded as its avatar; the patron's
+ * properties settled with their account on sign-in; `DebugPanel`
  * mounted last, so its spacer is the page's last thing (see `shellLayout`).
  */
 
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useReducer, useRef, type ReactNode } from "react";
 import { hydrateAvatarFromNostr } from "../avatar.ts";
 import { debugPush } from "../debugLog.ts";
+import { syncProperties } from "../properties.ts";
+// The standard properties register their local storage as they load.
+import "../timezone.ts";
+import "../tourPrefs.ts";
 import { serviceStatus, type ServiceStatus } from "../standardTools.ts";
 import { bootstrapTheme, type Theme } from "../theme.ts";
 import DebugPanel, { type DebugPanelProps } from "./DebugPanel.tsx";
@@ -131,6 +136,11 @@ export default function AppShell({
   const { npub, signedIn, notice, refresh } = session;
   useEffect(() => {
     if (signedIn && npub) void hydrateAvatarFromNostr(npub);
+  }, [signedIn, npub]);
+
+  // Settle this device's properties with the account, once per sign-in.
+  useEffect(() => {
+    if (signedIn && npub) void syncProperties(npub);
   }, [signedIn, npub]);
 
   const { status, state: statusState, error: statusError } = check;

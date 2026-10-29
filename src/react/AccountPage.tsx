@@ -1,6 +1,7 @@
 /**
  * The Profile page every site composed for itself, in one order for all of
- * them: Nostr profile, session key, usage, time zone, theme, coupons, build.
+ * them: Nostr profile, session key, the operator's properties (for the
+ * operator alone), usage, time zone, theme, coupons, build.
  *
  * Each section is on by default; `false` turns it off and an object passes it
  * its own props (headings, words, `classNames`). A site's own panels go in
@@ -20,6 +21,7 @@ import { accountSteps, type AccountSection } from "./accountSections.ts";
 import BuildInfoPanel, { type BuildInfoPanelProps } from "./BuildInfoPanel.tsx";
 import CouponsPanel, { type CouponsPanelProps } from "./CouponsPanel.tsx";
 import NostrProfilePanel from "./NostrProfilePanel.tsx";
+import OperatorProperties, { type OperatorPropertiesProps } from "./OperatorProperties.tsx";
 import SessionKeyClaim, { type SessionKeyClaimProps } from "./SessionKeyClaim.tsx";
 import ThemeToggle, { type ThemeToggleProps } from "./ThemeToggle.tsx";
 import TimezonePicker, { type TimezonePickerProps } from "./TimezonePicker.tsx";
@@ -57,6 +59,8 @@ export interface AccountPageProps {
   heading?: ReactNode;
   profile?: boolean | { onPublished?: (profile: Kind0) => void };
   sessionKey?: boolean | Omit<SessionKeyClaimProps, "npub">;
+  /** What the operator may tune; drawn only for the operator, where any are declared. */
+  operator?: boolean | OperatorPropertiesProps;
   usage?: boolean | UsageSummaryProps;
   timezone?: boolean | AccountTimezoneProps;
   theme?: boolean | AccountThemeProps;
@@ -79,6 +83,7 @@ export default function AccountPage({
   heading = "Profile",
   profile,
   sessionKey,
+  operator,
   usage,
   timezone,
   theme,
@@ -95,6 +100,7 @@ export default function AccountPage({
   const shown = {
     profile: profile !== false,
     sessionKey: sessionKey !== false,
+    operator: operator !== false,
     usage: usage !== false,
     timezone: timezone !== false,
     theme: theme !== false,
@@ -109,6 +115,8 @@ export default function AccountPage({
       case "sessionKey":
         // Keyed by npub so a revealed key never carries across a sign-in.
         return <SessionKeyClaim key={npub} npub={npub} {...opts(sessionKey)} />;
+      case "operator":
+        return <OperatorProperties {...opts(operator)} />;
       case "usage":
         return <UsageSummary {...opts(usage)} />;
       case "timezone": {
