@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [2.7.0] — 2026-10-29
+
+### Added
+
+- Properties, the browser half of the wheel's: `useProperty(name, fallback)` reads and sets one setting the same way whether it follows the account (kept with the npub, on every device) or the device. `AppShell` settles a device with the account on sign-in: the account wins, and the first sign-in on a device writes a choice the account lacks up once. The time zone and the tour switch now follow the account, keeping the storage they had. `OperatorProperties`, a new `operator` section of `AccountPage` drawn for the operator alone, sets what the operator may tune — e.g. which LLM model each use runs on. Needs tollbooth-dpyc with properties.
+
 ## [2.6.1] — 2026-10-27
 
 ### Fixed
