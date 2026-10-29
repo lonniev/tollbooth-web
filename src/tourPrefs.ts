@@ -6,6 +6,8 @@
  */
 
 import { getStoredNpub } from "./identity.ts";
+import { propertyChanged } from "./properties.ts";
+import { mirrorProperty } from "./propertyMirrors.ts";
 import { key, readStored, writeStored } from "./storage.ts";
 import { fromStored, type TourPrefs } from "./tour/state.ts";
 
@@ -42,14 +44,30 @@ export function readTourPrefs(): TourPrefs {
 
 const listeners = new Set<(p: TourPrefs) => void>();
 
-/** Store the preference and tell every listener on the page. */
-export function writeTourPrefs(next: TourPrefs): TourPrefs {
+function storeTourPrefs(next: TourPrefs): TourPrefs {
   writeStored(PREF, JSON.stringify(next));
   lastRaw = null;
   const stored = readTourPrefs();
   listeners.forEach((fn) => fn(stored));
   return stored;
 }
+
+/**
+ * Store the preference and tell every listener on the page. Whether the tour
+ * runs is the account's `tour` property; which pages have had theirs stays on
+ * this device.
+ */
+export function writeTourPrefs(next: TourPrefs): TourPrefs {
+  const before = readStored(PREF) ? readTourPrefs().on : undefined;
+  const stored = storeTourPrefs(next);
+  if (stored.on !== before) propertyChanged("tour", stored.on);
+  return stored;
+}
+
+mirrorProperty("tour", {
+  read: () => (readStored(PREF) ? readTourPrefs().on : undefined),
+  write: (v) => void storeTourPrefs({ ...readTourPrefs(), on: v === true }),
+});
 
 /** Hear every `writeTourPrefs` on this page. Returns an unsubscribe. */
 export function onTourChange(fn: (p: TourPrefs) => void): () => void {

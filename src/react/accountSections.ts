@@ -3,11 +3,13 @@
  * where a site's own panels go between them.
  */
 
-export type AccountSection = "profile" | "sessionKey" | "usage" | "timezone" | "theme" | "coupons" | "build";
+export type AccountSection =
+  "profile" | "sessionKey" | "operator" | "usage" | "timezone" | "theme" | "coupons" | "build";
 
 export const ACCOUNT_SECTIONS: readonly AccountSection[] = [
   "profile",
   "sessionKey",
+  "operator",
   "usage",
   "timezone",
   "theme",
