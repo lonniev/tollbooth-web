@@ -10,12 +10,14 @@
  * forward may keep an accent (`classNames.primary`). A preset amount only fills
  * the amount — the invoice is made by "Create invoice". Anything only one site has
  * (a funding-health panel, an operator view) goes in `before` or `children`.
+ * A site may draw the preset amounts itself (`renderTopUp`) and set something
+ * beside them (`topUpAside`).
  *
  * A balance nobody has read is a dash, never 0: showing 0 to someone with
  * funds sends them to buy credits they already own.
  */
 
-import { useCallback, useEffect, useReducer, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useReducer, useState, type ReactNode } from "react";
 import {
   checkBalance,
   getAccountStatement,
@@ -55,6 +57,8 @@ export interface WalletPageClassNames {
   chipActive?: string;
   /** A row of chips. */
   chips?: string;
+  /** The row of preset amounts, and `topUpAside` with them. Default: `chips`. */
+  topUpRow?: string;
   input?: string;
   /** The open invoice's box, and its BOLT11 string. */
   invoice?: string;
@@ -65,11 +69,23 @@ export interface WalletPageClassNames {
   row?: string;
 }
 
+/** What a site-drawn preset needs: whether it is the choice, and how to choose it. */
+export interface TopUpOffer {
+  chosen: boolean;
+  disabled: boolean;
+  /** Fills the amount; the invoice is still made by "Create invoice". */
+  pick: () => void;
+}
+
 export interface WalletPageProps {
   /** The page heading. Default "Wallet"; null for none. */
   heading?: ReactNode;
   /** Preset amounts, in sats, offered as chips. A tap fills the amount; it does not invoice. */
   topUps?: number[];
+  /** Draw a preset amount the site's own way, in place of the chip. */
+  renderTopUp?: (sats: number, offer: TopUpOffer) => ReactNode;
+  /** Site content in the row of preset amounts, e.g. the wallet chooser. */
+  topUpAside?: ReactNode;
   /** Offer a box for any amount. Default true. */
   customAmount?: boolean;
   /** Polling for an open invoice (see `useTopUp`). */
@@ -96,6 +112,8 @@ const localDateTime = (iso: string) => new Date(iso).toLocaleString();
 export default function WalletPage({
   heading = "Wallet",
   topUps = DEFAULT_TOP_UPS,
+  renderTopUp,
+  topUpAside,
   customAmount = true,
   poll,
   coupons = true,
@@ -134,7 +152,7 @@ export default function WalletPage({
       {before}
 
       <Balance bal={bal} error={balError} refresh={refresh} formatDateTime={formatDateTime} c={c} />
-      <TopUpSection topUps={topUps} customAmount={customAmount} poll={poll} onSettled={refresh} c={c} />
+      <TopUpSection topUps={topUps} renderTopUp={renderTopUp} aside={topUpAside} customAmount={customAmount} poll={poll} onSettled={refresh} c={c} />
       {bal?.tranches && bal.tranches.length > 0 && (
         <Tranches tranches={bal.tranches} formatDate={formatDate} c={c} />
       )}
@@ -206,12 +224,16 @@ function Balance({
 
 function TopUpSection({
   topUps,
+  renderTopUp,
+  aside,
   customAmount,
   poll,
   onSettled,
   c,
 }: {
   topUps: number[];
+  renderTopUp?: (sats: number, offer: TopUpOffer) => ReactNode;
+  aside?: ReactNode;
   customAmount: boolean;
   poll?: Pick<UseTopUpOptions, "pollMs" | "maxChecks">;
   onSettled: () => void;
@@ -244,19 +266,26 @@ function TopUpSection({
 
       {(state.phase === "idle" || state.phase === "creating") && (
         <>
-          <div className={c.chips}>
-            {topUps.map((n) => (
-              <button
-                key={n}
-                type="button"
-                disabled={creating}
-                aria-pressed={presetChosen(amount, n)}
-                onClick={() => pick({ type: "preset", sats: n })}
-                className={cx(c.chip, presetChosen(amount, n) && c.chipActive)}
-              >
-                {n.toLocaleString("en-US")} sats
-              </button>
-            ))}
+          <div className={c.topUpRow ?? c.chips}>
+            {topUps.map((n) => {
+              const chosen = presetChosen(amount, n);
+              const choose = () => pick({ type: "preset", sats: n });
+              return renderTopUp ? (
+                <Fragment key={n}>{renderTopUp(n, { chosen, disabled: creating, pick: choose })}</Fragment>
+              ) : (
+                <button
+                  key={n}
+                  type="button"
+                  disabled={creating}
+                  aria-pressed={chosen}
+                  onClick={choose}
+                  className={cx(c.chip, chosen && c.chipActive)}
+                >
+                  {n.toLocaleString("en-US")} sats
+                </button>
+              );
+            })}
+            {aside}
           </div>
           <div className={c.chips}>
             {customAmount && (
