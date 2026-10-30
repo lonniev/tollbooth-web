@@ -1,1 +1,0 @@
-- `WalletPage` takes `renderTopUp` to draw a preset amount the site's own way, `topUpAside` to set something beside the presets, and `classNames.topUpRow` for their row.

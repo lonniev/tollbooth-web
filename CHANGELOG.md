@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [2.9.0] — 2026-10-30
+
+### Added
+
+- `WalletPage` takes `renderTopUp` to draw a preset amount the site's own way, `topUpAside` to set something beside the presets, and `classNames.topUpRow` for their row.
+
 ## [2.8.0] — 2026-10-30
 
 ### Added
