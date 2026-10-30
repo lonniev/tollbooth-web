@@ -39,7 +39,7 @@ export interface PatronCredentialsPanelClassNames {
 
 export interface PatronCredentialsPanelProps {
   npub: string;
-  /** The panel's heading, e.g. "Your Ecowitt account". */
+  /** The panel's heading, e.g. "Your vendor account". */
   heading: ReactNode;
   /** Shown when the keys are on file. */
   connectedText: ReactNode;
