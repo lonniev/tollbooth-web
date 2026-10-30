@@ -214,10 +214,10 @@ key never touches the browser. The site supplies the words:
 ```tsx
 <PatronCredentialsPanel
   npub={session.npub}
-  heading="Your Roastify account"
-  connectedText="Your catalog and designs are the ones in your own Roastify account."
-  inviteText="Connect your Roastify account to see your catalog and your saved designs."
-  keySource={{ href: "https://merchant.roastify.app/developers", label: "Get a key" }}
+  heading="Your vendor account"
+  connectedText="This site reads your own vendor account."
+  inviteText="Connect your vendor account: you reply to a Nostr message with your keys."
+  keySource={{ href: "https://vendor.example/developers", label: "Get a key" }}
   classNames={{ root: "card p-4", primary: "chip-accent", chip: "chip" }}
 />
 ```

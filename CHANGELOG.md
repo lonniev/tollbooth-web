@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [2.8.0] — 2026-10-30
+
+### Added
+
+- `PatronCredentialsPanel` and the `getPatronOnboardingStatus`, `requestPatronCredentials`, `receivePatronCredentials` wrappers: the bring-your-own-keys Secure Courier exchange, for any operator whose patrons deliver vendor keys.
+
 ## [2.7.0] — 2026-10-29
 
 ### Added

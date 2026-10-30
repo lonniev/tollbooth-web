@@ -1,1 +1,0 @@
-- `PatronCredentialsPanel` and the `getPatronOnboardingStatus`, `requestPatronCredentials`, `receivePatronCredentials` wrappers: the bring-your-own-keys Secure Courier exchange, for any operator whose patrons deliver vendor keys.
