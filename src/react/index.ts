@@ -112,7 +112,7 @@ export {
 } from "./UsageSummary.tsx";
 export { default as WalletChooser, type WalletChooserProps } from "./WalletChooser.tsx";
 export { default as WalletCard, type WalletCardProps, type WalletCardClassNames } from "./WalletCard.tsx";
-export { default as WalletPage, type WalletPageProps, type WalletPageClassNames } from "./WalletPage.tsx";
+export { default as WalletPage, type TopUpOffer, type WalletPageProps, type WalletPageClassNames } from "./WalletPage.tsx";
 export { useSession, type Session } from "./useSession.ts";
 export { useDebugLog } from "./useDebugLog.ts";
 export { useTheme } from "./useTheme.ts";
