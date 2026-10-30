@@ -598,3 +598,63 @@ export function updatePatronCredential(
 export function deletePatronCredential(field: string, opts?: CallOptions): Promise<PatronCredentialWriteResult> {
   return callTool<PatronCredentialWriteResult>("delete_patron_credential", { field }, opts);
 }
+
+/** One credential a patron has delivered, or still owes. */
+export interface PatronOnboardingField {
+  field: string;
+  category?: string;
+  status?: string;
+  lifecycle?: string;
+  how?: string;
+}
+
+export interface PatronOnboardingResult {
+  ready: boolean;
+  configured: PatronOnboardingField[];
+  missing: PatronOnboardingField[];
+  summary?: string;
+  credential_service?: string;
+}
+
+/** What this patron has delivered and what is still missing. Names fields, never values. */
+export function getPatronOnboardingStatus(patronNpub: string, opts?: CallOptions): Promise<PatronOnboardingResult> {
+  return callTool<PatronOnboardingResult>("get_patron_onboarding_status", { patron_npub: patronNpub }, opts);
+}
+
+export interface RequestPatronCredentialsResult {
+  success: boolean;
+  /** The phrase the DM shows; it names the reply. */
+  nonce?: string;
+  rendezvous_relay?: string;
+  instructions?: string;
+  message?: string;
+}
+
+/** Secure Courier: send the patron the DM they answer with their keys. */
+export function requestPatronCredentials(
+  senderNpub: string,
+  opts?: CallOptions,
+): Promise<RequestPatronCredentialsResult> {
+  return callTool<RequestPatronCredentialsResult>("request_patron_credentials", { sender_npub: senderNpub }, opts);
+}
+
+export interface ReceivePatronCredentialsResult {
+  success: boolean;
+  stored_fields?: string[];
+  still_missing_required?: string[];
+  message?: string;
+  error?: string;
+}
+
+/** Secure Courier: collect the patron's reply and vault it. Drains the relay, so call it only after they replied. */
+export function receivePatronCredentials(
+  senderNpub: string,
+  nonce: string,
+  opts?: CallOptions,
+): Promise<ReceivePatronCredentialsResult> {
+  return callTool<ReceivePatronCredentialsResult>(
+    "receive_patron_credentials",
+    { sender_npub: senderNpub, nonce },
+    opts,
+  );
+}

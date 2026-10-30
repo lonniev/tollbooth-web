@@ -123,6 +123,11 @@ export {
   type OperatorPropertiesClassNames,
   type OperatorPropertiesProps,
 } from "./OperatorProperties.tsx";
+export {
+  default as PatronCredentialsPanel,
+  type PatronCredentialsPanelClassNames,
+  type PatronCredentialsPanelProps,
+} from "./PatronCredentialsPanel.tsx";
 export { useTopUp, type TopUp, type UseTopUpOptions } from "./useTopUp.ts";
 export {
   TourProvider,

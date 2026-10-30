@@ -12,7 +12,7 @@ features. It is the peer of the `tollbooth-dpyc` Python wheel.
   the standard tools (balance, top-up, statement, price, profile)
 - **React components** — `AppShell` / `useAppShell`, `SiteNav`, `AccountPage`,
   `RefreshButton`, `NpubGate`, `NostrProfilePanel`, `SessionKeyClaim`, `WalletCard`,
-  `WalletPage`, `CouponsPanel`, `UsageSummary`, `PriceSheet`, `PatronFundingStatus` /
+  `WalletPage`, `CouponsPanel`, `PatronCredentialsPanel`, `UsageSummary`, `PriceSheet`, `PatronFundingStatus` /
   `OperatorFundingStatus`, `BuildInfoPanel`, `TimezonePicker`, `TableFilter`,
   `SortHeader` / `PageControls` / `TableShell`, `ThemeToggle`, `ErrorBoundary`,
   `AvatarPicker`, `DebugPanel`, `QuoteScroller`, `useSession`, `useTopUp`,
@@ -204,6 +204,23 @@ import { BuildInfoPanel, OperatorFundingStatus, PatronFundingStatus, UsageSummar
   server's version, wheel and commit linked to its repository (from
   `service_status`; only https links), the Tollbooth-DPYC™ links, the licence
   and the patent notice. `children` adds rows after the MCP server section.
+
+### Patron credentials
+
+For an operator whose patrons bring their own vendor keys. `PatronCredentialsPanel`
+checks what is on file, sends the Secure Courier DM and collects the reply. The
+key never touches the browser. The site supplies the words:
+
+```tsx
+<PatronCredentialsPanel
+  npub={session.npub}
+  heading="Your Roastify account"
+  connectedText="Your catalog and designs are the ones in your own Roastify account."
+  inviteText="Connect your Roastify account to see your catalog and your saved designs."
+  keySource={{ href: "https://merchant.roastify.app/developers", label: "Get a key" }}
+  classNames={{ root: "card p-4", primary: "chip-accent", chip: "chip" }}
+/>
+```
 
 ### App shell, site nav, account page, refresh
 
