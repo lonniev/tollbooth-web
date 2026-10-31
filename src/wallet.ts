@@ -82,7 +82,7 @@ export function payLink(invoice: Invoice): string | null {
 }
 
 /** The top-up amounts, the same on every site. */
-export const TOP_UP_AMOUNTS: readonly number[] = [10, 100, 500, 1_000, 5_000, 25_000];
+export const TOP_UP_AMOUNTS: readonly number[] = [100, 500, 1_000, 5_000, 25_000];
 
 /** A whole number of sats worth invoicing, from what the patron typed; else null. */
 export function parseSats(input: string | number): number | null {

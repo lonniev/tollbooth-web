@@ -118,7 +118,7 @@
 .tb-wallet-custom { display: block; width: 100%; }
 .tb-wallet-create { width: 100%; }
 
-/* Two across on the narrowest phone, up to seven across when there is room. */
+/* Two across on the narrowest phone, up to six across when there is room. */
 .tb-wallet-tiles {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(7.25rem, 1fr));

@@ -20,5 +20,5 @@ test("the wallet takes decoration and nothing that changes its layout or scope",
 });
 
 test("the amounts are the brand's", () => {
-  assert.deepEqual([...TOP_UP_AMOUNTS], [10, 100, 500, 1_000, 5_000, 25_000]);
+  assert.deepEqual([...TOP_UP_AMOUNTS], [100, 500, 1_000, 5_000, 25_000]);
 });
