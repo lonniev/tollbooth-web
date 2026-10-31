@@ -349,17 +349,35 @@ export function BalanceAndTopUp({ decorateTile }: { decorateTile?: DecorateTile 
   );
 }
 
-/** The whole wallet, always in this order. */
-export default function Wallet({ decorateTile }: { decorateTile?: DecorateTile }) {
+function Funds({ decorateTile }: { decorateTile?: DecorateTile }) {
   const { bal, error, refresh } = useBalance();
   return (
-    <div className="tb-wallet">
+    <>
       <h1 className="tb-wallet-heading">Wallet</h1>
       <Balance bal={bal} error={error} refresh={refresh} />
       <TopUp onSettled={refresh} decorateTile={decorateTile} />
       {bal?.tranches && bal.tranches.length > 0 && <Tranches tranches={bal.tranches} />}
-      <Statement />
       <CouponsPanel />
+    </>
+  );
+}
+
+/** The wallet above its statement, for a page that puts the statement lower down. */
+export function WalletFunds({ decorateTile }: { decorateTile?: DecorateTile }) {
+  return <div className="tb-wallet"><Funds decorateTile={decorateTile} /></div>;
+}
+
+/** The statement, for a page showing `WalletFunds`. */
+export function WalletStatement() {
+  return <div className="tb-wallet"><Statement /></div>;
+}
+
+/** The whole wallet, always in this order. */
+export default function Wallet({ decorateTile }: { decorateTile?: DecorateTile }) {
+  return (
+    <div className="tb-wallet">
+      <Funds decorateTile={decorateTile} />
+      <Statement />
     </div>
   );
 }
