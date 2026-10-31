@@ -148,7 +148,7 @@
 }
 .tb-wallet-tile-mark { flex: none; display: grid; place-items: center; }
 .tb-wallet-tile-body { display: grid; min-width: 0; }
-.tb-wallet-tile-name { font-size: 0.8125rem; line-height: 1.2; overflow-wrap: anywhere; }
+.tb-wallet-tile-name { font-size: 0.8125rem; line-height: 1.2; overflow-wrap: break-word; }
 .tb-wallet-tile-sats { font-size: 1.125rem; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .tb-wallet-tile-unit { font-size: 0.75rem; opacity: 0.75; }
 
