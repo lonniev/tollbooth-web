@@ -1,0 +1,172 @@
+/*
+ * The wallet's layout, the same on every Tollbooth DPYC™ site. A site restyles it by
+ * setting these variables after importing this file, and may decorate the
+ * `.tb-wallet-*` boxes (a border, a background, a mask). Layout belongs here.
+ *
+ *   @import "@tollbooth-dpyc/web/wallet.css";
+ */
+@import "./price-sheet.css";
+
+:root {
+  --tb-wallet-font: inherit;
+  --tb-wallet-display-font: inherit;
+  --tb-wallet-figure-font: inherit;
+  --tb-wallet-radius: 0.75rem;
+  --tb-wallet-gap: 1rem;
+  --tb-wallet-card: var(--tb-surface);
+  --tb-wallet-line: var(--tb-line);
+  --tb-wallet-shadow: none;
+  --tb-wallet-figure: var(--tb-accent);
+
+  --tb-tile-bg: var(--tb-surface-2);
+  --tb-tile-ink: var(--tb-ink);
+  --tb-tile-line: var(--tb-line);
+  --tb-tile-radius: 0.625rem;
+  --tb-tile-font: inherit;
+  --tb-tile-chosen-bg: color-mix(in srgb, var(--tb-accent) 16%, var(--tb-tile-bg));
+  --tb-tile-chosen-line: var(--tb-accent);
+}
+
+.tb-wallet {
+  display: grid;
+  gap: var(--tb-wallet-gap);
+  min-width: 0;
+  font-family: var(--tb-wallet-font);
+  color: var(--tb-ink);
+}
+.tb-wallet-heading,
+.tb-wallet-title,
+.tb-wallet-subtitle {
+  margin: 0;
+  font-family: var(--tb-wallet-display-font);
+  font-weight: 600;
+  line-height: 1.25;
+}
+.tb-wallet-heading {
+  font-size: 1.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--tb-wallet-line);
+  border-radius: var(--tb-wallet-radius);
+  background: var(--tb-wallet-card);
+  box-shadow: var(--tb-wallet-shadow);
+}
+.tb-wallet-title { font-size: 1.125rem; margin-bottom: 0.625rem; }
+.tb-wallet-subtitle { font-size: 1rem; margin: 1rem 0 0.25rem; }
+
+.tb-wallet-section {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--tb-wallet-line);
+  border-radius: var(--tb-wallet-radius);
+  background: var(--tb-wallet-card);
+  box-shadow: var(--tb-wallet-shadow);
+}
+.tb-wallet-section > * + * { margin-top: 0.75rem; }
+.tb-wallet-section > .tb-wallet-title + * { margin-top: 0; }
+
+.tb-wallet-figure {
+  font-family: var(--tb-wallet-figure-font);
+  font-size: 2.25rem;
+  line-height: 1.1;
+  color: var(--tb-wallet-figure);
+  font-variant-numeric: tabular-nums;
+}
+.tb-wallet-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  font-size: 0.875rem;
+  color: var(--tb-muted);
+}
+.tb-wallet-note { margin: 0; font-size: 0.875rem; line-height: 1.45; color: var(--tb-muted); }
+.tb-wallet-ok { color: var(--tb-ok, var(--tb-accent)); }
+.tb-wallet-error { margin: 0; font-size: 0.875rem; color: var(--tb-err-ink, #b42318); }
+
+.tb-wallet-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.tb-wallet-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.375rem 0.875rem;
+  border: 1px solid var(--tb-wallet-line);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--tb-ink);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-decoration: none;
+}
+.tb-wallet-action:disabled { opacity: 0.45; cursor: default; }
+.tb-wallet-action:hover:not(:disabled) { background: var(--tb-surface-2); }
+.tb-wallet-primary { border-color: var(--tb-accent); background: var(--tb-accent); color: var(--tb-on-accent); }
+.tb-wallet-primary:hover:not(:disabled) { background: var(--tb-accent); filter: brightness(1.08); }
+.tb-wallet-input {
+  min-height: 2.75rem;
+  min-width: 0;
+  flex: 1 1 9rem;
+  max-width: 100%;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--tb-wallet-line);
+  border-radius: 0.5rem;
+  background: var(--tb-wallet-card);
+  color: var(--tb-ink);
+  font: inherit;
+  font-size: 1rem; /* below this, iOS zooms the page on focus */
+}
+.tb-wallet-custom { display: block; width: 100%; }
+.tb-wallet-create { width: 100%; }
+
+/* Two across on the narrowest phone, up to six across when there is room. */
+.tb-wallet-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.25rem, 1fr));
+  gap: 0.5rem;
+}
+.tb-wallet-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  min-height: 4rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--tb-tile-line);
+  border-radius: var(--tb-tile-radius);
+  background: var(--tb-tile-bg);
+  color: var(--tb-tile-ink);
+  font: inherit;
+  font-family: var(--tb-tile-font);
+  text-align: left;
+  cursor: pointer;
+}
+.tb-wallet-tile:disabled { opacity: 0.6; cursor: default; }
+.tb-wallet-tile[aria-pressed="true"] {
+  border-color: var(--tb-tile-chosen-line);
+  background: var(--tb-tile-chosen-bg);
+  box-shadow: 0 0 0 1px var(--tb-tile-chosen-line);
+}
+.tb-wallet-tile-mark { flex: none; display: grid; place-items: center; }
+.tb-wallet-tile-body { display: grid; min-width: 0; }
+.tb-wallet-tile-name { font-size: 0.8125rem; line-height: 1.2; overflow-wrap: break-word; }
+.tb-wallet-tile-sats { font-size: 1.125rem; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.tb-wallet-tile-unit { font-size: 0.75rem; opacity: 0.75; }
+
+.tb-wallet-invoice { display: grid; gap: 0.75rem; }
+.tb-wallet-qr { justify-self: center; width: min(100%, 15rem) !important; }
+
+.tb-wallet-list { margin: 0; padding: 0; list-style: none; }
+.tb-wallet-line,
+.tb-wallet-coupon {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--tb-wallet-line);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+.tb-wallet-line:first-child,
+.tb-wallet-coupon:first-child { border-top: 0; }

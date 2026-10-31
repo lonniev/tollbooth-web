@@ -27,13 +27,15 @@
     },
     "./theme.css": "./theme.css",
     "./tour.css": "./tour.css",
-    "./price-sheet.css": "./price-sheet.css"
+    "./price-sheet.css": "./price-sheet.css",
+    "./wallet.css": "./wallet.css"
   },
   "files": [
     "dist",
     "theme.css",
     "tour.css",
     "price-sheet.css",
+    "wallet.css",
     "README.md",
     "LICENSE"
   ],
@@ -61,6 +63,7 @@
     "access": "public"
   },
   "dependencies": {
-    "driver.js": "1.10.2"
+    "driver.js": "1.10.2",
+    "qrcode-generator": "2.0.4"
   }
 }
