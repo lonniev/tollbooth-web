@@ -11,11 +11,11 @@ features. It is the peer of the `tollbooth-dpyc` Python wheel.
 - **MCP client** — one shared connection to the operator, typed wrappers for
   the standard tools (balance, top-up, statement, price, profile)
 - **React components** — `AppShell` / `useAppShell`, `SiteNav`, `AccountPage`,
-  `RefreshButton`, `NpubGate`, `NostrProfilePanel`, `SessionKeyClaim`, `WalletCard`,
-  `WalletPage`, `CouponsPanel`, `PatronCredentialsPanel`, `UsageSummary`, `PriceSheet`, `PatronFundingStatus` /
+  `RefreshButton`, `NpubGate`, `NostrProfilePanel`, `SessionKeyClaim`, `Wallet`,
+  `BalanceAndTopUp`, `PatronCredentialsPanel`, `UsageSummary`, `PriceSheet`, `PatronFundingStatus` /
   `OperatorFundingStatus`, `BuildInfoPanel`, `TimezonePicker`, `TableFilter`,
   `SortHeader` / `PageControls` / `TableShell`, `ThemeToggle`, `ErrorBoundary`,
-  `AvatarPicker`, `DebugPanel`, `QuoteScroller`, `useSession`, `useTopUp`,
+  `AvatarPicker`, `DebugPanel`, `QuoteScroller`, `useSession`,
   `useTheme`, `useTimezone`, `useDebugLog`
 - **Time zone** — the patron's display zone and the conversions every clock
   needs (render, datetime-local, day-filter bounds), DST-correct
@@ -36,7 +36,7 @@ configureTollbooth({ slug: "chart", appName: "ChartRemotely", mcpUrl: "/mcp" });
 
 ```tsx
 import { callTool, callToolWithContent } from "@tollbooth-dpyc/web";
-import { NpubGate, WalletCard, useSession } from "@tollbooth-dpyc/web/react";
+import { NpubGate, Wallet, useSession } from "@tollbooth-dpyc/web/react";
 
 const displays = await callTool("agent_status");               // chart_agent_status
 const { data, images } = await callToolWithContent("snapshot_display", { display: "Desk" });
@@ -78,8 +78,8 @@ parts); without them the markup is plain and inherits from the page.
 ```tsx
 import { bootstrapTheme, filterRows, pageRows } from "@tollbooth-dpyc/web";
 import {
-  CouponsPanel, ErrorBoundary, PageControls, SortHeader, TableFilter, TableShell,
-  ThemeToggle, WalletPage,
+  ErrorBoundary, PageControls, SortHeader, TableFilter, TableShell,
+  ThemeToggle,
 } from "@tollbooth-dpyc/web/react";
 
 bootstrapTheme();            // main.tsx, after configureTollbooth: <prefix>:theme → <html>
@@ -87,14 +87,6 @@ bootstrapTheme();            // main.tsx, after configureTollbooth: <prefix>:the
 <ErrorBoundary classNames={{ root: "p-6", chip: "chip" }}>
   <App />
 </ErrorBoundary>
-
-<WalletPage
-  topUps={[1_000, 5_000, 25_000]}
-  formatDateTime={(iso) => formatInZone(iso, zone)}
-  before={<FundingStatus />}
-  coupons={{ classNames: { root: "card", chip: "chip" } }}
-  classNames={{ section: "card p-5", figure: "text-3xl", chip: "chip", chipActive: "chip-on", primary: "chip-accent" }}
-/>
 
 <ThemeToggle themes={["dark", "light", "system"]} classNames={{ chip: "chip", active: "chip-on" }} />
 
@@ -108,10 +100,7 @@ bootstrapTheme();            // main.tsx, after configureTollbooth: <prefix>:the
 <SortHeader as="div" label="Date" col="date" activeCol={col} dir={dir} onSort={sortBy} />  // a div grid
 ```
 
-A preset amount in `WalletPage` / `WalletCard` only fills the amount; the
-invoice is made by the explicit "Create invoice". `classNames.primary` styles
-the action that moves a top-up forward (Redeem in `CouponsPanel`); every other
-action stays a chip. `TableFilter`'s panel slides itself back on screen on a
+`TableFilter`'s panel slides itself back on screen on a
 phone; `clearPlacement="panel"` puts Clear inside it. Every standard-tool
 wrapper takes the same optional `CallOptions` as `callTool`, last
 (`listCanonicalIdentities({ bestEffort: true })`).
@@ -145,8 +134,30 @@ Operator-only and unpriced tools are left out unless you pass `restricted` or
 `unpriced`. `label` renames a tool, and `before` and `children` hold site
 content. `priceSheet(model, { slug })` is the same reading without React.
 
-`useTopUp` is the wallet's top-up on its own (purchase_credits → invoice →
-check_payment, polled while the tab is visible) for a site drawing its own.
+### Wallet
+
+The wallet is the brand: its layout, scope and behavior are the same on every
+site, so it has no layout props. `Wallet` is Balance, Top up, Tranches, Statement
+and Coupons, always in that order. `BalanceAndTopUp` is the one short form, for a
+Profile or a modal. A site says where it goes.
+
+An amount tile only fills the amount; the invoice is made by the explicit
+"Create invoice". An open invoice shows its QR code, Open in wallet, Copy invoice
+and Open checkout, and is checked on its own until it settles.
+
+A site restyles it with the variables in `wallet.css`, may decorate the
+`.tb-wallet-*` boxes, and may name and mark the tiles. `wallet.css` brings
+`price-sheet.css` with it.
+
+```css
+@import "@tollbooth-dpyc/web/theme.css";
+@import "@tollbooth-dpyc/web/wallet.css";
+:root { --tb-tile-bg: #fbf3dc; --tb-wallet-display-font: var(--font-display); }
+```
+
+```tsx
+<Wallet decorateTile={(sats) => ({ name: sats >= 5_000 ? "Harvest" : "Seed", mark: <Sprout size={20} /> })} />
+```
 
 ### Time zone
 
