@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.1.1] — 2026-10-31
+
+### Fixed
+
+- The amount tiles fill the width of their section, in even rows of two, three or six.
+
 ## [3.1.0] — 2026-10-31
 
 ### Added

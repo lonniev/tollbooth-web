@@ -118,11 +118,18 @@
 .tb-wallet-custom { display: block; width: 100%; }
 .tb-wallet-create { width: 100%; }
 
-/* Two across on the narrowest phone, up to six across when there is room. */
+/* The six tiles fill their span, in even rows of two, three or six as room allows. */
+.tb-wallet-tiles-span { container-type: inline-size; }
 .tb-wallet-tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(7.25rem, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
+}
+@container (min-width: 23rem) {
+  .tb-wallet-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@container (min-width: 46rem) {
+  .tb-wallet-tiles { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
 .tb-wallet-tile {
   display: flex;
