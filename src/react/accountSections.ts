@@ -4,7 +4,7 @@
  */
 
 export type AccountSection =
-  "profile" | "sessionKey" | "operator" | "usage" | "timezone" | "theme" | "coupons" | "build";
+  "profile" | "sessionKey" | "operator" | "usage" | "timezone" | "theme" | "build";
 
 export const ACCOUNT_SECTIONS: readonly AccountSection[] = [
   "profile",
@@ -13,7 +13,6 @@ export const ACCOUNT_SECTIONS: readonly AccountSection[] = [
   "usage",
   "timezone",
   "theme",
-  "coupons",
   "build",
 ];
 
@@ -22,8 +21,8 @@ export type AccountStep = { kind: "section"; section: AccountSection } | { kind:
 /**
  * Each shown section in order, each followed by the site's panel placed after
  * it. A site panel keeps its place when the section before it is hidden — a
- * site that brings its own coupons turns the package's off and puts its own
- * `between.theme`, and it lands where the coupons would have been.
+ * site that hides a section and puts its own panel in `between` for that
+ * section keeps that panel where the section would have been.
  */
 export function accountSteps(
   shown: Partial<Record<AccountSection, boolean>>,

@@ -9,7 +9,7 @@ describe("the account page's order", () => {
     assert.deepEqual(names(accountSteps({}, {})), [...ACCOUNT_SECTIONS]);
     assert.deepEqual(
       [...ACCOUNT_SECTIONS],
-      ["profile", "sessionKey", "operator", "usage", "timezone", "theme", "coupons", "build"],
+      ["profile", "sessionKey", "operator", "usage", "timezone", "theme", "build"],
     );
   });
 
@@ -23,12 +23,12 @@ describe("the account page's order", () => {
   });
 
   it("keeps a site's panel in place when the section before it is hidden", () => {
-    const steps = names(accountSteps({ coupons: false }, { coupons: "own coupons" }));
-    assert.deepEqual(steps.slice(-3), ["theme", "+coupons", "build"]);
+    const steps = names(accountSteps({ theme: false }, { theme: "own theme" }));
+    assert.deepEqual(steps.slice(-3), ["timezone", "+theme", "build"]);
   });
 
   it("skips hidden sections and empty slots", () => {
     const steps = names(accountSteps({ usage: false, build: false }, { theme: null, timezone: false }));
-    assert.deepEqual(steps, ["profile", "sessionKey", "operator", "timezone", "theme", "coupons"]);
+    assert.deepEqual(steps, ["profile", "sessionKey", "operator", "timezone", "theme"]);
   });
 });

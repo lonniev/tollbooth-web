@@ -1,13 +1,13 @@
 /**
  * The Profile page every site composed for itself, in one order for all of
  * them: Nostr profile, session key, the operator's properties (for the
- * operator alone), usage, time zone, theme, coupons, build.
+ * operator alone), usage, time zone, theme, build.
  *
  * Each section is on by default; `false` turns it off and an object passes it
  * its own props (headings, words, `classNames`). A site's own panels go in
  * `before`, `after`, or `between` — `between.sessionKey` is drawn right after
  * the session key, and keeps that place even when the section is off (a site
- * with its own coupons turns `coupons` off and puts them in `between.coupons`).
+ * with its own panel puts it in `between`).
  *
  * Mechanics only: the time zone and theme controls sit in a `<section>` with a
  * heading and a line of intro (`classNames.section` …); every other panel draws
@@ -19,7 +19,6 @@ import type { Kind0 } from "../standardTools.ts";
 import type { TimezonePref } from "../timezone.ts";
 import { accountSteps, type AccountSection } from "./accountSections.ts";
 import BuildInfoPanel, { type BuildInfoPanelProps } from "./BuildInfoPanel.tsx";
-import CouponsPanel, { type CouponsPanelProps } from "./CouponsPanel.tsx";
 import NostrProfilePanel from "./NostrProfilePanel.tsx";
 import OperatorProperties, { type OperatorPropertiesProps } from "./OperatorProperties.tsx";
 import SessionKeyClaim, { type SessionKeyClaimProps } from "./SessionKeyClaim.tsx";
@@ -64,7 +63,6 @@ export interface AccountPageProps {
   usage?: boolean | UsageSummaryProps;
   timezone?: boolean | AccountTimezoneProps;
   theme?: boolean | AccountThemeProps;
-  coupons?: boolean | CouponsPanelProps;
   build?: boolean | BuildInfoPanelProps;
   before?: ReactNode;
   /** A site's panel after the named section. */
@@ -87,7 +85,6 @@ export default function AccountPage({
   usage,
   timezone,
   theme,
-  coupons,
   build,
   before,
   between = {},
@@ -104,7 +101,6 @@ export default function AccountPage({
     usage: usage !== false,
     timezone: timezone !== false,
     theme: theme !== false,
-    coupons: coupons !== false,
     build: build !== false,
   };
 
@@ -136,8 +132,6 @@ export default function AccountPage({
           </Section>
         );
       }
-      case "coupons":
-        return <CouponsPanel {...opts(coupons)} />;
       case "build":
         return <BuildInfoPanel {...opts(build)} />;
     }

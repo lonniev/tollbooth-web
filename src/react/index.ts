@@ -25,7 +25,6 @@ export {
   type BuildInfoPanelClassNames,
   type BuildInfoPanelProps,
 } from "./BuildInfoPanel.tsx";
-export { default as CouponsPanel, type CouponsPanelProps, type CouponsPanelClassNames } from "./CouponsPanel.tsx";
 export { default as DebugPanel, type DebugPanelProps } from "./DebugPanel.tsx";
 export {
   default as ErrorBoundary,
@@ -110,13 +109,10 @@ export {
   type UsageSummaryClassNames,
   type UsageSummaryProps,
 } from "./UsageSummary.tsx";
-export { default as InvoiceQr, PAY_FROM_CASH_LINE } from "./InvoiceQr.tsx";
-export { default as WalletChooser, type WalletChooserProps } from "./WalletChooser.tsx";
-export { default as WalletCard, type WalletCardProps, type WalletCardClassNames } from "./WalletCard.tsx";
-export { default as WalletPage, type TopUpOffer, type WalletPageProps, type WalletPageClassNames } from "./WalletPage.tsx";
 export { useSession, type Session } from "./useSession.ts";
 export { useDebugLog } from "./useDebugLog.ts";
 export { useTheme } from "./useTheme.ts";
+export { default as Wallet, BalanceAndTopUp, type DecorateTile, type TileDecoration } from "./Wallet.tsx";
 export { useTimezone } from "./useTimezone.ts";
 export { useProperty } from "./useProperty.ts";
 export {
@@ -129,7 +125,6 @@ export {
   type PatronCredentialsPanelClassNames,
   type PatronCredentialsPanelProps,
 } from "./PatronCredentialsPanel.tsx";
-export { useTopUp, type TopUp, type UseTopUpOptions } from "./useTopUp.ts";
 export {
   TourProvider,
   tourTarget,

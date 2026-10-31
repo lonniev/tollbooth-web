@@ -9,7 +9,6 @@ import { invoiceQrText, qrModules, qrPath } from "../qr.ts";
 
 const QUIET = 4;
 
-/** For a page that draws its own invoice. */
 export const PAY_FROM_CASH_LINE = "No bitcoin? Strike and Cash App can pay this from the cash balance you hold there.";
 
 export default function InvoiceQr({ bolt11, size = 220, className }: { bolt11?: string | null; size?: number; className?: string }) {
