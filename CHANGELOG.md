@@ -2,6 +2,16 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.0.0] — 2026-10-31
+
+### Added
+
+- One wallet on every site: `Wallet`, and `BalanceAndTopUp` for a Profile or a modal, styled through `wallet.css`. An open invoice shows a QR code, Open in wallet, Copy and Open checkout, and tells someone with no bitcoin how to pay. Amounts are 100, 500, 1,000, 5,000 and 25,000, plus Custom.
+
+### Removed
+
+- **Breaking:** `WalletPage`, `WalletCard`, `CouponsPanel`, `WalletChooser` and `useTopUp` are no longer exported, and `AccountPage` has no coupons section. Use `Wallet` or `BalanceAndTopUp`, set the variables in `wallet.css`, and name tiles with `decorateTile`.
+
 ## [2.9.0] — 2026-10-30
 
 ### Added

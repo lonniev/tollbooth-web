@@ -1,1 +1,0 @@
-- **Breaking:** `WalletPage`, `WalletCard`, `CouponsPanel`, `WalletChooser` and `useTopUp` are no longer exported, and `AccountPage` has no coupons section. Use `Wallet` or `BalanceAndTopUp`, set the variables in `wallet.css`, and name tiles with `decorateTile`.

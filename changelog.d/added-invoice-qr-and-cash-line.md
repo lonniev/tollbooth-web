@@ -1,1 +1,0 @@
-- One wallet on every site: `Wallet`, and `BalanceAndTopUp` for a Profile or a modal, styled through `wallet.css`. An open invoice shows a QR code, Open in wallet, Copy and Open checkout, and tells someone with no bitcoin how to pay. Amounts are 100, 500, 1,000, 5,000 and 25,000, plus Custom.
