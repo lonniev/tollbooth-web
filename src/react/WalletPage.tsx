@@ -26,6 +26,7 @@ import {
   type CreditTranche,
 } from "../standardTools.ts";
 import { amountReducer, awaitingWords, formatSats, parseSats, payLink, presetChosen } from "../wallet.ts";
+import InvoiceQr, { PAY_FROM_CASH_LINE } from "./InvoiceQr.tsx";
 import CouponsPanel, { type CouponsPanelProps } from "./CouponsPanel.tsx";
 import { useTopUp, type UseTopUpOptions } from "./useTopUp.ts";
 import { cx } from "./cx.ts";
@@ -60,8 +61,9 @@ export interface WalletPageClassNames {
   /** The row of preset amounts, and `topUpAside` with them. Default: `chips`. */
   topUpRow?: string;
   input?: string;
-  /** The open invoice's box, and its BOLT11 string. */
+  /** The open invoice's box, its QR code, and its BOLT11 string. */
   invoice?: string;
+  qr?: string;
   bolt11?: string;
   /** The line saying where a payment stands. */
   status?: string;
@@ -314,6 +316,7 @@ function TopUpSection({
       {state.phase === "awaiting" && (
         <div className={c.invoice}>
           <p className={c.status}>Invoice for {formatSats(state.invoice.sats)} sats</p>
+          <InvoiceQr bolt11={state.invoice.bolt11} className={c.qr} />
           {state.invoice.bolt11 && <div className={c.bolt11}>{state.invoice.bolt11}</div>}
           <div className={c.chips}>
             {state.invoice.bolt11 && (
@@ -343,6 +346,7 @@ function TopUpSection({
               Cancel
             </button>
           </div>
+          <p className={c.status}>{PAY_FROM_CASH_LINE}</p>
           <p className={c.status} aria-live="polite">
             {awaitingWords(state.status, watching)}
           </p>

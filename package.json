@@ -61,6 +61,7 @@
     "access": "public"
   },
   "dependencies": {
-    "driver.js": "1.10.2"
+    "driver.js": "1.10.2",
+    "qrcode-generator": "2.0.4"
   }
 }

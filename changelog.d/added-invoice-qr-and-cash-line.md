@@ -1,0 +1,1 @@
+- An open Lightning invoice shows a QR code to scan from another device, and tells someone with no bitcoin that Strike and Cash App can pay it from a cash balance. `WalletPage` and `WalletCard` draw both; `InvoiceQr` and `PAY_FROM_CASH_LINE` are exported for a page that draws its own invoice.

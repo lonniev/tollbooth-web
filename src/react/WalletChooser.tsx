@@ -21,8 +21,8 @@ export interface WalletChooserProps {
 
 const STEPS: readonly [string, string][] = [
   ["📲", "Install one of these."],
-  ["⚡", "Add sats: buy them in the app, or have a friend send some."],
-  ["🧾", "Tap Pay on an invoice here, or scan its code."],
+  ["⚡", "Add sats: buy them in the app, or have a friend send some. Strike and Cash App can also pay from the cash balance you hold there."],
+  ["🧾", "Tap Open in wallet on an invoice here, or scan its code."],
 ];
 
 export default function WalletChooser({ className }: WalletChooserProps) {

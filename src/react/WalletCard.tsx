@@ -17,6 +17,7 @@ import { tollboothConfig } from "../config.ts";
 import { checkBalance } from "../standardTools.ts";
 import { amountReducer, awaitingWords, formatSats, parseSats, payLink, presetChosen } from "../wallet.ts";
 import { card, ghost, iconButton, muted, primary } from "./ui.ts";
+import InvoiceQr, { PAY_FROM_CASH_LINE } from "./InvoiceQr.tsx";
 import { useTopUp } from "./useTopUp.ts";
 
 const DEFAULT_TOP_UPS = [1_000, 5_000, 20_000];
@@ -112,6 +113,7 @@ export default function WalletCard({ topUps = DEFAULT_TOP_UPS, classNames = {} }
         </div>
       ) : (
         <div className="mt-4 space-y-2">
+          <InvoiceQr bolt11={invoice.bolt11} size={180} className="mx-auto" />
           <a
             href={payLink(invoice) ?? "#"}
             {...(invoice.bolt11 ? {} : { target: "_blank", rel: "noreferrer" })}
@@ -122,7 +124,7 @@ export default function WalletCard({ topUps = DEFAULT_TOP_UPS, classNames = {} }
           <div className="flex gap-2">
             {invoice.bolt11 && invoice.checkoutLink && (
               <a href={invoice.checkoutLink} target="_blank" rel="noreferrer" className={cx(c.chip, "text-center")}>
-                QR code
+                Checkout
               </a>
             )}
             <button type="button" disabled={busy} onClick={check} className={c.chip}>
@@ -132,6 +134,7 @@ export default function WalletCard({ topUps = DEFAULT_TOP_UPS, classNames = {} }
               Cancel
             </button>
           </div>
+          <p className={`text-xs ${muted}`}>{PAY_FROM_CASH_LINE}</p>
         </div>
       )}
       {msg && <p className={`mt-3 text-xs ${muted}`}>{msg}</p>}
