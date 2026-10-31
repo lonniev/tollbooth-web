@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.1.2] — 2026-10-31
+
+### Changed
+
+- In the wallet, "Need a wallet?" comes before Strike and Cash App, whose line now reads "No Wallet yet? Use cash with these."
+
 ## [3.1.1] — 2026-10-31
 
 ### Fixed

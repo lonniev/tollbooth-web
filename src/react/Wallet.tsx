@@ -167,8 +167,8 @@ function TopUp({ onSettled, decorateTile }: { onSettled: () => void; decorateTil
           </button>
           {creating && <p className="tb-wallet-note">Making a Lightning invoice…</p>}
           {state.phase === "idle" && state.message && <p className="tb-wallet-error">{state.message}</p>}
-          <CashWallets says="No bitcoin? Pay any invoice from the cash balance you hold in one of these." />
           <div data-tour={TB_TARGETS.walletDoor}><WalletChooser /></div>
+          <CashWallets />
         </>
       )}
 
@@ -196,7 +196,7 @@ function TopUp({ onSettled, decorateTile }: { onSettled: () => void; decorateTil
               </a>
             )}
           </div>
-          <CashWallets says="No bitcoin? Pay this from the cash balance you hold in one of these." />
+          <CashWallets />
           <p className="tb-wallet-note" aria-live="polite">{awaitingWords(state.status, watching)}</p>
           <div className="tb-wallet-row">
             <button type="button" disabled={state.checking} onClick={check} className="tb-wallet-action">
