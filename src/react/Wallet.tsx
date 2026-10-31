@@ -100,45 +100,47 @@ function TopUp({ onSettled, decorateTile }: { onSettled: () => void; decorateTil
 
       {(state.phase === "idle" || creating) && (
         <>
-          <div className="tb-wallet-tiles" data-tour={TB_TARGETS.walletAmounts}>
-            {TOP_UP_AMOUNTS.map((n) => {
-              const look = decorateTile?.(n);
-              return (
-                <button
-                  key={n}
-                  type="button"
-                  disabled={creating}
-                  aria-pressed={!custom && presetChosen(amount, n)}
-                  onClick={() => {
-                    setCustom(false);
-                    pick({ type: "preset", sats: n });
-                  }}
-                  className="tb-wallet-tile"
-                >
-                  {look?.mark && <span className="tb-wallet-tile-mark">{look.mark}</span>}
-                  <span className="tb-wallet-tile-body">
-                    {look?.name && <span className="tb-wallet-tile-name">{look.name}</span>}
-                    <span className="tb-wallet-tile-sats">{n.toLocaleString("en-US")}</span>
-                    <span className="tb-wallet-tile-unit">sats</span>
-                  </span>
-                </button>
-              );
-            })}
-            <button
-              type="button"
-              disabled={creating}
-              aria-pressed={custom}
-              onClick={() => {
-                setCustom(true);
-                pick({ type: "clear" });
-              }}
-              className="tb-wallet-tile"
-            >
-              <span className="tb-wallet-tile-body">
-                <span className="tb-wallet-tile-sats">Custom</span>
-                <span className="tb-wallet-tile-unit">amount</span>
-              </span>
-            </button>
+          <div className="tb-wallet-tiles-span">
+            <div className="tb-wallet-tiles" data-tour={TB_TARGETS.walletAmounts}>
+              {TOP_UP_AMOUNTS.map((n) => {
+                const look = decorateTile?.(n);
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    disabled={creating}
+                    aria-pressed={!custom && presetChosen(amount, n)}
+                    onClick={() => {
+                      setCustom(false);
+                      pick({ type: "preset", sats: n });
+                    }}
+                    className="tb-wallet-tile"
+                  >
+                    {look?.mark && <span className="tb-wallet-tile-mark">{look.mark}</span>}
+                    <span className="tb-wallet-tile-body">
+                      {look?.name && <span className="tb-wallet-tile-name">{look.name}</span>}
+                      <span className="tb-wallet-tile-sats">{n.toLocaleString("en-US")}</span>
+                      <span className="tb-wallet-tile-unit">sats</span>
+                    </span>
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                disabled={creating}
+                aria-pressed={custom}
+                onClick={() => {
+                  setCustom(true);
+                  pick({ type: "clear" });
+                }}
+                className="tb-wallet-tile"
+              >
+                <span className="tb-wallet-tile-body">
+                  <span className="tb-wallet-tile-sats">Custom</span>
+                  <span className="tb-wallet-tile-unit">amount</span>
+                </span>
+              </button>
+            </div>
           </div>
           {custom && (
             <input
