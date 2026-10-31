@@ -42,7 +42,14 @@
   font-weight: 600;
   line-height: 1.25;
 }
-.tb-wallet-heading { font-size: 1.75rem; }
+.tb-wallet-heading {
+  font-size: 1.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--tb-wallet-line);
+  border-radius: var(--tb-wallet-radius);
+  background: var(--tb-wallet-card);
+  box-shadow: var(--tb-wallet-shadow);
+}
 .tb-wallet-title { font-size: 1.125rem; margin-bottom: 0.625rem; }
 .tb-wallet-subtitle { font-size: 1rem; margin: 1rem 0 0.25rem; }
 
@@ -111,10 +118,10 @@
 .tb-wallet-custom { display: block; width: 100%; }
 .tb-wallet-create { width: 100%; }
 
-/* Two across on a phone, up to seven across when there is room. */
+/* Two across on the narrowest phone, up to seven across when there is room. */
 .tb-wallet-tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(7.25rem, 1fr));
   gap: 0.5rem;
 }
 .tb-wallet-tile {
@@ -142,7 +149,7 @@
 .tb-wallet-tile-mark { flex: none; display: grid; place-items: center; }
 .tb-wallet-tile-body { display: grid; min-width: 0; }
 .tb-wallet-tile-name { font-size: 0.8125rem; line-height: 1.2; overflow-wrap: anywhere; }
-.tb-wallet-tile-sats { font-size: 1.25rem; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.tb-wallet-tile-sats { font-size: 1.125rem; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .tb-wallet-tile-unit { font-size: 0.75rem; opacity: 0.75; }
 
 .tb-wallet-invoice { display: grid; gap: 0.75rem; }
