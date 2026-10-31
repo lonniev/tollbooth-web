@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { custodyWords, shapeWallets, storeFor } from "./lightningWallets.ts";
+import { cashWalletDoors, custodyWords, shapeWallets, storeFor } from "./lightningWallets.ts";
 
 const good = {
   id: "wos", name: "Wallet of Satoshi", line: "Easy.", custody: "self-custodial", buys_in_app: false,
@@ -43,4 +43,20 @@ describe("shapeWallets", () => {
     assert.equal(storeFor("Mozilla/5.0 (Linux; Android 15; Pixel 9)"), "google");
     assert.equal(storeFor("Mozilla/5.0 (Windows NT 10.0; Win64; x64)"), null);
   });
+});
+
+it("the cash wallets always have a name and a link, and a logo and installer once the Oracle answers", () => {
+  assert.deepEqual(cashWalletDoors(null, "apple"), [
+    { id: "strike", name: "Strike", href: "https://strike.me", logo: undefined },
+    { id: "cash-app", name: "Cash App", href: "https://cash.app", logo: undefined },
+  ]);
+  const list = { rankedBy: "catalog" as const, asOf: null, credit: "", wallets: [{
+    id: "strike", name: "Strike", line: "", custody: "custodial" as const, buysInApp: true, pinned: false,
+    homepage: "https://strike.me", appStore: "https://apple.example/strike", googlePlay: "https://google.example/strike", logo: "data:image/png;base64,AA",
+  }] };
+  const [strike, cash] = cashWalletDoors(list, "google");
+  assert.equal(strike.href, "https://google.example/strike");
+  assert.equal(strike.logo, "data:image/png;base64,AA");
+  assert.equal(cash.href, "https://cash.app");
+  assert.equal(cashWalletDoors(list, null)[0].href, "https://strike.me");
 });

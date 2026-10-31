@@ -12,6 +12,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Wallet, X } from "lucide-react";
 import { custodyWords, lightningWallets, storeFor, type LightningWallets } from "../lightningWallets.ts";
+import CashWallets from "./CashWallets.tsx";
 import { cx } from "./cx.ts";
 
 export interface WalletChooserProps {
@@ -21,7 +22,7 @@ export interface WalletChooserProps {
 
 const STEPS: readonly [string, string][] = [
   ["📲", "Install one of these."],
-  ["⚡", "Add sats: buy them in the app, or have a friend send some. Strike and Cash App can also pay from the cash balance you hold there."],
+  ["⚡", "Add sats: buy them in the app, or have a friend send some."],
   ["🧾", "Tap Open in wallet on an invoice here, or scan its code."],
 ];
 
@@ -79,6 +80,8 @@ function WalletDialog({ onClose }: { onClose: () => void }) {
             <li key={emoji}><span aria-hidden>{emoji}</span> {says}</li>
           ))}
         </ol>
+
+        <CashWallets says="No bitcoin? Pay from the cash balance you hold in one of these." />
 
         {failed ? (
           <p className="tb-wc-note">The list didn't load just now: close this and try again in a moment.</p>

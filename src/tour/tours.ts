@@ -21,6 +21,11 @@ export const TB_TARGETS = {
   accountUsage: "tb.account.usage",
   accountCoupons: "tb.account.coupons",
   accountSessionKey: "tb.account.sessionKey",
+  walletAmounts: "tb.wallet.amounts",
+  walletCash: "tb.wallet.cash",
+  walletDoor: "tb.wallet.door",
+  walletTranches: "tb.wallet.tranches",
+  walletStatement: "tb.wallet.statement",
 } as const;
 
 /** The sign-in gate, from the field to the moment of being in. */
@@ -40,6 +45,27 @@ export function signInTour(page = "signin"): Tour {
   return { page, steps };
 }
 
+/** The wallet, wherever a site puts it. A step whose part is not on the page is skipped. */
+export function walletSteps(): TourStep[] {
+  return [
+    { target: TB_TARGETS.walletAmounts, title: "Top up",
+      says: "Tap an amount, then Create invoice. Pay it in any Lightning wallet, and the balance updates on its own." },
+    { target: TB_TARGETS.walletCash, title: "Pay from cash",
+      says: "Strike and Cash App pay a Lightning invoice from the cash balance you hold there. Tap one to get it.", side: "top" },
+    { target: TB_TARGETS.walletDoor, title: "Need a wallet?",
+      says: "The wallets people use today, each with its logo and installers.", side: "top" },
+    { target: TB_TARGETS.walletTranches, title: "Credit tranches",
+      says: "Each purchase is a tranche of api_sats, with its own expiry if the operator sets one.", side: "top" },
+    { target: TB_TARGETS.walletStatement, title: "Statement",
+      says: "Your purchases and what each MCP tool drew.", side: "top" },
+  ];
+}
+
+/** The wallet as a page of its own. */
+export function walletTour(page = "wallet"): Tour {
+  return { page, steps: walletSteps() };
+}
+
 /** The account page's package panels: the usage table, the persona, coupons, the session key. */
 export function accountPanelsSteps(): TourStep[] {
   return [
@@ -56,5 +82,5 @@ export function accountPanelsSteps(): TourStep[] {
 
 /** The account page as the package knows it; a site appends its own steps. */
 export function accountTour(page = "account", own: TourStep[] = []): Tour {
-  return { page, steps: [...accountPanelsSteps(), ...own] };
+  return { page, steps: [...walletSteps(), ...accountPanelsSteps(), ...own] };
 }

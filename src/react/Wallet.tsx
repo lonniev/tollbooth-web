@@ -19,7 +19,9 @@ import {
 } from "../standardTools.ts";
 import { TOP_UP_AMOUNTS, amountReducer, awaitingWords, formatSats, parseSats, payLink, presetChosen } from "../wallet.ts";
 import CouponsPanel from "./CouponsPanel.tsx";
-import InvoiceQr, { PAY_FROM_CASH_LINE } from "./InvoiceQr.tsx";
+import { TB_TARGETS } from "../tour/tours.ts";
+import CashWallets from "./CashWallets.tsx";
+import InvoiceQr from "./InvoiceQr.tsx";
 import { useTimezone } from "./useTimezone.ts";
 import { useTopUp } from "./useTopUp.ts";
 import WalletChooser from "./WalletChooser.tsx";
@@ -98,7 +100,7 @@ function TopUp({ onSettled, decorateTile }: { onSettled: () => void; decorateTil
 
       {(state.phase === "idle" || creating) && (
         <>
-          <div className="tb-wallet-tiles">
+          <div className="tb-wallet-tiles" data-tour={TB_TARGETS.walletAmounts}>
             {TOP_UP_AMOUNTS.map((n) => {
               const look = decorateTile?.(n);
               return (
@@ -163,7 +165,8 @@ function TopUp({ onSettled, decorateTile }: { onSettled: () => void; decorateTil
           </button>
           {creating && <p className="tb-wallet-note">Making a Lightning invoice…</p>}
           {state.phase === "idle" && state.message && <p className="tb-wallet-error">{state.message}</p>}
-          <WalletChooser />
+          <CashWallets says="No bitcoin? Pay any invoice from the cash balance you hold in one of these." />
+          <div data-tour={TB_TARGETS.walletDoor}><WalletChooser /></div>
         </>
       )}
 
@@ -191,7 +194,7 @@ function TopUp({ onSettled, decorateTile }: { onSettled: () => void; decorateTil
               </a>
             )}
           </div>
-          <p className="tb-wallet-note">{PAY_FROM_CASH_LINE}</p>
+          <CashWallets says="No bitcoin? Pay this from the cash balance you hold in one of these." />
           <p className="tb-wallet-note" aria-live="polite">{awaitingWords(state.status, watching)}</p>
           <div className="tb-wallet-row">
             <button type="button" disabled={state.checking} onClick={check} className="tb-wallet-action">
@@ -226,7 +229,7 @@ function TopUp({ onSettled, decorateTile }: { onSettled: () => void; decorateTil
 function Tranches({ tranches }: { tranches: CreditTranche[] }) {
   const [, zone] = useTimezone();
   return (
-    <section className="tb-wallet-section tb-wallet-tranches">
+    <section className="tb-wallet-section tb-wallet-tranches" data-tour={TB_TARGETS.walletTranches}>
       <h2 className="tb-wallet-title">Credit tranches</h2>
       <ul className="tb-wallet-list">
         {tranches.map((t) => (
@@ -264,7 +267,7 @@ function Statement() {
   const usage = stmt?.tool_usage_all_time ?? [];
 
   return (
-    <section className="tb-wallet-section tb-wallet-statement">
+    <section className="tb-wallet-section tb-wallet-statement" data-tour={TB_TARGETS.walletStatement}>
       <h2 className="tb-wallet-title">Statement</h2>
       <div className="tb-wallet-row">
         <button type="button" disabled={loading} onClick={() => void load()} className="tb-wallet-action">

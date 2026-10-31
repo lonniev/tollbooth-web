@@ -2,6 +2,13 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.1.0] — 2026-10-31
+
+### Added
+
+- Strike and Cash App appear in the wallet with their logos and links, before an invoice and on it, and in "Need a wallet?".
+- `walletSteps` and `walletTour` walk the wallet, and `accountTour` includes them.
+
 ## [3.0.0] — 2026-10-31
 
 ### Added

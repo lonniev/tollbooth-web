@@ -90,6 +90,28 @@ export function storeFor(userAgent: string): Store {
   return null;
 }
 
+/** The wallets that pay a Lightning invoice from a cash balance, named wherever a page offers that. */
+const CASH_WALLETS = [
+  { id: "strike", name: "Strike", homepage: "https://strike.me" },
+  { id: "cash-app", name: "Cash App", homepage: "https://cash.app" },
+] as const;
+
+export interface CashWalletDoor {
+  id: string;
+  name: string;
+  href: string;
+  logo?: string;
+}
+
+/** Each cash wallet's name and link, always, with the logo and this device's installer once the Oracle has answered. */
+export function cashWalletDoors(list: LightningWallets | null, store: Store): CashWalletDoor[] {
+  return CASH_WALLETS.map(({ id, name, homepage }) => {
+    const w = list?.wallets.find((x) => x.id === id);
+    const installer = store === "apple" ? w?.appStore : store === "google" ? w?.googlePlay : undefined;
+    return { id, name, href: installer ?? w?.homepage ?? homepage, logo: w?.logo };
+  });
+}
+
 /** The custody label's words. */
 export function custodyWords(c: Custody): string {
   return c === "custodial" ? "Holds your sats for you" : c === "self-custodial" ? "Your keys, on your phone" : "Either way";

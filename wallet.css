@@ -170,3 +170,15 @@
 }
 .tb-wallet-line:first-child,
 .tb-wallet-coupon:first-child { border-top: 0; }
+
+/* The wallets that pay from cash: a labelled pair, each door a logo and a name. */
+.tb-cash { display: grid; gap: 0.5rem; padding: 0.75rem; border: 1px solid var(--tb-wallet-line); border-radius: 0.75rem; }
+.tb-cash-says { margin: 0; font-size: 0.95rem; font-weight: 600; line-height: 1.35; }
+.tb-cash-doors { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); gap: 0.5rem; }
+.tb-cash-door {
+  display: flex; align-items: center; gap: 0.6rem; min-height: 44px; padding: 0.4rem 0.6rem;
+  border: 1px solid var(--tb-wallet-line); border-radius: 0.6rem;
+  color: inherit; font-weight: 600; text-decoration: none;
+}
+.tb-cash-door:hover, .tb-cash-door:focus-visible { border-color: var(--tb-accent); }
+.tb-cash-logo { flex: none; width: 36px; height: 36px; border-radius: 0.5rem; }

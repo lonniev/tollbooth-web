@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { lintStep, lintTour, lintTours } from "./lint.ts";
-import { accountTour, signInTour } from "./tours.ts";
+import { accountTour, signInTour, walletTour } from "./tours.ts";
 
 describe("the voice a tour speaks in", () => {
   it("passes a step that says what a thing is", () => {
@@ -22,6 +22,6 @@ describe("the voice a tour speaks in", () => {
     assert.match(lintTour({ page: "p", steps: [] })[0], /has no steps/);
   });
   it("holds the package's own tours to it", () => {
-    assert.deepEqual(lintTours({ signin: signInTour(), account: accountTour() }), []);
+    assert.deepEqual(lintTours({ signin: signInTour(), account: accountTour(), wallet: walletTour() }), []);
   });
 });
