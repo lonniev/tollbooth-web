@@ -137,9 +137,11 @@ content. `priceSheet(model, { slug })` is the same reading without React.
 ### Wallet
 
 The wallet is the brand: its layout, scope and behavior are the same on every
-site, so it has no layout props. `Wallet` is Balance, Top up, Tranches, Statement
-and Coupons, always in that order. `BalanceAndTopUp` is the one short form, for a
-Profile or a modal. A site says where it goes.
+site, so it has no layout props. `Wallet` is Balance, Top up, Tranches, Coupons
+and Statement, always in that order. `WalletFunds` and `WalletStatement` are the
+same wallet in two pieces, for a page that puts the statement lower down.
+`BalanceAndTopUp` is the one short form, for a Profile or a modal. A site says
+where it goes.
 
 An amount tile only fills the amount; the invoice is made by the explicit
 "Create invoice". An open invoice shows its QR code, Open in wallet, Copy invoice

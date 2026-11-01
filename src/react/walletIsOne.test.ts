@@ -9,6 +9,8 @@ const wallet = readFileSync(new URL("./Wallet.tsx", import.meta.url), "utf8");
 test("a site has one wallet and cannot draw its own", () => {
   assert.match(exportsOf, /default as Wallet\b/);
   assert.match(exportsOf, /\bBalanceAndTopUp\b/);
+  assert.match(exportsOf, /\bWalletFunds\b/);
+  assert.match(exportsOf, /\bWalletStatement\b/);
   for (const gone of ["WalletPage", "WalletCard", "CouponsPanel", "InvoiceQr", "useTopUp", "WalletChooser", "PAY_FROM_CASH_LINE"]) {
     assert.doesNotMatch(exportsOf, new RegExp(`\\b${gone}\\b`), gone);
   }
@@ -16,7 +18,7 @@ test("a site has one wallet and cannot draw its own", () => {
 
 test("the wallet takes decoration and nothing that changes its layout or scope", () => {
   const props = [...wallet.matchAll(/export (?:default )?function \w+\(\{([^}]*)\}/g)].map((m) => m[1].trim());
-  assert.deepEqual(props, ["decorateTile", "decorateTile"]);
+  assert.deepEqual(props, ["decorateTile", "decorateTile", "decorateTile"]);
 });
 
 test("the amounts are the brand's", () => {

@@ -167,8 +167,8 @@ function TopUp({ onSettled, decorateTile }: { onSettled: () => void; decorateTil
           </button>
           {creating && <p className="tb-wallet-note">Making a Lightning invoice…</p>}
           {state.phase === "idle" && state.message && <p className="tb-wallet-error">{state.message}</p>}
-          <CashWallets says="No bitcoin? Pay any invoice from the cash balance you hold in one of these." />
           <div data-tour={TB_TARGETS.walletDoor}><WalletChooser /></div>
+          <CashWallets />
         </>
       )}
 
@@ -196,7 +196,7 @@ function TopUp({ onSettled, decorateTile }: { onSettled: () => void; decorateTil
               </a>
             )}
           </div>
-          <CashWallets says="No bitcoin? Pay this from the cash balance you hold in one of these." />
+          <CashWallets />
           <p className="tb-wallet-note" aria-live="polite">{awaitingWords(state.status, watching)}</p>
           <div className="tb-wallet-row">
             <button type="button" disabled={state.checking} onClick={check} className="tb-wallet-action">
@@ -349,17 +349,35 @@ export function BalanceAndTopUp({ decorateTile }: { decorateTile?: DecorateTile 
   );
 }
 
-/** The whole wallet, always in this order. */
-export default function Wallet({ decorateTile }: { decorateTile?: DecorateTile }) {
+function Funds({ decorateTile }: { decorateTile?: DecorateTile }) {
   const { bal, error, refresh } = useBalance();
   return (
-    <div className="tb-wallet">
+    <>
       <h1 className="tb-wallet-heading">Wallet</h1>
       <Balance bal={bal} error={error} refresh={refresh} />
       <TopUp onSettled={refresh} decorateTile={decorateTile} />
       {bal?.tranches && bal.tranches.length > 0 && <Tranches tranches={bal.tranches} />}
-      <Statement />
       <CouponsPanel />
+    </>
+  );
+}
+
+/** The wallet above its statement, for a page that puts the statement lower down. */
+export function WalletFunds({ decorateTile }: { decorateTile?: DecorateTile }) {
+  return <div className="tb-wallet"><Funds decorateTile={decorateTile} /></div>;
+}
+
+/** The statement, for a page showing `WalletFunds`. */
+export function WalletStatement() {
+  return <div className="tb-wallet"><Statement /></div>;
+}
+
+/** The whole wallet, always in this order. */
+export default function Wallet({ decorateTile }: { decorateTile?: DecorateTile }) {
+  return (
+    <div className="tb-wallet">
+      <Funds decorateTile={decorateTile} />
+      <Statement />
     </div>
   );
 }

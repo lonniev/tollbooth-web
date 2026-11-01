@@ -112,7 +112,7 @@ export {
 export { useSession, type Session } from "./useSession.ts";
 export { useDebugLog } from "./useDebugLog.ts";
 export { useTheme } from "./useTheme.ts";
-export { default as Wallet, BalanceAndTopUp, type DecorateTile, type TileDecoration } from "./Wallet.tsx";
+export { default as Wallet, BalanceAndTopUp, WalletFunds, WalletStatement, type DecorateTile, type TileDecoration } from "./Wallet.tsx";
 export { useTimezone } from "./useTimezone.ts";
 export { useProperty } from "./useProperty.ts";
 export {

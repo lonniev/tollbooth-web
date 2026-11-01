@@ -18,7 +18,7 @@ function theList(): Promise<LightningWallets | null> {
   return asked;
 }
 
-export default function CashWallets({ says }: { says: string }) {
+export default function CashWallets() {
   const [list, setList] = useState<LightningWallets | null>(null);
   const store = typeof navigator === "undefined" ? null : storeFor(navigator.userAgent);
 
@@ -30,7 +30,7 @@ export default function CashWallets({ says }: { says: string }) {
 
   return (
     <div className="tb-cash" data-tour={TB_TARGETS.walletCash}>
-      <p className="tb-cash-says">{says}</p>
+      <p className="tb-cash-says">No Wallet yet? Use cash with these.</p>
       <div className="tb-cash-doors">
         {cashWalletDoors(list, store).map((w) => (
           <a key={w.id} href={w.href} target="_blank" rel="noopener noreferrer" className="tb-cash-door">

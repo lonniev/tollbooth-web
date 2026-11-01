@@ -50,10 +50,10 @@ export function walletSteps(): TourStep[] {
   return [
     { target: TB_TARGETS.walletAmounts, title: "Top up",
       says: "Tap an amount, then Create invoice. Pay it in any Lightning wallet, and the balance updates on its own." },
-    { target: TB_TARGETS.walletCash, title: "Pay from cash",
-      says: "Strike and Cash App pay a Lightning invoice from the cash balance you hold there. Tap one to get it.", side: "top" },
     { target: TB_TARGETS.walletDoor, title: "Need a wallet?",
       says: "The wallets people use today, each with its logo and installers.", side: "top" },
+    { target: TB_TARGETS.walletCash, title: "Pay from cash",
+      says: "Strike and Cash App pay a Lightning invoice from the cash balance you hold there. Tap one to get it.", side: "top" },
     { target: TB_TARGETS.walletTranches, title: "Credit tranches",
       says: "Each purchase is a tranche of api_sats, with its own expiry if the operator sets one.", side: "top" },
     { target: TB_TARGETS.walletStatement, title: "Statement",

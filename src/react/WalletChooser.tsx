@@ -81,7 +81,7 @@ function WalletDialog({ onClose }: { onClose: () => void }) {
           ))}
         </ol>
 
-        <CashWallets says="No bitcoin? Pay from the cash balance you hold in one of these." />
+        <CashWallets />
 
         {failed ? (
           <p className="tb-wc-note">The list didn't load just now: close this and try again in a moment.</p>
