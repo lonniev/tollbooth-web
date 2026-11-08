@@ -1,0 +1,1 @@
+- `@tollbooth-dpyc/web/agent-guide`: a Vite plugin that builds `/llms.txt` from the service's own sections plus the shared ones, links it from `<head>`, and gives an empty `#root` an intro a fetcher without JavaScript can read.
