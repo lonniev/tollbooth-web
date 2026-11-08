@@ -51,6 +51,33 @@ import { makeMcpProxy } from "@tollbooth-dpyc/web/pages-proxy";
 export const onRequest = makeMcpProxy("https://chartremotely-mcp.fastmcp.app/mcp");
 ```
 
+### Agent guide (`/llms.txt`)
+
+A fetcher that runs no JavaScript gets an empty `#root` from a single-page app.
+The Vite plugin builds `/llms.txt` from the service's own sections plus the sections
+every operator shares: connecting an agent, payments and identity, license and marks,
+and links. It also links the guide from `<head>`, and puts a short intro in an empty
+`#root`.
+
+```ts
+// vite.config.ts
+import { agentGuide } from "@tollbooth-dpyc/web/agent-guide";
+
+plugins: [react(), agentGuide({
+  name: "FieldData",
+  summary: "What a grower's own weather station and soil probes measured.",
+  site: "https://fielddata.tollbooth-dpyc.com",
+  mcpUrl: "https://fielddata-mcp.fastmcp.app/mcp",
+  toolPrefix: "fielddata",
+  source: "https://github.com/lonniev/fielddata-mcp",
+  body: "agent-guide.md",   // the service's own "## " sections, no title
+})]
+```
+
+The build fails if `body` carries a title or one of the shared headings. It also
+fails if a URL is not https, or if `toolPrefix` is not a lowercase identifier.
+A `#root` that already holds markup keeps it.
+
 ### Network failures
 
 `callTool` throws a `NetworkError` when the call never reached the service
@@ -445,7 +472,7 @@ them after:
 ## Stability
 
 From 1.0.0 the public API — everything exported from `@tollbooth-dpyc/web`,
-`/react`, `/pages-proxy` and the `theme.css` tokens — follows semver. Patch and
+`/react`, `/pages-proxy`, `/agent-guide` and the `theme.css` tokens — follows semver. Patch and
 minor releases are safe to take unattended (the fleet's Renovate preset
 auto-merges them); a breaking change ships only as a new major, which Renovate
 holds for review.
