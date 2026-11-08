@@ -18,13 +18,18 @@ const OPTS: AgentGuideOptions = {
 };
 const BODY = "## What it answers\n\nFrost dates for your own ground.\n";
 
-test("the guide is the service's sections, then each shared section once", () => {
+test("the guide leads with the service's prose and how to connect, then its sections", () => {
+  const g = renderAgentGuide(OPTS, "Good Earth is a web app.\n\n" + BODY);
+  assert.ok(g.startsWith("# Good Earth\n\n> Climate timing for cottage gardens.\n\nGood Earth is a web app.\n\n## Connecting an agent"));
+  assert.ok(g.indexOf("## Connecting an agent") < g.indexOf("## What it answers"));
+  assert.ok(g.indexOf("## What it answers") < g.indexOf("## Payments and identity"));
+});
+
+test("each shared section appears once", () => {
   const g = renderAgentGuide(OPTS, BODY);
-  assert.ok(g.startsWith("# Good Earth\n\n> Climate timing for cottage gardens.\n\n## What it answers"));
   for (const h of ["## Connecting an agent", "## Payments and identity", "## License, patent, and trademarks", "## Links"]) {
     assert.equal(g.split(h).length, 2, h);
   }
-  assert.ok(g.indexOf("## What it answers") < g.indexOf("## Connecting an agent"));
 });
 
 test("the tool names carry the service's prefix", () => {

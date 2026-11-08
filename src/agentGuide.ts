@@ -7,10 +7,10 @@
  * learns nothing. This Vite plugin gives every operator front end the same
  * answer:
  *
- *   - `dist/llms.txt`: the service's own sections, followed by the sections
- *     every Tollbooth DPYC operator shares (connecting an agent, payments and
- *     identity, licence and marks, links). It is served at `/llms.txt` in
- *     `vite dev` too.
+ *   - `dist/llms.txt`: the service's opening prose, how an agent connects,
+ *     the service's own sections, then the sections every Tollbooth DPYC
+ *     operator shares (payments and identity, licence and marks, links). It is
+ *     served at `/llms.txt` in `vite dev` too.
  *   - `index.html` gets `<link rel="alternate" href="/llms.txt">`, and an
  *     empty `#root` gets a short intro. `createRoot` replaces it when the app
  *     loads. A `#root` that already holds markup is left alone.
@@ -155,7 +155,14 @@ export function renderAgentGuide(options: AgentGuideOptions, body: string): stri
       throw new Error(`agentGuide: ${o.body} still carries "${h}", which the shared guide writes`);
     }
   }
-  return [`# ${o.name}`, `> ${o.summary.trim()}`, own, connecting(o), PAYMENTS, LICENSE, links(o)].join("\n\n") + "\n";
+  // The service's opening prose, then how to connect, then the rest of its
+  // sections: an agent learns how to reach the tools before the feature list.
+  const firstSection = own.search(/^## /m);
+  const lead = firstSection < 0 ? own : own.slice(0, firstSection).trim();
+  const rest = firstSection < 0 ? "" : own.slice(firstSection).trim();
+  return [`# ${o.name}`, `> ${o.summary.trim()}`, lead, connecting(o), rest, PAYMENTS, LICENSE, links(o)]
+    .filter(Boolean)
+    .join("\n\n") + "\n";
 }
 
 function escapeHtml(s: string): string {
