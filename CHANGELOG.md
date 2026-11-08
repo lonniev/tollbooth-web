@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.3.0] — 2026-11-08
+
+### Added
+
+- `@tollbooth-dpyc/web/agent-guide`: a Vite plugin that builds `/llms.txt` from the service's own sections plus the shared ones, links it from `<head>`, and gives an empty `#root` an intro a fetcher without JavaScript can read.
+
 ## [3.2.0] — 2026-10-31
 
 ### Added
