@@ -2,6 +2,14 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.4.0] — 2026-11-12
+
+### Added
+
+- `PeersPanel`, on the Profile page after usage: who may see and fund this account (with Revoke), the accounts this npub funds (balance, Top up, Stop), and "Fund another account", which asks the patron by Nostr DM. Needs tollbooth-dpyc 0.119.1 on the operator. `AccountPage` takes `peers: false` to leave it out.
+- `checkBalance`, `purchaseCredits`, `checkPayment` and `getAccountStatement` take `forNpub`, for a peer acting on an account it was granted; such calls are best-effort, so a refusal never signs the peer out.
+- Wrappers for `list_peer_grants`, `request_peer_grant`, `receive_peer_grant` and `revoke_peer_grant`.
+
 ## [3.3.0] — 2026-11-08
 
 ### Added
