@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.5.2] — 2026-11-12
+
+### Fixed
+
+- `operatorClient` calls carry only the arguments they are given: the signed-in npub is no longer added to another service's tools. The Oracle's `list_services`, which takes no npub, refused the call.
+
 ## [3.5.1] — 2026-11-12
 
 ### Added
