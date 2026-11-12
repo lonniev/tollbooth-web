@@ -281,6 +281,11 @@ export function prefixFromTools(names: readonly string[]): string | null {
   return status ? status.slice(0, -"_service_status".length) : null;
 }
 
+/** A tool's runtime name under `prefix`; an empty prefix names it bare. */
+export function toolNameUnder(prefix: string, tool: string): string {
+  return prefix ? `${prefix}_${tool}` : tool;
+}
+
 /** `fetch` for another operator: this tab's key, or nobody. */
 export const remoteFetch: typeof fetch = async (input, init) => {
   const headers = new Headers(init?.headers);
@@ -294,8 +299,17 @@ export const remoteFetch: typeof fetch = async (input, init) => {
   return fetch(input, { ...init, headers });
 };
 
+export interface OperatorClientOptions {
+  /**
+   * The operator's tool prefix, when it is known or has none: "" for a
+   * service whose tools are unprefixed (the Oracle's `list_services`).
+   * Omitted, it is read from the operator's own tool list.
+   */
+  prefix?: string;
+}
+
 /** The client for the operator at `url`, one per URL for the page's life. */
-export function operatorClient(url: string): OperatorClient {
+export function operatorClient(url: string, options: OperatorClientOptions = {}): OperatorClient {
   const known = operators.get(url);
   if (known) return known;
 
@@ -314,7 +328,7 @@ export function operatorClient(url: string): OperatorClient {
     return connecting;
   };
 
-  let prefixed: Promise<string> | null = null;
+  let prefixed: Promise<string> | null = options.prefix === undefined ? null : Promise.resolve(options.prefix);
   const prefix = (): Promise<string> => {
     prefixed ??= (async () => {
       const names: string[] = [];
@@ -337,7 +351,7 @@ export function operatorClient(url: string): OperatorClient {
 
   const callWith = async <T>(tool: string, args: Record<string, unknown> = {}, opts: CallOptions = {}) =>
     invoke<T>(
-      { client: connect, name: `${await prefix()}_${tool}`, quiet: false, bootstrap: takesNoNpub(tool), home: false },
+      { client: connect, name: toolNameUnder(await prefix(), tool), quiet: false, bootstrap: takesNoNpub(tool), home: false },
       args,
       opts,
     );
