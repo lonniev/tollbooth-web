@@ -1,0 +1,1 @@
+- `operatorClient` calls carry only the arguments they are given: the signed-in npub is no longer added to another service's tools. The Oracle's `list_services`, which takes no npub, refused the call.

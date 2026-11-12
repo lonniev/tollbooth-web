@@ -255,7 +255,8 @@ async function invoke<T>(target: Target, args: Record<string, unknown>, opts: Ca
  * Every request is signed with this tab's key (NIP-98) while it holds one, and
  * is otherwise anonymous: this site's holder bearer was issued by its own
  * operator and is never sent elsewhere. A refusal from another operator throws
- * `ProofRequiredError` and leaves this page's sign-in alone.
+ * `ProofRequiredError` and leaves this page's sign-in alone. A call carries
+ * only the arguments it is given: pass `npub` to a tool that takes one.
  */
 export interface OperatorClient {
   /** The MCP endpoint, e.g. "https://goodearth-mcp.fastmcp.app/mcp". */
@@ -351,7 +352,9 @@ export function operatorClient(url: string, options: OperatorClientOptions = {})
 
   const callWith = async <T>(tool: string, args: Record<string, unknown> = {}, opts: CallOptions = {}) =>
     invoke<T>(
-      { client: connect, name: toolNameUnder(await prefix(), tool), quiet: false, bootstrap: takesNoNpub(tool), home: false },
+      // Another service's tools are not this site's: which take an npub, and
+      // whose, is the caller's to say. Nothing is added to `args`.
+      { client: connect, name: toolNameUnder(await prefix(), tool), quiet: false, bootstrap: true, home: false },
       args,
       opts,
     );
