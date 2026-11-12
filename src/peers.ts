@@ -1,13 +1,13 @@
 /**
- * The pure half of `PeersPanel`: a patron lets a peer npub see their account
- * here and pay for it, and the peer asks for that by a Nostr DM the patron
- * approves. Framework-free and tested.
+ * The pure half of `PeersPanel`: a sponsor sees a patron's account here and
+ * pays for it. Either one asks, by a Nostr DM the other approves. Framework-free
+ * and tested.
  */
 
 import { nip19 } from "nostr-tools";
 import type { PeerGrantResult } from "./standardTools.ts";
 
-/** The npub typed into "Fund another account", or why it will not do. */
+/** The npub typed into the ask box, or why it will not do. */
 export function peerTarget(typed: string, self: string): { npub: string } | { problem: string } {
   const npub = typed.trim();
   if (!npub) return { problem: "" };
@@ -28,17 +28,27 @@ export function grantEndsText(expiresAt: number, nowMs: number = Date.now()): st
   return `ends in ${days} days`;
 }
 
-/** Where a peer's ask stands: nothing sent, or a DM out to `patron` named by `nonce`. */
-export type AskPhase = { kind: "idle" } | { kind: "sent"; patron: string; nonce: string };
+/**
+ * Where an ask stands: nothing sent, or a DM out to `other` named by `nonce`.
+ * `patron` and `peer` are the grant's two sides; the signed-in npub is one.
+ */
+export type AskPhase =
+  | { kind: "idle" }
+  | { kind: "sent"; patron: string; peer: string; other: string; nonce: string };
+
+/** The grant's two sides when `self` asks `other`: to sponsor them, or to be sponsored by them. */
+export function askSides(self: string, other: string, offer: boolean): { patron: string; peer: string } {
+  return offer ? { patron: other, peer: self } : { patron: self, peer: other };
+}
 
 export interface AskStep {
   phase: AskPhase;
   problem: string;
 }
 
-/** After `request_peer_grant`: the DM went out, or say why not. */
-export function afterAsk(patron: string, r: PeerGrantResult): AskStep {
-  if (r.success && r.nonce) return { phase: { kind: "sent", patron, nonce: r.nonce }, problem: "" };
+/** After `request_peer_grant`: the DM went out to `other`, or say why not. */
+export function afterAsk(sides: { patron: string; peer: string }, other: string, r: PeerGrantResult): AskStep {
+  if (r.success && r.nonce) return { phase: { kind: "sent", ...sides, other, nonce: r.nonce }, problem: "" };
   return { phase: { kind: "idle" }, problem: r.error ?? r.message ?? "The request could not be sent." };
 }
 

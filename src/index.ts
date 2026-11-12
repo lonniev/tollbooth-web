@@ -6,8 +6,11 @@ export {
   isNetworkError,
   NetworkError,
   onProofExpired,
+  operatorClient,
+  prefixFromTools,
   ProofRequiredError,
   type CallOptions,
+  type OperatorClient,
   type ToolAnswer,
 } from "./client.ts";
 export type { ImageBlock } from "./toolResult.ts";

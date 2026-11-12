@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { afterApproval, afterAsk, grantEndsText, peerTarget } from "./peers.ts";
+import { afterApproval, afterAsk, askSides, grantEndsText, peerTarget } from "./peers.ts";
 
 const PATRON = "npub1d999638gqpn8c594teklxtxva0uvxdng80q3ycyqvldjdl457c7qcrq64z";
 const PEER = "npub1aamuuuk9myts9nw69udvsdcx6m62a3em4rkaaghcq6a2v4rerqmq72kmz8";
@@ -22,19 +22,25 @@ test("a grant's end reads in days", () => {
   assert.equal(grantEndsText(now / 1000 + 7 * 86_400, now), "ends in 7 days");
 });
 
+test("offering to sponsor makes the other the patron; asking makes them the sponsor", () => {
+  assert.deepEqual(askSides(PEER, PATRON, true), { patron: PATRON, peer: PEER });
+  assert.deepEqual(askSides(PATRON, PEER, false), { patron: PATRON, peer: PEER });
+});
+
 test("an ask that went out waits on its nonce", () => {
-  assert.deepEqual(afterAsk(PATRON, { success: true, nonce: "bold-hawk" }), {
-    phase: { kind: "sent", patron: PATRON, nonce: "bold-hawk" },
+  const sides = { patron: PATRON, peer: PEER };
+  assert.deepEqual(afterAsk(sides, PATRON, { success: true, nonce: "bold-hawk" }), {
+    phase: { kind: "sent", patron: PATRON, peer: PEER, other: PATRON, nonce: "bold-hawk" },
     problem: "",
   });
-  assert.deepEqual(afterAsk(PATRON, { success: false, error: "Secure Courier not configured." }), {
+  assert.deepEqual(afterAsk(sides, PATRON, { success: false, error: "Secure Courier not configured." }), {
     phase: { kind: "idle" },
     problem: "Secure Courier not configured.",
   });
 });
 
 test("no approval yet keeps waiting on the same DM", () => {
-  const sent = { kind: "sent", patron: PATRON, nonce: "bold-hawk" } as const;
+  const sent = { kind: "sent", patron: PATRON, peer: PEER, other: PATRON, nonce: "bold-hawk" } as const;
   assert.equal(afterApproval(sent, { success: true }).granted, true);
   const waiting = afterApproval(sent, { success: false, error: "No reply yet." });
   assert.deepEqual(waiting, { phase: sent, problem: "No reply yet.", granted: false });
