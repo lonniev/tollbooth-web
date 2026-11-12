@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { prefixFromTools, remoteFetch, takesNoNpub } from "./client.ts";
+import { toolNameUnder, prefixFromTools, remoteFetch, takesNoNpub } from "./client.ts";
 
 test("the Oracle's tools never get the caller's npub", () => {
   assert.equal(takesNoNpub("oracle_lightning_wallets"), true);
@@ -32,4 +32,9 @@ test("a call to another operator without this tab's key goes anonymous, never wi
     globalThis.fetch = real;
   }
   assert.equal(seen[0].get("Authorization"), "Bearer anonymous");
+});
+
+test("an empty prefix names a tool bare, as the Oracle's are", () => {
+  assert.equal(toolNameUnder("", "list_services"), "list_services");
+  assert.equal(toolNameUnder("goodearth", "check_balance"), "goodearth_check_balance");
 });

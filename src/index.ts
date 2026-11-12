@@ -7,6 +7,7 @@ export {
   NetworkError,
   onProofExpired,
   operatorClient,
+  type OperatorClientOptions,
   prefixFromTools,
   ProofRequiredError,
   type CallOptions,
