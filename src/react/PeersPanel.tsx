@@ -1,8 +1,8 @@
 /**
- * Peers: who may see and fund this account here, and whose accounts this npub
- * may see and fund. A peer (a parent, a supervisor) never spends the balance;
- * it reads it and pays for it. Each grant is the patron's own approval of a
- * Nostr DM, so asking only sends that DM — the patron decides in their app.
+ * Sponsors: who may see and fund this account here, and whose accounts this
+ * npub sponsors. A sponsor (a parent, a supervisor, an employer) never spends
+ * the balance; it reads it and pays for it. Either side asks, and the other
+ * approves a Nostr DM in their own app.
  *
  * Laid out by `wallet.css`, like the wallet: it is the brand.
  */
@@ -19,7 +19,7 @@ import {
   type PeerGrant,
 } from "../standardTools.ts";
 import { shortNpub } from "../avatar.ts";
-import { afterApproval, afterAsk, grantEndsText, peerTarget, type AskPhase } from "../peers.ts";
+import { afterApproval, afterAsk, askSides, grantEndsText, peerTarget, type AskPhase } from "../peers.ts";
 import { formatSats } from "../wallet.ts";
 import TopUp from "./TopUp.tsx";
 
@@ -94,12 +94,12 @@ export default function PeersPanel({ npub }: PeersPanelProps) {
   return (
     <div className="tb-wallet tb-peers" data-tour="tb.account.peers">
       <section className="tb-wallet-section">
-        <h2 className="tb-wallet-title">Who may see and fund you</h2>
+        <h2 className="tb-wallet-title">Your sponsors</h2>
         <p className="tb-wallet-note">They can read your balance and pay for you here. They cannot spend it.</p>
         {loading ? (
           <p className="tb-wallet-note">Loading…</p>
         ) : peers.length === 0 ? (
-          <p className="tb-wallet-note">Nobody yet. A peer asks from their own account, and you approve the DM.</p>
+          <p className="tb-wallet-note">None yet. Ask someone below, or approve their offer when it comes.</p>
         ) : (
           <ul className="tb-wallet-list">
             {peers.map((p) => (
@@ -118,7 +118,7 @@ export default function PeersPanel({ npub }: PeersPanelProps) {
       </section>
 
       <section className="tb-wallet-section">
-        <h2 className="tb-wallet-title">Accounts you fund</h2>
+        <h2 className="tb-wallet-title">Accounts you sponsor</h2>
         {!loading && patrons.length === 0 && <p className="tb-wallet-note">None yet.</p>}
         {patrons.length > 0 && (
           <ul className="tb-wallet-list">
@@ -127,7 +127,10 @@ export default function PeersPanel({ npub }: PeersPanelProps) {
             ))}
           </ul>
         )}
-        <AskToFund npub={npub} onGranted={() => void refresh()} />
+      </section>
+
+      <section className="tb-wallet-section">
+        <AskByNpub npub={npub} onGranted={() => void refresh()} />
       </section>
 
       {problem && <p className="tb-wallet-error">{problem}</p>}
@@ -169,7 +172,7 @@ function FundedAccount({ grant, onStop }: { grant: PatronGrant; onStop: () => vo
         >
           Top up
         </button>
-        <button type="button" onClick={onStop} title="Stop seeing and funding this account" className="tb-wallet-action">
+        <button type="button" onClick={onStop} title="Stop sponsoring this account" className="tb-wallet-action">
           Stop
         </button>
       </div>
@@ -185,7 +188,7 @@ function FundedAccount({ grant, onStop }: { grant: PatronGrant; onStop: () => vo
   );
 }
 
-function AskToFund({ npub, onGranted }: { npub: string; onGranted: () => void }) {
+function AskByNpub({ npub, onGranted }: { npub: string; onGranted: () => void }) {
   const [typed, setTyped] = useState("");
   const [phase, setPhase] = useState<AskPhase>({ kind: "idle" });
   const [busy, setBusy] = useState(false);
@@ -204,10 +207,12 @@ function AskToFund({ npub, onGranted }: { npub: string; onGranted: () => void })
     }
   }
 
-  const ask = () =>
+  /** Offer to sponsor them, or ask them to sponsor me. */
+  const ask = (offer: boolean) =>
     "npub" in target &&
     attempt(async () => {
-      const next = afterAsk(target.npub, await requestPeerGrant(target.npub, npub));
+      const sides = askSides(npub, target.npub, offer);
+      const next = afterAsk(sides, target.npub, await requestPeerGrant(sides.patron, sides.peer));
       setPhase(next.phase);
       setProblem(next.problem);
     });
@@ -215,7 +220,7 @@ function AskToFund({ npub, onGranted }: { npub: string; onGranted: () => void })
   const collect = () =>
     phase.kind === "sent" &&
     attempt(async () => {
-      const next = afterApproval(phase, await receivePeerGrant(phase.patron, npub, phase.nonce));
+      const next = afterApproval(phase, await receivePeerGrant(phase.patron, phase.peer, phase.nonce));
       setPhase(next.phase);
       setProblem(next.problem);
       if (next.granted) {
@@ -224,34 +229,30 @@ function AskToFund({ npub, onGranted }: { npub: string; onGranted: () => void })
       }
     });
 
+  const ready = !busy && "npub" in target;
   return (
     <div className="tb-peers-ask">
-      <h3 className="tb-wallet-subtitle">Fund another account</h3>
+      <h3 className="tb-wallet-subtitle">Ask by npub</h3>
       {phase.kind === "idle" ? (
         <>
+          <input
+            type="text"
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+            placeholder="Their npub1…"
+            aria-label="Their npub"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+            disabled={busy}
+            className="tb-wallet-input tb-wallet-custom"
+          />
           <div className="tb-wallet-row">
-            <input
-              type="text"
-              value={typed}
-              onChange={(e) => setTyped(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") void ask();
-              }}
-              placeholder="Their npub1…"
-              aria-label="The npub of the account to fund"
-              autoCapitalize="off"
-              autoCorrect="off"
-              spellCheck={false}
-              disabled={busy}
-              className="tb-wallet-input tb-peers-grow"
-            />
-            <button
-              type="button"
-              onClick={() => void ask()}
-              disabled={busy || !("npub" in target)}
-              className="tb-wallet-action tb-wallet-primary"
-            >
-              {busy ? "Asking…" : "Ask"}
+            <button type="button" onClick={() => void ask(false)} disabled={!ready} className="tb-wallet-action tb-wallet-primary">
+              Ask them to sponsor me
+            </button>
+            <button type="button" onClick={() => void ask(true)} disabled={!ready} className="tb-wallet-action">
+              Offer to sponsor them
             </button>
           </div>
           {"problem" in target && target.problem && <p className="tb-wallet-error">{target.problem}</p>}
@@ -259,7 +260,7 @@ function AskToFund({ npub, onGranted }: { npub: string; onGranted: () => void })
       ) : (
         <>
           <p className="tb-wallet-note">
-            <Who npub={phase.patron} /> gets a DM marked <span className="tb-peers-phrase">{phase.nonce}</span>.
+            <Who npub={phase.other} /> gets a DM marked <span className="tb-peers-phrase">{phase.nonce}</span>.
             Once they approve it, collect the grant.
           </p>
           <div className="tb-wallet-row">

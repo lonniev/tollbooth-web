@@ -1,0 +1,1 @@
+- `PeersPanel` speaks of sponsors: "Your sponsors" and "Accounts you sponsor". Its ask box takes an npub and either asks them to sponsor you or offers to sponsor them; the other side approves the DM. Needs tollbooth-dpyc 0.120.0.

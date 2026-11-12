@@ -18,7 +18,8 @@ import { debugPush, redact } from "./debugLog.ts";
 import { isHolder } from "./holder.ts";
 import { forgetRecentLogin, getStoredNpub } from "./identity.ts";
 import { isTransportFailure, NetworkError } from "./networkError.ts";
-import { signingFetch, signsForSignedInNpub } from "./requestSigning.ts";
+import { signingFetch, signRequest, signsForSignedInNpub } from "./requestSigning.ts";
+import { getSessionNsecBytes } from "./sessionNsec.ts";
 import {
   errorText,
   deadGrantMessage,
@@ -155,21 +156,47 @@ export async function callToolWithContent<T = unknown>(
   opts: CallOptions = {},
 ): Promise<ToolAnswer<T>> {
   const cfg = tollboothConfig();
-  const name = toolName(tool);
-  const quiet = STANDARD_QUIET.includes(tool) || cfg.quietTools.includes(tool);
+  return invoke<T>(
+    {
+      client: getClient,
+      name: toolName(tool),
+      quiet: STANDARD_QUIET.includes(tool) || cfg.quietTools.includes(tool),
+      bootstrap: takesNoNpub(tool, cfg.extraBootstrapTools),
+      home: true,
+    },
+    args,
+    opts,
+  );
+}
+
+/** Where one call goes, and how its refusals are taken. */
+interface Target {
+  client: () => Promise<Client>;
+  /** The runtime tool name, prefix included. */
+  name: string;
+  quiet: boolean;
+  bootstrap: boolean;
+  /**
+   * The site's own operator. Only its refusals touch the sign-in: another
+   * operator refusing a call says nothing about this page's session.
+   */
+  home: boolean;
+}
+
+async function invoke<T>(target: Target, args: Record<string, unknown>, opts: CallOptions): Promise<ToolAnswer<T>> {
+  const { name, quiet, bootstrap, home } = target;
   // `args` holds only the caller's own parameters — the npub is added below —
   // so it is safe to log.
   if (!quiet) debugPush("call", `${name}(${redact(JSON.stringify(args)).slice(0, 140)})`);
 
-  const bootstrap = takesNoNpub(tool, cfg.extraBootstrapTools);
   const merged = bootstrap ? { ...args } : { npub: getStoredNpub(), ...args };
   // A call this tab's holder proves rides a grant the operator keeps; a signed
   // call proves itself afresh and has none to lose.
-  const rodeHolder = !bootstrap && isHolder() && !signsForSignedInNpub();
+  const rodeHolder = home && !bootstrap && isHolder() && !signsForSignedInNpub();
 
   let result: RawToolResult;
   try {
-    const c = await getClient();
+    const c = await target.client();
     result = (await c.callTool(
       { name, arguments: merged },
       undefined,
@@ -206,14 +233,124 @@ export async function callToolWithContent<T = unknown>(
     (opts.bestEffort ? null : proofBounceMessage(payload)) ??
     (rodeHolder ? deadGrantMessage(payload) : null);
   if (bounced !== null) {
-    // The recent-login shortcut would re-enter on the same refused hold, so it
-    // goes too, or a returning patron re-bounces.
-    const npub = getStoredNpub();
-    if (npub) forgetRecentLogin(npub);
-    emitProofExpired(bounced);
+    if (home) {
+      // The recent-login shortcut would re-enter on the same refused hold, so
+      // it goes too, or a returning patron re-bounces.
+      const npub = getStoredNpub();
+      if (npub) forgetRecentLogin(npub);
+      emitProofExpired(bounced);
+    }
     throw new ProofRequiredError(bounced);
   }
   return { data: payload as T, images };
+}
+
+// ─── Other operators ─────────────────────────────────────────────────────
+
+/**
+ * Another operator's MCP, called from this page as the signed-in npub. A page
+ * that works across operators (a sponsor's console, say) reads and pays at each
+ * one directly: their endpoints answer any origin.
+ *
+ * Every request is signed with this tab's key (NIP-98) while it holds one, and
+ * is otherwise anonymous: this site's holder bearer was issued by its own
+ * operator and is never sent elsewhere. A refusal from another operator throws
+ * `ProofRequiredError` and leaves this page's sign-in alone.
+ */
+export interface OperatorClient {
+  /** The MCP endpoint, e.g. "https://goodearth-mcp.fastmcp.app/mcp". */
+  readonly url: string;
+  /** Its tool prefix ("goodearth"), read from its own tool list. */
+  prefix(): Promise<string>;
+  callTool<T = unknown>(tool: string, args?: Record<string, unknown>, opts?: CallOptions): Promise<T>;
+  callToolWithContent<T = unknown>(
+    tool: string,
+    args?: Record<string, unknown>,
+    opts?: CallOptions,
+  ): Promise<ToolAnswer<T>>;
+}
+
+const operators = new Map<string, OperatorClient>();
+
+/**
+ * The tool prefix an operator's tool list implies: every operator registers
+ * `<prefix>_service_status`. Null when the list has none.
+ */
+export function prefixFromTools(names: readonly string[]): string | null {
+  const status = names.find((n) => n.endsWith("_service_status"));
+  return status ? status.slice(0, -"_service_status".length) : null;
+}
+
+/** `fetch` for another operator: this tab's key, or nobody. */
+export const remoteFetch: typeof fetch = async (input, init) => {
+  const headers = new Headers(init?.headers);
+  if (signsForSignedInNpub()) {
+    const request = new Request(input, init);
+    const body = typeof init?.body === "string" ? init.body : "";
+    headers.set("Authorization", await signRequest(request.method, request.url, body, getSessionNsecBytes()));
+  } else {
+    headers.set("Authorization", "Bearer anonymous");
+  }
+  return fetch(input, { ...init, headers });
+};
+
+/** The client for the operator at `url`, one per URL for the page's life. */
+export function operatorClient(url: string): OperatorClient {
+  const known = operators.get(url);
+  if (known) return known;
+
+  let client: Client | null = null;
+  let connecting: Promise<Client> | null = null;
+  const connect = (): Promise<Client> => {
+    if (client) return Promise.resolve(client);
+    connecting ??= (async () => {
+      const c = new Client({ name: `${tollboothConfig().slug}-frontend`, version: "1" });
+      await c.connect(new StreamableHTTPClientTransport(new URL(url), { fetch: remoteFetch }));
+      client = c;
+      return c;
+    })().finally(() => {
+      connecting = null;
+    });
+    return connecting;
+  };
+
+  let prefixed: Promise<string> | null = null;
+  const prefix = (): Promise<string> => {
+    prefixed ??= (async () => {
+      const names: string[] = [];
+      let cursor: string | undefined;
+      const c = await connect();
+      do {
+        const page = await c.listTools(cursor ? { cursor } : undefined);
+        names.push(...page.tools.map((t) => t.name));
+        cursor = page.nextCursor;
+      } while (cursor);
+      const p = prefixFromTools(names);
+      if (p === null) throw new Error(`${url} lists no service_status tool: not a Tollbooth operator.`);
+      return p;
+    })().catch((e) => {
+      prefixed = null; // a cold or unreachable operator may answer next time
+      throw e;
+    });
+    return prefixed;
+  };
+
+  const callWith = async <T>(tool: string, args: Record<string, unknown> = {}, opts: CallOptions = {}) =>
+    invoke<T>(
+      { client: connect, name: `${await prefix()}_${tool}`, quiet: false, bootstrap: takesNoNpub(tool), home: false },
+      args,
+      opts,
+    );
+
+  const op: OperatorClient = {
+    url,
+    prefix,
+    callToolWithContent: callWith,
+    callTool: async <T,>(tool: string, args?: Record<string, unknown>, opts?: CallOptions) =>
+      (await callWith<T>(tool, args, opts)).data,
+  };
+  operators.set(url, op);
+  return op;
 }
 
 /**
