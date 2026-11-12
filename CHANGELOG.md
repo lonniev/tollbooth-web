@@ -2,6 +2,16 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.5.0] — 2026-11-12
+
+### Added
+
+- `operatorClient(url)` calls another operator's MCP from this page as the signed-in npub. It signs each request with this tab's key, or goes anonymous; this site's holder bearer never leaves for another operator. A refusal from another operator throws `ProofRequiredError` and leaves this page's sign-in alone. Its tool prefix is read from the operator's own tool list (`prefixFromTools`).
+
+### Changed
+
+- `PeersPanel` speaks of sponsors: "Your sponsors" and "Accounts you sponsor". Its ask box takes an npub and either asks them to sponsor you or offers to sponsor them; the other side approves the DM. Needs tollbooth-dpyc 0.120.0.
+
 ## [3.4.0] — 2026-11-12
 
 ### Added
