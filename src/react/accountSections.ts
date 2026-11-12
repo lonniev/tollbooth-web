@@ -4,13 +4,14 @@
  */
 
 export type AccountSection =
-  "profile" | "sessionKey" | "operator" | "usage" | "timezone" | "theme" | "build";
+  "profile" | "sessionKey" | "operator" | "usage" | "peers" | "timezone" | "theme" | "build";
 
 export const ACCOUNT_SECTIONS: readonly AccountSection[] = [
   "profile",
   "sessionKey",
   "operator",
   "usage",
+  "peers",
   "timezone",
   "theme",
   "build",

@@ -13,6 +13,7 @@ export {
 export type { ImageBlock } from "./toolResult.ts";
 export * from "./identity.ts";
 export * from "./standardTools.ts";
+export * from "./peers.ts";
 export {
   clearSessionNsec,
   getSessionNsec,

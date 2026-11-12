@@ -55,6 +55,7 @@ export {
 export { default as SignInLinks, type SignInLinksClassNames, type SignInLinksProps } from "./SignInLinks.tsx";
 export { SIGN_IN_LINKS, SIGN_IN_LINKS_CREDIT, type SignInLink } from "./signInTools.ts";
 export { default as NostrProfilePanel } from "./NostrProfilePanel.tsx";
+export { default as PeersPanel, type PeersPanelProps } from "./PeersPanel.tsx";
 export {
   PageControls,
   SortHeader,

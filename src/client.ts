@@ -49,6 +49,8 @@ const STANDARD_BOOTSTRAP = [
   "get_patron_onboarding_status",
   "request_patron_credentials",
   "receive_patron_credentials",
+  "request_peer_grant",
+  "receive_peer_grant",
 ];
 
 const STANDARD_QUIET = ["service_status", "get_nostr_profile"];
