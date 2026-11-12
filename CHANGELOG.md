@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.5.1] — 2026-11-12
+
+### Added
+
+- `operatorClient(url, { prefix })` takes the operator's tool prefix when it is known, or `""` for a service whose tools are unprefixed, such as the Oracle's `list_services`.
+
 ## [3.5.0] — 2026-11-12
 
 ### Added

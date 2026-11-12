@@ -1,1 +1,0 @@
-- `operatorClient(url, { prefix })` takes the operator's tool prefix when it is known, or `""` for a service whose tools are unprefixed, such as the Oracle's `list_services`.
