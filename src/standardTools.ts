@@ -9,6 +9,23 @@
 
 import { callTool, type CallOptions } from "./client.ts";
 
+/**
+ * A call about another patron's account: a peer the patron approved
+ * (`request_peer_grant`) may read it and pay for it. `forNpub` names that
+ * patron; without it the call is about the signed-in npub. A peer's call is
+ * best-effort, so a refusal never signs the peer out of their own account.
+ */
+export interface AccountCallOptions extends CallOptions {
+  forNpub?: string;
+}
+
+function forAccount(
+  args: Record<string, unknown>,
+  { forNpub, ...opts }: AccountCallOptions = {},
+): [Record<string, unknown>, CallOptions] {
+  return forNpub ? [{ npub: forNpub, ...args }, { bestEffort: true, ...opts }] : [args, opts];
+}
+
 /** What a patron must supply beyond the npub proof, per the wheel's `patron_auth_block`. */
 export interface PatronAuth {
   mode: "oauth" | "secure_courier" | "none";
@@ -161,8 +178,8 @@ export interface CheckBalanceResult {
   error_code?: string;
 }
 
-export function checkBalance(opts?: CallOptions): Promise<CheckBalanceResult> {
-  return callTool<CheckBalanceResult>("check_balance", {}, opts);
+export function checkBalance(opts?: AccountCallOptions): Promise<CheckBalanceResult> {
+  return callTool<CheckBalanceResult>("check_balance", ...forAccount({}, opts));
 }
 
 export interface ConstraintEffect {
@@ -224,8 +241,8 @@ export interface PurchaseCreditsResult {
   error_code?: string;
 }
 
-export function purchaseCredits(sats: number, opts?: CallOptions): Promise<PurchaseCreditsResult> {
-  return callTool<PurchaseCreditsResult>("purchase_credits", { amount_sats: sats }, opts);
+export function purchaseCredits(sats: number, opts?: AccountCallOptions): Promise<PurchaseCreditsResult> {
+  return callTool<PurchaseCreditsResult>("purchase_credits", ...forAccount({ amount_sats: sats }, opts));
 }
 
 export interface CheckPaymentResult {
@@ -243,8 +260,8 @@ export interface CheckPaymentResult {
   error_code?: string;
 }
 
-export function checkPayment(invoiceId: string, opts?: CallOptions): Promise<CheckPaymentResult> {
-  return callTool<CheckPaymentResult>("check_payment", { invoice_id: invoiceId }, opts);
+export function checkPayment(invoiceId: string, opts?: AccountCallOptions): Promise<CheckPaymentResult> {
+  return callTool<CheckPaymentResult>("check_payment", ...forAccount({ invoice_id: invoiceId }, opts));
 }
 
 export interface StatementInvoice {
@@ -297,8 +314,8 @@ export interface AccountStatementResult {
   error_code?: string;
 }
 
-export function getAccountStatement(days = 30, opts?: CallOptions): Promise<AccountStatementResult> {
-  return callTool<AccountStatementResult>("account_statement", { days }, opts);
+export function getAccountStatement(days = 30, opts?: AccountCallOptions): Promise<AccountStatementResult> {
+  return callTool<AccountStatementResult>("account_statement", ...forAccount({ days }, opts));
 }
 
 // ─── Coupons (patron side) ───────────────────────────────────────────────
@@ -655,6 +672,83 @@ export function receivePatronCredentials(
   return callTool<ReceivePatronCredentialsResult>(
     "receive_patron_credentials",
     { sender_npub: senderNpub, nonce },
+    opts,
+  );
+}
+
+// ─── Peer grants ─────────────────────────────────────────────────────────
+// A patron lets a peer npub (a parent, a supervisor) see their account and
+// pay for it here — never spend it. Each grant is the patron's own signed
+// reply to a Nostr DM, and lasts at most 90 days.
+
+export interface PeerGrant {
+  peer_npub: string;
+  /** Unix seconds. */
+  expires_at: number;
+}
+
+export interface PatronGrant {
+  patron_npub: string;
+  /** Unix seconds. */
+  expires_at: number;
+}
+
+export interface ListPeerGrantsResult {
+  success?: boolean;
+  /** Who may see and fund the signed-in npub's account. */
+  peers?: PeerGrant[];
+  /** Whose accounts the signed-in npub may see and fund. */
+  patrons?: PatronGrant[];
+  error?: string;
+  error_code?: string;
+}
+
+export interface PeerGrantResult {
+  success?: boolean;
+  /** From `request_peer_grant`: names the patron's reply. */
+  nonce?: string;
+  expires_at?: string;
+  revoked?: boolean;
+  message?: string;
+  error?: string;
+  error_code?: string;
+}
+
+/** Both sides of the signed-in npub's peer grants here. Free. */
+export function listPeerGrants(opts?: CallOptions): Promise<ListPeerGrantsResult> {
+  return callTool<ListPeerGrantsResult>("list_peer_grants", {}, opts);
+}
+
+/** Ask `patronNpub`, by Nostr DM, to let the signed-in npub see and fund their account. Free. */
+export function requestPeerGrant(patronNpub: string, peerNpub: string, opts?: CallOptions): Promise<PeerGrantResult> {
+  return callTool<PeerGrantResult>("request_peer_grant", { patron_npub: patronNpub, peer_npub: peerNpub }, opts);
+}
+
+/**
+ * Collect the patron's approval, named by the `nonce` the request returned.
+ * It drains the relay, so call it only once they say they approved.
+ */
+export function receivePeerGrant(
+  patronNpub: string,
+  peerNpub: string,
+  nonce: string,
+  opts?: CallOptions,
+): Promise<PeerGrantResult> {
+  return callTool<PeerGrantResult>(
+    "receive_peer_grant",
+    { patron_npub: patronNpub, peer_npub: peerNpub, nonce },
+    opts,
+  );
+}
+
+/**
+ * End a grant. The patron may end any of their peers' grants; a peer may end
+ * its own. `patronNpub` defaults to the signed-in npub.
+ */
+export function revokePeerGrant(peerNpub: string, patronNpub?: string, opts?: CallOptions): Promise<PeerGrantResult> {
+  return callTool<PeerGrantResult>(
+    "revoke_peer_grant",
+    { ...(patronNpub ? { npub: patronNpub } : {}), peer_npub: peerNpub },
     opts,
   );
 }

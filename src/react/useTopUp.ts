@@ -20,6 +20,8 @@ export interface UseTopUpOptions {
   maxChecks?: number;
   /** Called once when an invoice settles, with the sats credited — refresh a balance here. */
   onSettled?: (credited: number) => void;
+  /** Top up another patron's account, as a peer they approved. Default: the signed-in npub's own. */
+  forNpub?: string;
 }
 
 export interface TopUp {
@@ -44,7 +46,7 @@ function tabHidden(): boolean {
   return typeof document !== "undefined" && document.visibilityState === "hidden";
 }
 
-export function useTopUp({ pollMs = 7000, maxChecks = 60, onSettled }: UseTopUpOptions = {}): TopUp {
+export function useTopUp({ pollMs = 7000, maxChecks = 60, onSettled, forNpub }: UseTopUpOptions = {}): TopUp {
   const [state, dispatch] = useReducer(topUpReducer, TOP_UP_IDLE);
   const latest = useRef(state);
   latest.current = state;
@@ -57,18 +59,18 @@ export function useTopUp({ pollMs = 7000, maxChecks = 60, onSettled }: UseTopUpO
     const s = latest.current;
     if (s.phase === "creating" || s.phase === "awaiting") return;
     dispatch({ type: "create", sats });
-    purchaseCredits(sats).then(
+    purchaseCredits(sats, { forNpub }).then(
       (result) => dispatch({ type: "created", result }),
       (e) => dispatch({ type: "error", message: messageOf(e) }),
     );
-  }, []);
+  }, [forNpub]);
 
   const check = useCallback(() => {
     const s = latest.current;
     if (s.phase !== "awaiting" || s.checking) return;
     const id = s.invoice.id;
     dispatch({ type: "check" });
-    checkPayment(id).then(
+    checkPayment(id, { forNpub }).then(
       (result) => {
         // A late answer for an invoice the patron has since cancelled is dropped.
         const now = latest.current;
@@ -76,7 +78,7 @@ export function useTopUp({ pollMs = 7000, maxChecks = 60, onSettled }: UseTopUpO
       },
       (e) => dispatch({ type: "error", message: messageOf(e) }),
     );
-  }, []);
+  }, [forNpub]);
 
   const cancel = useCallback(() => dispatch({ type: "cancel" }), []);
   const reset = useCallback(() => dispatch({ type: "reset" }), []);

@@ -189,3 +189,8 @@
 }
 .tb-cash-door:hover, .tb-cash-door:focus-visible { border-color: var(--tb-accent); }
 .tb-cash-logo { flex: none; width: 36px; height: 36px; border-radius: 0.5rem; }
+
+/* Peers (PeersPanel): who may see and fund this account, and whose this npub funds. */
+.tb-peers-grow { flex: 1; min-width: 0; }
+.tb-peers-phrase { font-family: ui-monospace, monospace; }
+.tb-peers .tb-wallet-line > .tb-wallet-section { margin-top: 0.75rem; }

@@ -9,7 +9,7 @@ describe("the account page's order", () => {
     assert.deepEqual(names(accountSteps({}, {})), [...ACCOUNT_SECTIONS]);
     assert.deepEqual(
       [...ACCOUNT_SECTIONS],
-      ["profile", "sessionKey", "operator", "usage", "timezone", "theme", "build"],
+      ["profile", "sessionKey", "operator", "usage", "peers", "timezone", "theme", "build"],
     );
   });
 
@@ -28,7 +28,7 @@ describe("the account page's order", () => {
   });
 
   it("skips hidden sections and empty slots", () => {
-    const steps = names(accountSteps({ usage: false, build: false }, { theme: null, timezone: false }));
+    const steps = names(accountSteps({ usage: false, peers: false, build: false }, { theme: null, timezone: false }));
     assert.deepEqual(steps, ["profile", "sessionKey", "operator", "timezone", "theme"]);
   });
 });
