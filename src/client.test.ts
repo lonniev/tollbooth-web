@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { toolNameUnder, prefixFromTools, remoteFetch, takesNoNpub } from "./client.ts";
+import { operatorBase, prefixFromTools, remoteFetch, takesNoNpub, toolNameUnder } from "./client.ts";
 
 test("the Oracle's tools never get the caller's npub", () => {
   assert.equal(takesNoNpub("oracle_lightning_wallets"), true);
@@ -27,7 +27,7 @@ test("a call to another operator without this tab's key goes anonymous, never wi
     return new Response("{}");
   }) as typeof fetch;
   try {
-    await remoteFetch("https://other.example/mcp", { method: "POST", body: "{}" });
+    await remoteFetch()("https://other.example/mcp", { method: "POST", body: "{}" });
   } finally {
     globalThis.fetch = real;
   }
@@ -37,4 +37,28 @@ test("a call to another operator without this tab's key goes anonymous, never wi
 test("an empty prefix names a tool bare, as the Oracle's are", () => {
   assert.equal(toolNameUnder("", "list_services"), "list_services");
   assert.equal(toolNameUnder("goodearth", "check_balance"), "goodearth_check_balance");
+});
+
+test("a remote holder carries its own bearer, never this site's", async () => {
+  const seen: Headers[] = [];
+  const real = globalThis.fetch;
+  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+    seen.push(new Headers(init?.headers));
+    return new Response("{}");
+  }) as typeof fetch;
+  const holder = {
+    isHolder: () => true, connect: async () => {}, forget: async () => {},
+    bearer: async () => "remote-bearer", reconnectAfterRefusal: async () => null,
+  };
+  try {
+    await remoteFetch(holder)("https://other.example/mcp", { method: "POST", body: "{}" });
+  } finally {
+    globalThis.fetch = real;
+  }
+  assert.equal(seen[0].get("Authorization"), "Bearer remote-bearer");
+});
+
+test("an operator's OAuth lives at its origin, beside /mcp", () => {
+  assert.equal(operatorBase("https://goodearth-mcp.fastmcp.app/mcp"), "https://goodearth-mcp.fastmcp.app");
+  assert.equal(operatorBase("https://x.example/mcp/"), "https://x.example");
 });
