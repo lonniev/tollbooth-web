@@ -23,6 +23,7 @@ import NostrProfilePanel from "./NostrProfilePanel.tsx";
 import OperatorProperties, { type OperatorPropertiesProps } from "./OperatorProperties.tsx";
 import PeersPanel from "./PeersPanel.tsx";
 import SessionKeyClaim, { type SessionKeyClaimProps } from "./SessionKeyClaim.tsx";
+import TextSizeToggle from "./TextSizeToggle.tsx";
 import ThemeToggle, { type ThemeToggleProps } from "./ThemeToggle.tsx";
 import TimezonePicker, { type TimezonePickerProps } from "./TimezonePicker.tsx";
 import UsageSummary, { type UsageSummaryProps } from "./UsageSummary.tsx";
@@ -136,7 +137,10 @@ export default function AccountPage({
         const { heading: h = "Appearance", intro, ...toggle } = opts<AccountThemeProps>(theme);
         return (
           <Section heading={h} intro={intro} c={c}>
-            <ThemeToggle {...toggle} />
+            <div style={{ display: "grid", gap: "0.75rem", justifyItems: "start" }}>
+              <ThemeToggle {...toggle} />
+              <TextSizeToggle classNames={toggle.classNames} />
+            </div>
           </Section>
         );
       }

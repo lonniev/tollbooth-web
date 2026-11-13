@@ -97,6 +97,7 @@ export {
   type TableFilterQuestions,
   type TableFilterSearch,
 } from "./TableFilter.tsx";
+export { default as TextSizeToggle, type TextSizeToggleClassNames } from "./TextSizeToggle.tsx";
 export { default as ThemeToggle, type ThemeToggleProps, type ThemeToggleClassNames } from "./ThemeToggle.tsx";
 export {
   default as TimezonePicker,
