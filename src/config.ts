@@ -8,6 +8,8 @@
  * renders, and everything in the package reads from it.
  */
 
+import { applyTextSize, readTextSize } from "./textSize.ts";
+
 export interface TollboothConfig {
   /** Tool-name prefix the operator registers under, e.g. "chart" or "goodearth". */
   slug: string;
@@ -66,6 +68,7 @@ export function configureTollbooth(config: TollboothConfig): void {
     avatarChoices: config.avatarChoices,
     tourIdleMs: config.tourIdleMs,
   };
+  applyTextSize(readTextSize(current.storagePrefix));
 }
 
 export function tollboothConfig(): Resolved {
