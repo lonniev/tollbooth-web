@@ -154,7 +154,7 @@ export default function NostrProfilePanel({
           <div className="flex items-center gap-2 flex-wrap">
             <div className="text-sm font-medium truncate">{collapsedDisplayName(profile.display_name ?? "")}</div>
             {mode === "how-to-set" && (
-              <span className={`text-[11px] px-1.5 py-0.5 rounded-md bg-[var(--tb-surface-2)] ${muted}`}>Read-only</span>
+              <span className={`text-[0.6875rem] px-1.5 py-0.5 rounded-md bg-[var(--tb-surface-2)] ${muted}`}>Read-only</span>
             )}
           </div>
           <button type="button" onClick={copyNpub} title="Copy full npub" className={`mt-0.5 font-mono text-xs ${muted}`}>

@@ -1,0 +1,1 @@
+- NpubGate, SessionKeyClaim and NostrProfilePanel size their text in rem, so it follows the reader's text size; the standard size looks the same.
