@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.6.0] — 2026-11-12
+
+### Added
+
+- `operatorClient` proves the signed-in npub at another operator without a key in the browser: `proveStart(npub)` connects this page there as a holder of its own and sends the DM, `proveFinish(npub, nonce)` collects the approval, and `proves(npub)` says whether it already holds. Each operator's holder tokens are kept apart, and this site's own holder bearer is never sent elsewhere. `holderConnection` is the holder flow for any operator; the site's own holder works as before.
+
 ## [3.5.2] — 2026-11-12
 
 ### Fixed
