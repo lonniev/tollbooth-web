@@ -1,1 +1,0 @@
-- Text size: the reader picks Standard, Large, Larger or Largest under Appearance on the Profile. It is kept per site and applied by `configureTollbooth`, so every rem-sized word grows from the first frame. `TextSizeToggle` and the `textSize` helpers are exported.

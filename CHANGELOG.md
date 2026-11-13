@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.7.0] — 2026-11-13
+
+### Added
+
+- Text size: the reader picks Standard, Large, Larger or Largest under Appearance on the Profile. It is kept per site and applied by `configureTollbooth`, so every rem-sized word grows from the first frame. `TextSizeToggle` and the `textSize` helpers are exported.
+
 ## [3.6.0] — 2026-11-12
 
 ### Added
