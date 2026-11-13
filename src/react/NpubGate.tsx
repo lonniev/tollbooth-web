@@ -79,8 +79,8 @@ const STEPS_LOOK: SignInStepsClassNames = {
   current: "text-[var(--tb-ink)]",
   todo: "text-[var(--tb-muted)]",
   glyph: "text-2xl leading-none",
-  label: "mt-1 text-[11px] leading-tight font-medium",
-  actor: "text-[10px] leading-tight opacity-70",
+  label: "mt-1 text-[0.6875rem] leading-tight font-medium",
+  actor: "text-[0.625rem] leading-tight opacity-70",
   connector: "absolute right-[-0.35rem] top-2 text-base leading-none text-[var(--tb-muted)] opacity-50 [li:nth-child(3n)_&]:hidden",
 };
 
@@ -93,7 +93,7 @@ const LINKS_LOOK: SignInLinksClassNames = {
   text: "min-w-0",
   name: "block text-sm font-medium",
   line: `block text-xs leading-snug ${muted}`,
-  credit: `text-[10px] leading-relaxed ${muted}`,
+  credit: `text-[0.625rem] leading-relaxed ${muted}`,
 };
 
 export default function NpubGate({
@@ -342,7 +342,7 @@ export default function NpubGate({
             </div>
             {nonce && (
               <div className="rounded-lg p-3 text-xs border border-[var(--tb-accent)] space-y-2">
-                <div className={`uppercase tracking-wider text-[10px] ${muted}`}>Confirmation code</div>
+                <div className={`uppercase tracking-wider text-[0.625rem] ${muted}`}>Confirmation code</div>
                 <div className="font-mono text-base select-all">{nonce}</div>
                 <div className={`leading-relaxed ${muted}`}>
                   The same code appears in the message. <b>Approve it only if the codes match.</b> If they differ — or
@@ -378,7 +378,7 @@ function Trouble({ raw, appName }: { raw: string; appName: string }) {
   return (
     <div className={s.retryable ? warnBox : errBox}>
       {s.lead}
-      {s.detail && <div className="mt-2 font-mono text-[10px] leading-relaxed opacity-70">{s.detail}</div>}
+      {s.detail && <div className="mt-2 font-mono text-[0.625rem] leading-relaxed opacity-70">{s.detail}</div>}
     </div>
   );
 }

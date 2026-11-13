@@ -199,7 +199,7 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
       <div className={`${card} px-4 py-3`} data-tour="tb.account.sessionKey">
         <div className="eyebrow mb-1">Session key</div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <p className={`min-w-[14rem] flex-1 text-[12.5px] leading-snug ${muted}`}>
+          <p className={`min-w-[14rem] flex-1 text-[0.78125rem] leading-snug ${muted}`}>
             This browser is holding the secret key that signs you in. Take a copy
             before you clear site data or switch devices — without it, this identity
             is gone.
@@ -207,7 +207,7 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
           <button
             type="button"
             onClick={() => setRevealed(true)}
-            className="min-h-11 shrink-0 rounded-full border border-[var(--tb-accent)] bg-[var(--tb-accent)] px-4 text-[13px] font-semibold text-[var(--tb-on-accent)]"
+            className="min-h-11 shrink-0 rounded-full border border-[var(--tb-accent)] bg-[var(--tb-accent)] px-4 text-[0.8125rem] font-semibold text-[var(--tb-on-accent)]"
           >
             Claim your session key
           </button>
@@ -229,12 +229,12 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
             setFlash(null);
             setRecipient("");
           }}
-          className={`text-[12px] ${muted} hover:text-[var(--tb-ink)]`}
+          className={`text-[0.75rem] ${muted} hover:text-[var(--tb-ink)]`}
         >
           Hide
         </button>
       </div>
-      <p className={`mb-3 text-[12.5px] leading-relaxed ${muted}`}>
+      <p className={`mb-3 text-[0.78125rem] leading-relaxed ${muted}`}>
         Anyone who holds this key is you. It leaves this page only when you
         choose a destination below — never logged, never sent to {appName}.
       </p>
@@ -288,19 +288,19 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
       </div>
 
       {showKey && (
-        <div className="mt-3 break-all rounded-lg border border-[var(--tb-line)] bg-[var(--tb-surface-2)] px-3 py-2 font-mono text-[12px] text-[var(--tb-ink)]">
+        <div className="mt-3 break-all rounded-lg border border-[var(--tb-line)] bg-[var(--tb-surface-2)] px-3 py-2 font-mono text-[0.75rem] text-[var(--tb-ink)]">
           {getSessionNsec()}
         </div>
       )}
 
       {dmOpen && (
         <div className="mt-3 space-y-2 rounded-lg border border-[var(--tb-line)] bg-[var(--tb-surface-2)] p-3">
-          <p className={`text-[12px] leading-relaxed ${muted}`}>
+          <p className={`text-[0.75rem] leading-relaxed ${muted}`}>
             Encrypts the key to an npub you own and publishes the sealed message
             to public relays. Only that npub can open it.
           </p>
           <div className="flex flex-wrap items-end gap-2">
-          <label className={`block min-w-[16rem] flex-1 text-[12px] ${muted}`}>
+          <label className={`block min-w-[16rem] flex-1 text-[0.75rem] ${muted}`}>
             Recipient npub
             <input
               value={recipient}
@@ -316,7 +316,7 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
             type="button"
             onClick={() => void sendDm()}
             disabled={busy || recipient.trim().length < 60}
-            className="min-h-11 shrink-0 rounded-full border border-[var(--tb-accent)] bg-[var(--tb-accent)] px-4 text-[13px] font-semibold text-[var(--tb-on-accent)] disabled:opacity-40"
+            className="min-h-11 shrink-0 rounded-full border border-[var(--tb-accent)] bg-[var(--tb-accent)] px-4 text-[0.8125rem] font-semibold text-[var(--tb-on-accent)] disabled:opacity-40"
           >
             {busy ? "Sending…" : "Send encrypted DM"}
           </button>
@@ -359,7 +359,7 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
 
       {flash && (
         <p
-          className={`mt-3 text-[12.5px] leading-relaxed ${
+          className={`mt-3 text-[0.78125rem] leading-relaxed ${
             flash.tone === "ok" ? "text-[var(--tb-ink)]" : "text-[var(--tb-err-ink)]"
           }`}
           role="status"
