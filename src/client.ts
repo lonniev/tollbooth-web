@@ -15,7 +15,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 
 import { tollboothConfig, toolName } from "./config.ts";
 import { debugPush, redact } from "./debugLog.ts";
-import { isHolder } from "./holder.ts";
+import { holderConnection, isHolder, type HolderConnection } from "./holder.ts";
 import { forgetRecentLogin, getStoredNpub } from "./identity.ts";
 import { isTransportFailure, NetworkError } from "./networkError.ts";
 import { signingFetch, signRequest, signsForSignedInNpub } from "./requestSigning.ts";
@@ -252,11 +252,14 @@ async function invoke<T>(target: Target, args: Record<string, unknown>, opts: Ca
  * that works across operators (a sponsor's console, say) reads and pays at each
  * one directly: their endpoints answer any origin.
  *
- * Every request is signed with this tab's key (NIP-98) while it holds one, and
- * is otherwise anonymous: this site's holder bearer was issued by its own
- * operator and is never sent elsewhere. A refusal from another operator throws
- * `ProofRequiredError` and leaves this page's sign-in alone. A call carries
- * only the arguments it is given: pass `npub` to a tool that takes one.
+ * Every request is signed with this tab's key (NIP-98) while it holds one.
+ * Without a key, this page connects to that operator as a holder of its own,
+ * and the patron proves their npub into it by DM once (`proveStart`, then
+ * `proveFinish` after they approve). Until then a call goes anonymous. This
+ * site's own holder bearer is never sent elsewhere. A refusal from another
+ * operator throws `ProofRequiredError` and leaves this page's sign-in alone.
+ * A call carries only the arguments it is given: pass `npub` to a tool that
+ * takes one.
  */
 export interface OperatorClient {
   /** The MCP endpoint, e.g. "https://goodearth-mcp.fastmcp.app/mcp". */
@@ -269,6 +272,12 @@ export interface OperatorClient {
     args?: Record<string, unknown>,
     opts?: CallOptions,
   ): Promise<ToolAnswer<T>>;
+  /** Whether this page's connection there proves `npub` (a signing key always does). */
+  proves(npub: string): Promise<boolean>;
+  /** Connect as a holder there and DM `npub` a proof request; returns the nonce to collect. */
+  proveStart(npub: string, reason?: string): Promise<string>;
+  /** Collect the approval for `nonce`. Call once, after the patron approved the DM. */
+  proveFinish(npub: string, nonce: string): Promise<void>;
 }
 
 const operators = new Map<string, OperatorClient>();
@@ -287,18 +296,36 @@ export function toolNameUnder(prefix: string, tool: string): string {
   return prefix ? `${prefix}_${tool}` : tool;
 }
 
-/** `fetch` for another operator: this tab's key, or nobody. */
-export const remoteFetch: typeof fetch = async (input, init) => {
-  const headers = new Headers(init?.headers);
-  if (signsForSignedInNpub()) {
-    const request = new Request(input, init);
-    const body = typeof init?.body === "string" ? init.body : "";
-    headers.set("Authorization", await signRequest(request.method, request.url, body, getSessionNsecBytes()));
-  } else {
-    headers.set("Authorization", "Bearer anonymous");
-  }
-  return fetch(input, { ...init, headers });
-};
+/**
+ * `fetch` for another operator: this tab's key, else this page's holder
+ * connection there, else nobody. A 401 on a holder bearer means the operator
+ * forgot it: connect afresh and send the request once more (the proofs it
+ * held are gone; the patron proves again).
+ */
+export function remoteFetch(holder?: HolderConnection): typeof fetch {
+  return async (input, init) => {
+    const headers = new Headers(init?.headers);
+    if (signsForSignedInNpub()) {
+      const request = new Request(input, init);
+      const body = typeof init?.body === "string" ? init.body : "";
+      headers.set("Authorization", await signRequest(request.method, request.url, body, getSessionNsecBytes()));
+      return fetch(input, { ...init, headers });
+    }
+    const bearer = (await holder?.bearer()) ?? null;
+    headers.set("Authorization", `Bearer ${bearer ?? "anonymous"}`);
+    const answer = await fetch(input, { ...init, headers });
+    if (!holder || !bearer || answer.status !== 401 || (init?.body != null && typeof init.body !== "string")) return answer;
+    const next = await holder.reconnectAfterRefusal(bearer);
+    if (!next) return answer;
+    headers.set("Authorization", `Bearer ${next}`);
+    return fetch(input, { ...init, headers });
+  };
+}
+
+/** An MCP endpoint's origin and path before `/mcp`: where its OAuth endpoints are. */
+export function operatorBase(mcpUrl: string): string {
+  return mcpUrl.replace(/\/+$/, "").replace(/\/mcp$/, "");
+}
 
 export interface OperatorClientOptions {
   /**
@@ -314,13 +341,15 @@ export function operatorClient(url: string, options: OperatorClientOptions = {})
   const known = operators.get(url);
   if (known) return known;
 
+  const base = operatorBase(url);
+  const holder = holderConnection(() => base, `holder:v1:${base}`);
   let client: Client | null = null;
   let connecting: Promise<Client> | null = null;
   const connect = (): Promise<Client> => {
     if (client) return Promise.resolve(client);
     connecting ??= (async () => {
       const c = new Client({ name: `${tollboothConfig().slug}-frontend`, version: "1" });
-      await c.connect(new StreamableHTTPClientTransport(new URL(url), { fetch: remoteFetch }));
+      await c.connect(new StreamableHTTPClientTransport(new URL(url), { fetch: remoteFetch(holder) }));
       client = c;
       return c;
     })().finally(() => {
@@ -359,12 +388,41 @@ export function operatorClient(url: string, options: OperatorClientOptions = {})
       opts,
     );
 
+  const call = async <T,>(tool: string, args?: Record<string, unknown>, opts?: CallOptions) =>
+    (await callWith<T>(tool, args, opts)).data;
+
   const op: OperatorClient = {
     url,
     prefix,
     callToolWithContent: callWith,
-    callTool: async <T,>(tool: string, args?: Record<string, unknown>, opts?: CallOptions) =>
-      (await callWith<T>(tool, args, opts)).data,
+    callTool: call,
+    async proves(npub) {
+      if (signsForSignedInNpub()) return true;
+      if (!holder.isHolder()) return false;
+      const r = await call<{ status?: string }>("check_proof_status", { patron_npub: npub }, { bestEffort: true });
+      return r.status === "valid";
+    },
+    async proveStart(npub, reason) {
+      if (!holder.isHolder()) {
+        await holder.connect();
+        // A session opened anonymously is not reused for a holder: start afresh.
+        const stale = client;
+        client = null;
+        void stale?.close().catch(() => {});
+      }
+      const r = await call<{ success?: boolean; nonce?: string; error?: string; message?: string }>(
+        "request_npub_proof",
+        { patron_npub: npub, verify_at: globalThis.location.origin, ...(reason ? { reason } : {}) },
+      );
+      if (!r.success || !r.nonce) throw new Error(r.error ?? r.message ?? "The proof request was not sent.");
+      return r.nonce;
+    },
+    async proveFinish(npub, nonce) {
+      const r = await call<{ success?: boolean; error?: string; message?: string }>(
+        "receive_npub_proof", { patron_npub: npub, nonce },
+      );
+      if (!r.success) throw new Error(r.error ?? r.message ?? "No approval found yet: approve the DM, then try again.");
+    },
   };
   operators.set(url, op);
   return op;

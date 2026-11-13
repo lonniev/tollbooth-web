@@ -61,19 +61,6 @@ class TokenRefused extends Error {
   }
 }
 
-function readTokens(): Tokens | null {
-  try {
-    const t = JSON.parse(readStored(TOKENS) || "null");
-    return t && typeof t.accessToken === "string" && typeof t.refreshToken === "string" ? t : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeTokens(t: Tokens): void {
-  writeStored(TOKENS, JSON.stringify(t));
-}
-
 function randomUrlSafe(bytes: number): string {
   const raw = crypto.getRandomValues(new Uint8Array(bytes));
   return btoa(String.fromCharCode(...raw)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -84,115 +71,175 @@ async function challengeFor(verifier: string): Promise<string> {
   return btoa(String.fromCharCode(...digest)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-async function register(): Promise<string> {
-  const r = await fetch(`${operator()}/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      client_name: tollboothConfig().appName,
-      redirect_uris: [redirectUri()],
-      grant_types: ["authorization_code", "refresh_token"],
-      response_types: ["code"],
-      token_endpoint_auth_method: "none",
-    }),
-  });
-  if (!r.ok) throw new Error(`Could not register with the service (${r.status}).`);
-  return (await r.json()).client_id as string;
+/**
+ * One holder connection: to the operator at `base` (its origin, no `/mcp`),
+ * its tokens kept under `stored`. `onDrop` runs when the connection is lost,
+ * for what else went with it.
+ */
+export interface HolderConnection {
+  isHolder(): boolean;
+  connect(): Promise<void>;
+  bearer(): Promise<string | null>;
+  reconnectAfterRefusal(bearer: string): Promise<string | null>;
+  forget(): Promise<void>;
 }
 
-async function token(form: Record<string, string>, clientId: string): Promise<Tokens> {
-  const r = await fetch(`${operator()}/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ ...form, client_id: clientId, resource: `${operator()}/mcp` }),
-  });
-  if (!r.ok) throw new TokenRefused(r.status);
-  const t = await r.json();
+export function holderConnection(baseOf: () => string, stored: string, onDrop: () => void = () => {}): HolderConnection {
+  const readTokens = (): Tokens | null => {
+    try {
+      const t = JSON.parse(readStored(stored) || "null");
+      return t && typeof t.accessToken === "string" && typeof t.refreshToken === "string" ? t : null;
+    } catch {
+      return null;
+    }
+  };
+  const writeTokens = (t: Tokens) => writeStored(stored, JSON.stringify(t));
+  const drop = () => {
+    removeStored(stored);
+    onDrop();
+  };
+
+  async function register(): Promise<string> {
+    const r = await fetch(`${baseOf()}/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        client_name: tollboothConfig().appName,
+        redirect_uris: [redirectUri()],
+        grant_types: ["authorization_code", "refresh_token"],
+        response_types: ["code"],
+        token_endpoint_auth_method: "none",
+      }),
+    });
+    if (!r.ok) throw new Error(`Could not register with the service (${r.status}).`);
+    return (await r.json()).client_id as string;
+  }
+
+  async function token(form: Record<string, string>, clientId: string): Promise<Tokens> {
+    const r = await fetch(`${baseOf()}/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ ...form, client_id: clientId, resource: `${baseOf()}/mcp` }),
+    });
+    if (!r.ok) throw new TokenRefused(r.status);
+    const t = await r.json();
+    return {
+      clientId,
+      accessToken: t.access_token,
+      refreshToken: t.refresh_token,
+      expiresAt: Date.now() + Number(t.expires_in ?? 3600) * 1000,
+    };
+  }
+
+  /** Become a holder: register, take a code from the operator by fetch, and exchange it. */
+  async function connect(): Promise<void> {
+    const clientId = readTokens()?.clientId || (await register());
+    const verifier = randomUrlSafe(48);
+    const state = randomUrlSafe(16);
+    const url = new URL(`${baseOf()}/authorize`);
+    url.search = new URLSearchParams({
+      response_type: "code",
+      client_id: clientId,
+      redirect_uri: redirectUri(),
+      state,
+      code_challenge: await challengeFor(verifier),
+      code_challenge_method: "S256",
+      resource: `${baseOf()}/mcp`,
+    }).toString();
+    const r = await fetch(url, { headers: { Accept: "application/json" } });
+    const answer = await r.json().catch(() => ({}));
+    if (!r.ok || typeof answer.redirect_uri !== "string") {
+      throw new Error(answer.error_description || `The service would not connect this page (${r.status}).`);
+    }
+    const issued = new URL(answer.redirect_uri).searchParams;
+    if (issued.get("state") !== state) throw new Error("The service's reply did not match this sign-in.");
+    const code = issued.get("code");
+    if (!code) throw new Error(issued.get("error_description") || "The service did not connect this page.");
+    writeTokens(await token(
+      { grant_type: "authorization_code", code, redirect_uri: redirectUri(), code_verifier: verifier },
+      clientId,
+    ));
+  }
+
+  let refreshing: Promise<string | null> | null = null;
+  const fresh = (t: Tokens) => t.expiresAt - REFRESH_EARLY_MS > Date.now();
+
+  /** Run `fn` holding this connection's token lock, so no two tabs refresh one pair. */
+  function withTokenLock<T>(fn: () => Promise<T>): Promise<T> {
+    const locks = globalThis.navigator?.locks;
+    return locks ? locks.request(key(stored), fn) : fn();
+  }
+
+  async function refresh(): Promise<string | null> {
+    // Another tab may have refreshed while this one waited for the lock.
+    const t = readTokens();
+    if (!t) return null;
+    if (fresh(t)) return t.accessToken;
+    try {
+      const next = await token({ grant_type: "refresh_token", refresh_token: t.refreshToken }, t.clientId);
+      writeTokens(next);
+      return next.accessToken;
+    } catch (e) {
+      // A refusal ends this holder; a network fault leaves it for the next try.
+      if (e instanceof TokenRefused) drop();
+      return null;
+    }
+  }
+
   return {
-    clientId,
-    accessToken: t.access_token,
-    refreshToken: t.refresh_token,
-    expiresAt: Date.now() + Number(t.expires_in ?? 3600) * 1000,
+    isHolder: () => readTokens() !== null,
+    connect,
+    async bearer() {
+      const t = readTokens();
+      if (!t) return null;
+      if (fresh(t)) return t.accessToken;
+      refreshing ??= withTokenLock(refresh).finally(() => { refreshing = null; });
+      return refreshing;
+    },
+    reconnectAfterRefusal(bearer: string) {
+      return withTokenLock(async () => {
+        const t = readTokens();
+        // Another call already replaced it: use the new one.
+        if (t && t.accessToken !== bearer) return fresh(t) ? t.accessToken : null;
+        drop();
+        try {
+          await connect();
+        } catch {
+          return null;
+        }
+        return readTokens()?.accessToken ?? null;
+      });
+    },
+    async forget() {
+      const t = readTokens();
+      drop();
+      if (!t) return;
+      try {
+        await fetch(`${baseOf()}/revoke`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ token: t.refreshToken, token_type_hint: "refresh_token", client_id: t.clientId }),
+        });
+      } catch {
+        /* the tokens are gone from this tab; the operator lets them lapse */
+      }
+    },
   };
 }
 
+// ─── This site's own operator ─────────────────────────────────────────────
+// The DM sign-ins this holder holds go with it (RECENT_LOGINS).
+
+const home = holderConnection(operator, TOKENS, () => removeStored(RECENT_LOGINS));
+
 /** True when this tab already is a holder. */
-export function isHolder(): boolean {
-  return readTokens() !== null;
-}
+export const isHolder = (): boolean => home.isHolder();
 
 /** Become a holder: register, take a code from the operator by fetch, and exchange it. */
-export async function connectAsHolder(): Promise<void> {
-  const clientId = readTokens()?.clientId || (await register());
-  const verifier = randomUrlSafe(48);
-  const state = randomUrlSafe(16);
-  const url = new URL(`${operator()}/authorize`);
-  url.search = new URLSearchParams({
-    response_type: "code",
-    client_id: clientId,
-    redirect_uri: redirectUri(),
-    state,
-    code_challenge: await challengeFor(verifier),
-    code_challenge_method: "S256",
-    resource: `${operator()}/mcp`,
-  }).toString();
-  const r = await fetch(url, { headers: { Accept: "application/json" } });
-  const answer = await r.json().catch(() => ({}));
-  if (!r.ok || typeof answer.redirect_uri !== "string") {
-    throw new Error(answer.error_description || `The service would not connect this page (${r.status}).`);
-  }
-  const issued = new URL(answer.redirect_uri).searchParams;
-  if (issued.get("state") !== state) throw new Error("The service's reply did not match this sign-in.");
-  const code = issued.get("code");
-  if (!code) throw new Error(issued.get("error_description") || "The service did not connect this page.");
-  writeTokens(await token(
-    { grant_type: "authorization_code", code, redirect_uri: redirectUri(), code_verifier: verifier },
-    clientId,
-  ));
-}
+export const connectAsHolder = (): Promise<void> => home.connect();
 
 /** The bearer for the next request, refreshed when it is about to lapse; null when not a holder. */
-export async function holderBearer(): Promise<string | null> {
-  const t = readTokens();
-  if (!t) return null;
-  if (fresh(t)) return t.accessToken;
-  refreshing ??= withTokenLock(refresh).finally(() => { refreshing = null; });
-  return refreshing;
-}
-
-let refreshing: Promise<string | null> | null = null;
-
-function fresh(t: Tokens): boolean {
-  return t.expiresAt - REFRESH_EARLY_MS > Date.now();
-}
-
-/** Run `fn` holding this site's token lock, so no two tabs refresh one pair. */
-function withTokenLock<T>(fn: () => Promise<T>): Promise<T> {
-  const locks = globalThis.navigator?.locks;
-  return locks ? locks.request(key(TOKENS), fn) : fn();
-}
-
-async function refresh(): Promise<string | null> {
-  // Another tab may have refreshed while this one waited for the lock.
-  const t = readTokens();
-  if (!t) return null;
-  if (fresh(t)) return t.accessToken;
-  try {
-    const next = await token({ grant_type: "refresh_token", refresh_token: t.refreshToken }, t.clientId);
-    writeTokens(next);
-    return next.accessToken;
-  } catch (e) {
-    // A refusal ends this holder; a network fault leaves it for the next try.
-    if (e instanceof TokenRefused) dropHolder();
-    return null;
-  }
-}
-
-/** Forget this tab's holder and the sign-ins it held, without telling the operator. */
-function dropHolder(): void {
-  removeStored(TOKENS);
-  removeStored(RECENT_LOGINS);
-}
+export const holderBearer = (): Promise<string | null> => home.bearer();
 
 /**
  * The operator answered `bearer` with 401: it no longer knows this holder.
@@ -200,33 +247,7 @@ function dropHolder(): void {
  * riding that bearer or cannot reconnect. The sign-ins the old holder held
  * are gone with it; the patron proves them again.
  */
-export async function reconnectAfterRefusal(bearer: string): Promise<string | null> {
-  return withTokenLock(async () => {
-    const t = readTokens();
-    // Another call already replaced it: use the new one.
-    if (t && t.accessToken !== bearer) return fresh(t) ? t.accessToken : null;
-    dropHolder();
-    try {
-      await connectAsHolder();
-    } catch {
-      return null;
-    }
-    return readTokens()?.accessToken ?? null;
-  });
-}
+export const reconnectAfterRefusal = (bearer: string): Promise<string | null> => home.reconnectAfterRefusal(bearer);
 
 /** Disconnect: the operator forgets this holder and every npub it held. */
-export async function forgetHolder(): Promise<void> {
-  const t = readTokens();
-  dropHolder();
-  if (!t) return;
-  try {
-    await fetch(`${operator()}/revoke`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ token: t.refreshToken, token_type_hint: "refresh_token", client_id: t.clientId }),
-    });
-  } catch {
-    /* the tokens are gone from this tab; the operator lets them lapse */
-  }
-}
+export const forgetHolder = (): Promise<void> => home.forget();
