@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.7.1] — 2026-11-13
+
+### Fixed
+
+- NpubGate, SessionKeyClaim and NostrProfilePanel size their text in rem, so it follows the reader's text size; the standard size looks the same.
+
 ## [3.7.0] — 2026-11-13
 
 ### Added
