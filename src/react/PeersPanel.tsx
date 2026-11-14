@@ -94,46 +94,51 @@ export default function PeersPanel({ npub }: PeersPanelProps) {
   return (
     <div className="tb-wallet tb-peers" data-tour="tb.account.peers">
       <section className="tb-wallet-section">
-        <h2 className="tb-wallet-title">Your sponsors</h2>
-        <p className="tb-wallet-note">They can read your balance and pay for you here. They cannot spend it.</p>
-        {loading ? (
-          <p className="tb-wallet-note">Loading…</p>
-        ) : peers.length === 0 ? (
-          <p className="tb-wallet-note">None yet. Ask someone below, or approve their offer when it comes.</p>
-        ) : (
-          <ul className="tb-wallet-list">
-            {peers.map((p) => (
-              <li key={p.peer_npub} className="tb-wallet-coupon">
-                <div>
-                  <Who npub={p.peer_npub} />
-                  <div className="tb-wallet-note">{grantEndsText(p.expires_at)}</div>
-                </div>
-                <button type="button" onClick={() => void end(p.peer_npub)} className="tb-wallet-action">
-                  Revoke
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+        <h2 className="tb-wallet-title">Sponsorship</h2>
+        <p className="tb-wallet-note">A sponsor can read an account's balance here and pay for it.</p>
+        <p className="tb-wallet-note">A sponsor cannot spend it.</p>
 
-      <section className="tb-wallet-section">
-        <h2 className="tb-wallet-title">Accounts you sponsor</h2>
-        {!loading && patrons.length === 0 && <p className="tb-wallet-note">None yet.</p>}
-        {patrons.length > 0 && (
-          <ul className="tb-wallet-list">
-            {patrons.map((p) => (
-              <FundedAccount key={p.patron_npub} grant={p} onStop={() => void end(npub, p.patron_npub)} />
-            ))}
-          </ul>
-        )}
-      </section>
+        <div className="tb-peers-part">
+          <h3 className="tb-wallet-subtitle">Your sponsors{!loading && ` (${peers.length})`}</h3>
+          {loading ? (
+            <p className="tb-wallet-note">Loading…</p>
+          ) : peers.length === 0 ? (
+            <p className="tb-wallet-note">None yet. Ask someone below, or approve their offer when it comes.</p>
+          ) : (
+            <ul className="tb-wallet-list">
+              {peers.map((p) => (
+                <li key={p.peer_npub} className="tb-wallet-coupon">
+                  <div>
+                    <Who npub={p.peer_npub} />
+                    <div className="tb-wallet-note">{grantEndsText(p.expires_at)}</div>
+                  </div>
+                  <button type="button" onClick={() => void end(p.peer_npub)} className="tb-wallet-action">
+                    Revoke
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
-      <section className="tb-wallet-section">
-        <AskByNpub npub={npub} onGranted={() => void refresh()} />
-      </section>
+        <div className="tb-peers-part">
+          <h3 className="tb-wallet-subtitle">Accounts you sponsor{!loading && ` (${patrons.length})`}</h3>
+          {!loading && patrons.length === 0 && <p className="tb-wallet-note">None yet.</p>}
+          {patrons.length > 0 && (
+            <ul className="tb-wallet-list">
+              {patrons.map((p) => (
+                <FundedAccount key={p.patron_npub} grant={p} onStop={() => void end(npub, p.patron_npub)} />
+              ))}
+            </ul>
+          )}
+        </div>
 
-      {problem && <p className="tb-wallet-error">{problem}</p>}
+        <div className="tb-peers-part">
+          <AskByNpub npub={npub} onGranted={() => void refresh()} />
+        </div>
+
+        {problem && <p className="tb-wallet-error">{problem}</p>}
+      </section>
     </div>
   );
 }
