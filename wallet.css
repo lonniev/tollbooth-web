@@ -12,6 +12,7 @@
   --tb-wallet-display-font: inherit;
   --tb-wallet-figure-font: inherit;
   --tb-wallet-radius: 0.75rem;
+  --tb-wallet-pad: 1rem;
   --tb-wallet-gap: 1rem;
   --tb-wallet-card: var(--tb-surface);
   --tb-wallet-line: var(--tb-line);
@@ -55,7 +56,7 @@
 
 .tb-wallet-section {
   min-width: 0;
-  padding: 1rem;
+  padding: var(--tb-wallet-pad);
   border: 1px solid var(--tb-wallet-line);
   border-radius: var(--tb-wallet-radius);
   background: var(--tb-wallet-card);
@@ -192,5 +193,11 @@
 
 /* Peers (PeersPanel): who may see and fund this account, and whose this npub funds. */
 .tb-peers-grow { flex: 1; min-width: 0; }
+.tb-peers-part { border-top: 1px solid var(--tb-wallet-line); padding-top: 0.75rem; }
+.tb-peers-part > * + * { margin-top: 0.75rem; }
+.tb-peers-part > .tb-wallet-subtitle,
+.tb-peers-part .tb-peers-ask > .tb-wallet-subtitle { margin-top: 0; }
+.tb-peers-ask > * + * { margin-top: 0.75rem; }
+.tb-peers-ask .tb-wallet-row { justify-content: flex-end; }
 .tb-peers-phrase { font-family: ui-monospace, monospace; }
 .tb-peers .tb-wallet-line > .tb-wallet-section { margin-top: 0.75rem; }
