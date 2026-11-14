@@ -1,2 +1,0 @@
-- `PeersPanel` is one "Sponsorship" card: Your sponsors (n), Accounts you sponsor (n) and Ask by npub are its parts. Its ask buttons sit on the right.
-- `--tb-wallet-pad` sets the wallet cards' padding (1rem by default), so a site can match its own cards.

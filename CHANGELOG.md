@@ -2,6 +2,13 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.7.2] — 2026-11-14
+
+### Changed
+
+- `PeersPanel` is one "Sponsorship" card: Your sponsors (n), Accounts you sponsor (n) and Ask by npub are its parts. Its ask buttons sit on the right.
+- `--tb-wallet-pad` sets the wallet cards' padding (1rem by default), so a site can match its own cards.
+
 ## [3.7.1] — 2026-11-13
 
 ### Fixed
