@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.8.0] — 2026-11-15
+
+### Added
+
+- `InvoiceQr` and `WalletChooser` are exported from `@tollbooth-dpyc/web/react`. A site may draw any Lightning invoice as a code to scan, and may offer the "Need a wallet?" chooser on a page of its own, such as a guide a guest reads before signing in. The wallet itself stays one piece: `WalletPage`, `WalletCard`, `CouponsPanel`, `useTopUp` and `PAY_FROM_CASH_LINE` remain private. The chooser's look is in `price-sheet.css`, which `wallet.css` already imports.
+
 ## [3.7.2] — 2026-11-14
 
 ### Changed
