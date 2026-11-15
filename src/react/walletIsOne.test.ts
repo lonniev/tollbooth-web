@@ -11,9 +11,17 @@ test("a site has one wallet and cannot draw its own", () => {
   assert.match(exportsOf, /\bBalanceAndTopUp\b/);
   assert.match(exportsOf, /\bWalletFunds\b/);
   assert.match(exportsOf, /\bWalletStatement\b/);
-  for (const gone of ["WalletPage", "WalletCard", "CouponsPanel", "InvoiceQr", "useTopUp", "WalletChooser", "PAY_FROM_CASH_LINE"]) {
+  for (const gone of ["WalletPage", "WalletCard", "CouponsPanel", "useTopUp", "PAY_FROM_CASH_LINE"]) {
     assert.doesNotMatch(exportsOf, new RegExp(`\\b${gone}\\b`), gone);
   }
+});
+
+test("a site may show an invoice as a code and offer the wallet chooser, neither of which is a wallet", () => {
+  // InvoiceQr draws any Lightning invoice, such as one person paying another.
+  // WalletChooser helps a guest get a wallet before they have signed in.
+  // Neither holds a balance, tops one up, or redeems a coupon.
+  assert.match(exportsOf, /default as InvoiceQr\b/);
+  assert.match(exportsOf, /default as WalletChooser\b/);
 });
 
 test("the wallet takes decoration and nothing that changes its layout or scope", () => {

@@ -114,6 +114,8 @@ export {
 export { useSession, type Session } from "./useSession.ts";
 export { useDebugLog } from "./useDebugLog.ts";
 export { useTheme } from "./useTheme.ts";
+export { default as InvoiceQr } from "./InvoiceQr.tsx";
+export { default as WalletChooser, type WalletChooserProps } from "./WalletChooser.tsx";
 export { default as Wallet, BalanceAndTopUp, WalletFunds, WalletStatement, type DecorateTile, type TileDecoration } from "./Wallet.tsx";
 export { useTimezone } from "./useTimezone.ts";
 export { useProperty } from "./useProperty.ts";
