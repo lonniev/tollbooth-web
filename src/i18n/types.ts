@@ -26,3 +26,6 @@ export type Vars = Record<string, string | number>;
 
 /** A site's own words for one language: flat dotted keys to strings. */
 export type Resource = Record<string, string>;
+
+/** A site's structured content for one language: keys to any data, read whole with `content` / `useContent`. */
+export type Content = Record<string, unknown>;

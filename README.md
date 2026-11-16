@@ -455,6 +455,28 @@ Props: `quotes`, `source`, `heading`, `spinner`, `intervalMs` (default 3500),
 `[open, close]`), and `renderQuote(quote)` to draw a quote's markup yourself
 (then `text`, `mark` and `author` are unused).
 
+### Languages
+
+Every screen the package draws reads in English, French, Spanish, Japanese, Chinese or Hindi, through i18next. English is bundled; a language's file is fetched only when chosen.
+
+**Which language first.** The reader's stored choice (`tollbooth:language`, the same on every site). With none, the guest's country, read from the site's own Cloudflare edge (`/cdn-cgi/trace`): a country that speaks one of the six is shown in it; one that speaks several (India, Canada, the US, Singapore…) lets the browser's language choose among them; anywhere else is English. `AppShell` does this once. Nothing is stored until the reader chooses.
+
+**The chooser.** `<LanguageChooser />` from `/react`, styled by `theme.css` or `classNames={{ root, chip, active }}`.
+
+**A site's own words.** A site adds words only; it brings no i18n code of its own.
+
+```ts
+// main.tsx, before render
+registerNamespace("mysite", en, { fr: () => import("./i18n/fr.ts"), es: () => import("./i18n/es.ts") });
+registerNamespace("mysite-content", { lessons, quotes }, { fr: () => import("./content/fr.ts") });
+```
+
+- Words: `const t = useT("mysite")`, then `t("home.greeting", { name })`. Plurals are `_one` / `_other` keys read with `{ count }`. Outside React, `translate(key, vars, "mysite")`.
+- A sentence with a link inside it: `"home.more": "Read <guide>the guide</guide> first."`, drawn by `<Tx ns="mysite" k="home.more" components={{ guide: <a href="/guide" /> }} />`. A self-closing `<sats/>` draws the element with its own children, for a styled number or a link whose words come from elsewhere. Never name a tag after an empty HTML element (`link`, `img`, `br`, `input`, `meta`…): the words fall outside it.
+- Structured content (lists of lessons, quotes): `useContent<Lesson[]>("mysite-content", "lessons")`, English for any piece a language lacks.
+- Dates and numbers: `const locale = useLanguageLocale()` (outside React, `languageLocale()`).
+- A test that holds each translation to English: `assert.deepEqual(localeProblems(en, fr), [])` (same keys, `{{placeholders}}` and `<tags>`).
+
 ### Styling
 
 Components use Tailwind classes coloured only through CSS variables. Tell
