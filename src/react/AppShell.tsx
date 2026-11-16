@@ -16,15 +16,18 @@
  * connecting, answered or failed (with `retryStatus()` to ask again) — so a
  * site keeps no session context of its own.
  *
- * Also done here, once: the stored theme applied before paint and followed
+ * Also done here, once: the reader's language started and the i18next
+ * instance provided to the tree; the stored theme applied before paint and followed
  * across tabs; the npub's kind-0 picture seeded as its avatar; the patron's
  * properties settled with their account on sign-in; `DebugPanel`
  * mounted last, so its spacer is the page's last thing (see `shellLayout`).
  */
 
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useReducer, useRef, type ReactNode } from "react";
+import { I18nextProvider } from "react-i18next";
 import { hydrateAvatarFromNostr } from "../avatar.ts";
 import { debugPush } from "../debugLog.ts";
+import { i18n, startLanguage } from "../i18n/index.ts";
 import { syncProperties } from "../properties.ts";
 // The standard properties register their local storage as they load.
 import "../timezone.ts";
@@ -109,6 +112,11 @@ export default function AppShell({
     bootstrapTheme(theme);
   }, [theme]);
 
+  // The reader's stored language, else the browser's, once.
+  useEffect(() => {
+    void startLanguage();
+  }, []);
+
   // Only the newest check settles the state: a slow first answer must not
   // overwrite a retry's, and an unmounted shell settles nothing.
   const retryStatus = useCallback(() => {
@@ -157,6 +165,7 @@ export default function AppShell({
   const layout = shellLayout(fit);
 
   return (
+    <I18nextProvider i18n={i18n}>
     <Ctx.Provider value={shell}>
       <div className={c.root} style={layout.root}>
         <div className={c.body} style={layout.body}>
@@ -166,5 +175,6 @@ export default function AppShell({
         {debug !== false && <DebugPanel {...debug} />}
       </div>
     </Ctx.Provider>
+    </I18nextProvider>
   );
 }

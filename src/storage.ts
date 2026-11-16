@@ -46,3 +46,20 @@ export function removeStored(name: string): void {
     /* nothing to remove from a store we cannot reach */
   }
 }
+
+/** A key every site shares, read as it is written, e.g. "tollbooth:language". */
+export function readShared(sharedKey: string): string {
+  try {
+    return store()?.getItem(sharedKey) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+export function writeShared(sharedKey: string, value: string): void {
+  try {
+    store()?.setItem(sharedKey, value);
+  } catch {
+    /* the choice still applies for this page */
+  }
+}

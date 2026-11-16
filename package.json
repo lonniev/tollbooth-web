@@ -69,6 +69,8 @@
   },
   "dependencies": {
     "driver.js": "1.10.2",
-    "qrcode-generator": "2.0.4"
+    "i18next": "27.1.2",
+    "qrcode-generator": "2.0.4",
+    "react-i18next": "18.0.1"
   }
 }
