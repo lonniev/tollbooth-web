@@ -4,6 +4,7 @@ import { en } from "./en.ts";
 import { LOCALE_LOADERS } from "./loaders.ts";
 import {
   LANGUAGES,
+  content,
   getLanguage,
   languageLocale,
   onLanguageChange,
@@ -21,8 +22,8 @@ test("English is there before anything is asked for", () => {
   assert.equal(translate("language.label"), en["language.label"]);
 });
 
-test("a site with no stored choice starts in the browser's language", async () => {
-  // Node's own navigator speaks English and there is no localStorage here.
+test("a guest with no stored choice and no known country starts in English", async () => {
+  // Node has no page origin to ask for a country, and no localStorage.
   await startLanguage();
   assert.equal(getLanguage(), "en");
 });
@@ -106,4 +107,34 @@ test("the latest of two quick choices wins", async () => {
 
 test("the package's namespace cannot be overwritten by a site", () => {
   assert.throws(() => registerNamespace("tollbooth", {}), /own namespace/);
+});
+
+test("a guest with no stored choice starts in their country's language", async () => {
+  await startLanguage(async () => "MX");
+  assert.equal(getLanguage(), "es");
+  await startLanguage(async () => "DE");
+  assert.equal(getLanguage(), "en");
+});
+
+test("a choice made while the country is being asked for is kept", async () => {
+  let answer: (country: string) => void = () => {};
+  const started = startLanguage(() => new Promise((resolve) => { answer = resolve; }));
+  await setLanguage("ja");
+  answer("FR");
+  await started;
+  assert.equal(getLanguage(), "ja");
+  await setLanguage("en");
+});
+
+test("structured content follows the language, piece by piece, as the same object", async () => {
+  const lessons = [{ slug: "save", title: "Saving" }];
+  const quotes = [{ text: "A penny saved." }];
+  await registerNamespace("shelf", { lessons, quotes }, { fr: async () => ({ default: { lessons: [{ slug: "save", title: "Épargner" }] } }) });
+  assert.deepEqual(content("shelf", "lessons"), lessons);
+  await setLanguage("fr");
+  assert.deepEqual(content("shelf", "lessons"), [{ slug: "save", title: "Épargner" }]);
+  assert.equal(content("shelf", "lessons"), content("shelf", "lessons"), "the same language gives the same object");
+  assert.deepEqual(content("shelf", "quotes"), quotes, "a piece French lacks is English's");
+  assert.equal(content("shelf", "nothing"), undefined);
+  await setLanguage("en");
 });

@@ -116,6 +116,8 @@ export { useDebugLog } from "./useDebugLog.ts";
 export { useTheme } from "./useTheme.ts";
 export { useT, type Translate } from "./useT.ts";
 export { useLanguage, type LanguageState } from "./useLanguage.ts";
+export { useContent } from "./useContent.ts";
+export { default as Tx, type TxProps } from "./Tx.tsx";
 export {
   default as LanguageChooser,
   type LanguageChooserClassNames,

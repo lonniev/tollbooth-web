@@ -112,7 +112,7 @@ export default function AppShell({
     bootstrapTheme(theme);
   }, [theme]);
 
-  // The reader's stored language, else the browser's, once.
+  // The reader's stored language, else their country's, once.
   useEffect(() => {
     void startLanguage();
   }, []);

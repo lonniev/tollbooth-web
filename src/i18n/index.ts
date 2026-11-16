@@ -11,21 +11,21 @@
 import i18next, { type i18n as I18n } from "i18next";
 import { readShared, writeShared } from "../storage.ts";
 import { en } from "./en.ts";
+import { guestCountry, languageForCountry } from "./geo.ts";
 import {
   DEFAULT_LANGUAGE,
   LANGUAGE_STORAGE_KEY,
-  languageForBrowser,
   languageFrom,
   localeFor,
   type LanguageCode,
 } from "./languages.ts";
 import { LOCALE_LOADERS } from "./loaders.ts";
-import type { Resource, TranslationKey, Vars } from "./types.ts";
+import type { Content, Resource, TranslationKey, Vars } from "./types.ts";
 
 export const TOLLBOOTH_NAMESPACE = "tollbooth";
 
 /** A language's words for one namespace, as a module or as the bare object. */
-export type ResourceLoader = () => Promise<Resource | { default: Resource }>;
+export type ResourceLoader = () => Promise<Resource | Content | { default: Resource | Content }>;
 export type ResourceLoaders = Partial<Record<LanguageCode, ResourceLoader>>;
 
 /** The instance. Package code only: a site uses the functions below. */
@@ -65,7 +65,7 @@ async function load(namespace: string, language: LanguageCode): Promise<boolean>
   try {
     const got = await loader();
     const inner = (got as { default?: unknown }).default;
-    const words = (inner && typeof inner === "object" ? inner : got) as Resource;
+    const words = (inner && typeof inner === "object" ? inner : got) as Content;
     i18n.addResourceBundle(language, namespace, words, true, true);
     loaded.add(mark);
     return true;
@@ -99,13 +99,18 @@ export function setLanguage(code: string): Promise<void> {
 }
 
 /**
- * Begin in the reader's language: their stored choice, else the first of the
- * browser's languages the package speaks. `AppShell` calls this once.
+ * Begin in the reader's language: their stored choice, else the language of
+ * the country they are in (the browser choosing where a country speaks
+ * several), else English. Nothing is stored until the reader chooses.
+ * `AppShell` calls this once.
  */
-export function startLanguage(): Promise<void> {
+export async function startLanguage(country: () => Promise<string | null> = guestCountry): Promise<void> {
   const stored = languageFrom(readShared(LANGUAGE_STORAGE_KEY));
-  const browser = languageForBrowser(globalThis.navigator?.languages);
-  return apply(stored ?? browser, false);
+  if (stored) return apply(stored, false);
+  const before = newest;
+  const where = await country();
+  if (newest !== before) return; // the reader chose while we asked
+  return apply(languageForCountry(where, globalThis.navigator?.languages), false);
 }
 
 /**
@@ -114,7 +119,7 @@ export function startLanguage(): Promise<void> {
  * in its own chunk. Registered after a language is chosen, that language's
  * words are fetched straight away.
  */
-export function registerNamespace(namespace: string, english: Resource, loaders: ResourceLoaders = {}): Promise<void> {
+export function registerNamespace(namespace: string, english: Resource | Content, loaders: ResourceLoaders = {}): Promise<void> {
   if (namespace === TOLLBOOTH_NAMESPACE) throw new Error(`"${TOLLBOOTH_NAMESPACE}" is the package's own namespace.`);
   i18n.addResourceBundle(DEFAULT_LANGUAGE, namespace, english, true, true);
   namespaces.set(namespace, loaders);
@@ -128,6 +133,17 @@ export function translate(key: TranslationKey, vars?: Vars): string;
 export function translate(key: string, vars: Vars | undefined, namespace: string): string;
 export function translate(key: string, vars?: Vars, namespace: string = TOLLBOOTH_NAMESPACE): string {
   return i18n.t(key, { ...vars, ns: namespace });
+}
+
+/**
+ * A piece of a site's structured content (lessons, samples, quotes) in the
+ * current language, or English's where the language lacks it. Register it
+ * with `registerNamespace` like words. The same language gives back the same
+ * object, so it can be a hook's dependency.
+ */
+export function content<T>(namespace: string, key: string): T | undefined {
+  const own = i18n.getResource(getLanguage(), namespace, key) as T | undefined;
+  return own ?? (i18n.getResource(DEFAULT_LANGUAGE, namespace, key) as T | undefined);
 }
 
 /** Hear of every change of language (and of late-arriving words). Returns the way to stop. */
@@ -157,4 +173,6 @@ export {
   type Language,
   type LanguageCode,
 } from "./languages.ts";
-export type { EnglishKey, PluralForm, Resource, Translation, TranslationKey, Vars } from "./types.ts";
+export { COUNTRY_LANGUAGES, countryFromTrace, guestCountry, languageForCountry } from "./geo.ts";
+export { localeProblems } from "./parity.ts";
+export type { Content, EnglishKey, PluralForm, Resource, Translation, TranslationKey, Vars } from "./types.ts";
