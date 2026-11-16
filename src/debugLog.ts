@@ -18,6 +18,7 @@
  */
 
 import { tollboothConfig } from "./config.ts";
+import { languageLocale } from "./i18n/index.ts";
 import { displayTimeZone } from "./timezone.ts";
 
 export interface DebugEntry {
@@ -189,7 +190,7 @@ function hydrate(): DebugEntry[] {
 
 /** In the patron's display zone (`timezone.ts`), so stamps match the rest of the UI. */
 function stamp(now: Date): string {
-  return now.toLocaleTimeString(undefined, { timeZone: displayTimeZone() });
+  return now.toLocaleTimeString(languageLocale(), { timeZone: displayTimeZone() });
 }
 
 function emit(): void {

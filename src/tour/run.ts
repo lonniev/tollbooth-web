@@ -11,6 +11,8 @@
  */
 
 import { driver, type DriveStep } from "driver.js";
+import { en as shell } from "../i18n/en.ts";
+import { translate } from "../i18n/index.ts";
 import type { Tour, TourStep } from "./types.ts";
 
 export interface TourRun {
@@ -70,10 +72,10 @@ export function buildTour(tour: Tour, hooks: TourHooks): TourRun {
     steps,
     popoverClass: POPOVER_CLASS,
     showProgress: true,
-    progressText: "{{current}} of {{total}}",
-    nextBtnText: "Next",
-    prevBtnText: "Back",
-    doneBtnText: "Done",
+    progressText: translate("tour.progress", { current: "{{current}}", total: "{{total}}" }),
+    nextBtnText: translate("tour.next"),
+    prevBtnText: translate("tour.back"),
+    doneBtnText: translate("tour.done"),
     allowClose: true,
     overlayOpacity: 0.45,
     stagePadding: 6,
@@ -85,7 +87,7 @@ export function buildTour(tour: Tour, hooks: TourHooks): TourRun {
       const stop = document.createElement("button");
       stop.type = "button";
       stop.className = "tb-tour-stop";
-      stop.textContent = "Stop the tutorial";
+      stop.textContent = translate("tour.stop");
       stop.addEventListener("click", () => { silent = true; hooks.onStop(); d.destroy(); });
       popover.wrapper.appendChild(stop);
     },
@@ -136,7 +138,13 @@ export interface Offer {
 }
 
 /** The question a page asks after a quiet while, centred, with Yes and No. */
-export function offerTour(hooks: OfferHooks, words = OFFER_WORDS): Offer {
+export function offerTour(hooks: OfferHooks, given?: OfferWords): Offer {
+  const words: OfferWords = given ?? {
+    title: translate("tour.offer.title"),
+    says: translate("tour.offer.says"),
+    yes: translate("tour.offer.yes"),
+    no: translate("tour.offer.no"),
+  };
   let answered = false;
   let quiet = false;
   const d = driver({
@@ -186,8 +194,8 @@ export interface OfferWords {
 }
 
 export const OFFER_WORDS: OfferWords = {
-  title: "A tour?",
-  says: "Would you like a tour of this page? It points at each control and says what it is for.",
-  yes: "Yes",
-  no: "No",
+  title: shell["tour.offer.title"],
+  says: shell["tour.offer.says"],
+  yes: shell["tour.offer.yes"],
+  no: shell["tour.offer.no"],
 };

@@ -31,6 +31,7 @@ import {
 } from "../sessionNsec.ts";
 import { shareOrDownload } from "../shareFile.ts";
 import { card, input, muted } from "./ui.ts";
+import { useT } from "./useT.ts";
 
 type Flash = { tone: "ok" | "err"; text: string };
 
@@ -59,6 +60,7 @@ export default function SessionKeyClaim({ npub, classNames = {} }: SessionKeyCla
 
 function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
   const { slug, appName } = tollboothConfig();
+  const t = useT();
   const envFilename = sessionKeyEnvFilename(slug);
   const [revealed, setRevealed] = useState(false);
   const [showKey, setShowKey] = useState(false);
@@ -73,7 +75,7 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
 
   function nsecOrThrow(): string {
     const nsec = getSessionNsec();
-    if (!nsec) throw new Error("No session key in this browser.");
+    if (!nsec) throw new Error(t("sessionKey.none"));
     return nsec;
   }
 
@@ -90,9 +92,9 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
       await navigator.clipboard.writeText(nsec);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1500);
-      note("ok", "Copied. It is on your clipboard only — paste it somewhere you trust.");
+      note("ok", t("sessionKey.copied"));
     } catch {
-      note("err", "Could not copy. Your browser may have blocked the clipboard.");
+      note("err", t("sessionKey.copyFailed"));
     } finally {
       setBusy(false);
     }
@@ -107,24 +109,18 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
       const file = new File([body], envFilename, {
         type: "text/plain",
       });
-      const outcome = await shareOrDownload(file, `${appName} session key`);
+      const outcome = await shareOrDownload(file, t("sessionKey.title", { appName }));
       if (outcome === "cancelled") {
-        note("ok", "Share cancelled — nothing left this page.");
+        note("ok", t("sessionKey.shareCancelled"));
       } else if (outcome === "blocked") {
-        note(
-          "err",
-          "The share sheet needs a fresh tap. Try Download again.",
-        );
+        note("err", t("sessionKey.shareBlocked"));
       } else if (outcome === "shared") {
-        note("ok", "Handed off via the share sheet.");
+        note("ok", t("sessionKey.shared"));
       } else {
-        note(
-          "ok",
-          `Downloaded ${envFilename}. Import it yourself — the page did not write to any keychain.`,
-        );
+        note("ok", t("sessionKey.downloaded", { filename: envFilename }));
       }
     } catch {
-      note("err", "Could not prepare the download.");
+      note("err", t("sessionKey.downloadFailed"));
     } finally {
       setBusy(false);
     }
@@ -138,7 +134,7 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
       const outcome = await offerPasswordManager(
         nsec,
         npubHint(),
-        `${appName} session key`,
+        t("sessionKey.title", { appName }),
         formRef.current,
         userRef.current,
         passRef.current,
@@ -163,7 +159,7 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
       const nsec = nsecOrThrow();
       const to = recipient.trim();
       if (!to.startsWith("npub1") || to.length < 60) {
-        note("err", "Enter the recipient as an npub1… address.");
+        note("err", t("sessionKey.dm.enterRecipient"));
         return;
       }
       const result = await sendSessionKeyDm({
@@ -173,22 +169,16 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
         recipientNpub: to,
       });
       if (result.ok > 0) {
-        note(
-          "ok",
-          `Encrypted DM accepted by ${result.ok}/${result.total} relays. Open it from the recipient’s Nostr client.`,
-        );
+        note("ok", t("sessionKey.dm.accepted", { ok: result.ok, total: result.total }));
         setDmOpen(false);
         setRecipient("");
       } else {
-        note(
-          "err",
-          "No relay accepted the encrypted DM. Try again in a moment.",
-        );
+        note("err", t("sessionKey.dm.noRelay"));
       }
     } catch (e) {
       // Message must stay free of the nsec — our thrown errors already are.
-      const msg = (e as Error).message || "Could not send the DM.";
-      note("err", msg.includes("nsec") ? "Could not send the DM." : msg);
+      const msg = (e as Error).message || t("sessionKey.dm.failed");
+      note("err", msg.includes("nsec") ? t("sessionKey.dm.failed") : msg);
     } finally {
       setBusy(false);
     }
@@ -197,19 +187,17 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
   if (!revealed) {
     return (
       <div className={`${card} px-4 py-3`} data-tour="tb.account.sessionKey">
-        <div className="eyebrow mb-1">Session key</div>
+        <div className="eyebrow mb-1">{t("sessionKey.eyebrow")}</div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <p className={`min-w-[14rem] flex-1 text-[0.78125rem] leading-snug ${muted}`}>
-            This browser is holding the secret key that signs you in. Take a copy
-            before you clear site data or switch devices — without it, this identity
-            is gone.
+            {t("sessionKey.intro")}
           </p>
           <button
             type="button"
             onClick={() => setRevealed(true)}
             className="min-h-11 shrink-0 rounded-full border border-[var(--tb-accent)] bg-[var(--tb-accent)] px-4 text-[0.8125rem] font-semibold text-[var(--tb-on-accent)]"
           >
-            Claim your session key
+            {t("sessionKey.claim")}
           </button>
         </div>
       </div>
@@ -219,7 +207,7 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
   return (
     <div className={`relative ${card} px-4 py-3`} data-tour="tb.account.sessionKey">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div className="eyebrow mb-1">Session key</div>
+        <div className="eyebrow mb-1">{t("sessionKey.eyebrow")}</div>
         <button
           type="button"
           onClick={() => {
@@ -231,18 +219,17 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
           }}
           className={`text-[0.75rem] ${muted} hover:text-[var(--tb-ink)]`}
         >
-          Hide
+          {t("sessionKey.hide")}
         </button>
       </div>
       <p className={`mb-3 text-[0.78125rem] leading-relaxed ${muted}`}>
-        Anyone who holds this key is you. It leaves this page only when you
-        choose a destination below — never logged, never sent to {appName}.
+        {t("sessionKey.warning", { appName })}
       </p>
 
       <div className="flex flex-wrap gap-2">
         {/* Reveal is its own deliberate tap, a peer of the destinations. */}
         <DestButton
-          label={showKey ? "Conceal the key" : "Reveal the key"}
+          label={showKey ? t("sessionKey.action.conceal") : t("sessionKey.action.reveal")}
           onClick={() => setShowKey((v) => !v)}
           active={showKey}
           className={actionClass}
@@ -250,7 +237,7 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
           {showKey ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
         </DestButton>
         <DestButton
-          label={copied ? "Copied" : "Copy the key"}
+          label={copied ? t("sessionKey.action.copied") : t("sessionKey.action.copy")}
           onClick={() => void copyKey()}
           disabled={busy}
           className={actionClass}
@@ -258,7 +245,7 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
           {copied ? <Check size={20} aria-hidden="true" /> : <Copy size={20} aria-hidden="true" />}
         </DestButton>
         <DestButton
-          label="Download a .env file"
+          label={t("sessionKey.action.download")}
           onClick={() => void downloadEnv()}
           disabled={busy}
           className={actionClass}
@@ -266,7 +253,7 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
           <Download size={20} aria-hidden="true" />
         </DestButton>
         <DestButton
-          label="Save to your password manager"
+          label={t("sessionKey.action.passwordManager")}
           onClick={() => void passwordManagerSave()}
           disabled={busy}
           className={actionClass}
@@ -274,7 +261,7 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
           <KeyRound size={20} aria-hidden="true" />
         </DestButton>
         <DestButton
-          label="Send by encrypted DM"
+          label={t("sessionKey.action.dm")}
           onClick={() => {
             setDmOpen((v) => !v);
             setFlash(null);
@@ -296,12 +283,11 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
       {dmOpen && (
         <div className="mt-3 space-y-2 rounded-lg border border-[var(--tb-line)] bg-[var(--tb-surface-2)] p-3">
           <p className={`text-[0.75rem] leading-relaxed ${muted}`}>
-            Encrypts the key to an npub you own and publishes the sealed message
-            to public relays. Only that npub can open it.
+            {t("sessionKey.dm.explain")}
           </p>
           <div className="flex flex-wrap items-end gap-2">
           <label className={`block min-w-[16rem] flex-1 text-[0.75rem] ${muted}`}>
-            Recipient npub
+            {t("sessionKey.dm.recipient")}
             <input
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
@@ -318,7 +304,7 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
             disabled={busy || recipient.trim().length < 60}
             className="min-h-11 shrink-0 rounded-full border border-[var(--tb-accent)] bg-[var(--tb-accent)] px-4 text-[0.8125rem] font-semibold text-[var(--tb-on-accent)] disabled:opacity-40"
           >
-            {busy ? "Sending…" : "Send encrypted DM"}
+            {busy ? t("sessionKey.dm.sending") : t("sessionKey.dm.send")}
           </button>
           </div>
         </div>

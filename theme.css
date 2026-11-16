@@ -73,3 +73,34 @@
   --tb-notice-line: #4d2d6e;
   --tb-notice-ink: #d8b4fe;
 }
+
+/* LanguageChooser: one chip per language, the current one filled. */
+.tb-lang {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.tb-lang-chip {
+  min-height: 2.5rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--tb-line);
+  border-radius: 999px;
+  background: var(--tb-surface);
+  color: var(--tb-ink);
+  font: inherit;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+.tb-lang-chip:hover {
+  background: var(--tb-surface-2);
+}
+.tb-lang-chip:focus-visible {
+  outline: 2px solid var(--tb-accent);
+  outline-offset: 2px;
+}
+.tb-lang-on,
+.tb-lang-on:hover {
+  border-color: var(--tb-accent);
+  background: var(--tb-accent);
+  color: var(--tb-on-accent);
+}

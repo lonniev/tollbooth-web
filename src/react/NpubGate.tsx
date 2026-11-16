@@ -35,7 +35,9 @@ import { cx } from "./cx.ts";
 import SignInLinks, { type SignInLinksClassNames } from "./SignInLinks.tsx";
 import SignInSteps, { type SignInStepsClassNames } from "./SignInSteps.tsx";
 import { gateStage } from "./signInFlow.ts";
+import Tx from "./Tx.tsx";
 import { card, errBox, ghost, input, muted, primary, warnBox } from "./ui.ts";
+import { useT, type Translate } from "./useT.ts";
 
 type Stage = "begin" | "awaiting" | "checking";
 
@@ -108,6 +110,7 @@ export default function NpubGate({
   classNames: c = {},
 }: NpubGateProps) {
   const { appName } = tollboothConfig();
+  const t = useT();
   // Prefilled from what was typed last, NOT from the stored identity.
   const [value, setValue] = useState(getLastTypedNpub());
   const [stage, setStage] = useState<Stage>("begin");
@@ -163,14 +166,14 @@ export default function NpubGate({
       setLastTypedNpub(npub);
       onLogin();
     } catch (e) {
-      setError(`Couldn't read that nsec: ${(e as Error).message}`);
+      setError(t("signin.error.nsecUnreadable", { reason: (e as Error).message }));
     }
   }
 
   async function begin() {
     const npubToProve = trimmed;
     if (!(npubToProve.startsWith("npub1") && npubToProve.length >= 60)) {
-      setError("Enter a valid npub1… key.");
+      setError(t("signin.error.invalidNpub"));
       return;
     }
     setBusy(true);
@@ -179,7 +182,7 @@ export default function NpubGate({
       // The proof will stay with the operator, so this tab connects to it
       // first, by fetch, and the DM goes out.
       if (!holderEnabled()) {
-        setError("This site signs in with a key only — paste an nsec, or make one.");
+        setError(t("signin.error.keyOnly"));
         return;
       }
       if (!isHolder()) await connectAsHolder();
@@ -189,7 +192,7 @@ export default function NpubGate({
         `You requested to sign in to ${appName} (${globalThis.location.host}).`,
       );
       if (r.error) return setError(r.error);
-      if (!r.nonce) return setError("The service did not return a session phrase. Try again.");
+      if (!r.nonce) return setError(t("signin.error.noPhrase"));
       // Remembered for the field only. The identity is written by `finish()`,
       // once the human has answered the DM.
       setLastTypedNpub(npubToProve);
@@ -209,7 +212,7 @@ export default function NpubGate({
     try {
       const r = await receiveNpubProof(trimmed, nonce);
       if (r.error || !r.held_by_connection) {
-        setError(r.error || "The service did not keep the proof for this page. Try again.");
+        setError(r.error || t("signin.error.proofNotKept"));
         setStage("awaiting");
         return;
       }
@@ -218,11 +221,15 @@ export default function NpubGate({
       if (r.expires_in_seconds && r.expires_in_seconds > 0) {
         recordRecentLogin(npub, r.expires_in_seconds);
         const h = Math.floor(r.expires_in_seconds / 3600);
-        setNote(`Proof held for ~${h > 0 ? `${h}h` : `${Math.round(r.expires_in_seconds / 60)}m`}.`);
+        setNote(
+          h > 0
+            ? t("signin.proofHeldHours", { hours: h })
+            : t("signin.proofHeldMinutes", { minutes: Math.round(r.expires_in_seconds / 60) }),
+        );
       }
       onLogin();
     } catch (e) {
-      setError(`Verification failed: ${(e as Error).message}`);
+      setError(t("signin.error.verificationFailed", { reason: (e as Error).message }));
       setStage("awaiting");
     } finally {
       setBusy(false);
@@ -237,18 +244,17 @@ export default function NpubGate({
 
   return (
     <div className={cx("max-w-md mx-auto mt-12 px-4", c.root)}>
-      <h1 className="text-xl font-semibold mb-1">Sign in to {appName}</h1>
+      <h1 className="text-xl font-semibold mb-1">{t("signin.heading", { appName })}</h1>
       {welcome && <div className={cx("text-sm mb-3", c.welcome)}>{welcome}</div>}
       <p className={cx(`text-sm mb-5 ${muted}`, c.register)}>
-        {appName} is an operator on the Tollbooth DPYC™ network. DPYC™ — Don't Pester Your Customer™: no email, no
-        password, no KYC. Your Nostr key is your identity.
+        {t("signin.register", { appName })}
       </p>
 
       {notice && <div className={`mb-5 ${warnBox}`}>{notice}</div>}
 
       {stage === "begin" && recents.length > 0 && (
         <div className="mb-5">
-          <div className={`text-xs uppercase tracking-wider mb-2 ${muted}`}>Recent identities</div>
+          <div className={`text-xs uppercase tracking-wider mb-2 ${muted}`}>{t("signin.recent.heading")}</div>
           <div className="space-y-1.5">
             {recents.map((e) => (
               <div key={e.npub} className="flex gap-1.5">
@@ -256,18 +262,18 @@ export default function NpubGate({
                   type="button"
                   onClick={() => reuseRecent(e)}
                   disabled={busy}
-                  title={`Re-enter as ${e.npub} on the proof the service holds`}
+                  title={t("signin.recent.reenter", { npub: e.npub })}
                   className={`${card} flex-1 flex items-center justify-between px-3 py-2.5 text-left hover:border-[var(--tb-accent)]`}
                 >
                   <span className="font-mono text-xs truncate">{e.npub.slice(0, 12)}…{e.npub.slice(-6)}</span>
-                  <span className={`text-xs shrink-0 ml-2 ${muted}`}>{ttl(e.expiresAt)} left</span>
+                  <span className={`text-xs shrink-0 ml-2 ${muted}`}>{ttl(e.expiresAt, t)}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => forget(e.npub)}
                   disabled={busy}
-                  title="Forget this identity"
-                  aria-label="Forget this identity"
+                  title={t("signin.recent.forget")}
+                  aria-label={t("signin.recent.forget")}
                   className={`w-9 rounded-lg border border-[var(--tb-line)] ${muted}`}
                 >
                   ×
@@ -282,7 +288,7 @@ export default function NpubGate({
         {stage === "begin" ? (
           <>
             <label className={`block text-xs uppercase tracking-wider ${muted}`} htmlFor="tb-npub-field">
-              Enter npub (secure) or nsec (convenient)
+              {t("signin.field.label")}
             </label>
             <input
               id="tb-npub-field"
@@ -306,7 +312,7 @@ export default function NpubGate({
             />
             {generatedHint && (
               <div className={warnBox}>
-                New key generated. <b>Save this nsec</b> somewhere safe — it's the only copy and it lives only in this browser.
+                <Tx k="signin.generated" components={{ b: <b /> }} />
               </div>
             )}
             <button
@@ -316,48 +322,51 @@ export default function NpubGate({
               className={primary}
               data-tour="tb.gate.send"
             >
-              {busy ? "Sending…" : isNpub ? "Send message" : "Sign in"}
+              {busy ? t("signin.sending") : isNpub ? t("signin.sendMessage") : t("signin.signIn")}
             </button>
-            {isNsec && <p className={`text-xs ${muted}`}>Your nsec stays in this browser and signs each call.</p>}
+            {isNsec && <p className={`text-xs ${muted}`}>{t("signin.nsecStays")}</p>}
             {isNpub && (
               <p className={`text-xs ${muted}`}>
-                We send a message to your npub. Approve it from your Nostr client — your signature is the proof.
+                {t("signin.npubExplain")}
               </p>
             )}
-            <p className={`text-xs pt-1 ${muted}`}>Need a new identity?</p>
+            <p className={`text-xs pt-1 ${muted}`}>{t("signin.needIdentity")}</p>
             <button type="button" onClick={generateKey} className={ghost}>
-              Generate a new key
+              {t("signin.generate")}
             </button>
           </>
         ) : (
           <>
             <div className={`${warnBox} space-y-1.5`}>
-              <div className="font-medium">Message sent — open your Nostr client.</div>
-              <div>Reply with any text. Your signature on that reply is the proof.</div>
+              <div className="font-medium">{t("signin.sent.heading")}</div>
+              <div>{t("signin.sent.reply")}</div>
               {operatorHash && (
                 <div>
-                  Sender fingerprint: <span className="font-mono">🔒 {operatorHash}</span>
+                  <Tx
+                    k="signin.sent.fingerprint"
+                    vars={{ hash: operatorHash }}
+                    components={{ mono: <span className="font-mono" /> }}
+                  />
                 </div>
               )}
             </div>
             {nonce && (
               <div className="rounded-lg p-3 text-xs border border-[var(--tb-accent)] space-y-2">
-                <div className={`uppercase tracking-wider text-[0.625rem] ${muted}`}>Confirmation code</div>
+                <div className={`uppercase tracking-wider text-[0.625rem] ${muted}`}>{t("signin.code.label")}</div>
                 <div className="font-mono text-base select-all">{nonce}</div>
                 <div className={`leading-relaxed ${muted}`}>
-                  The same code appears in the message. <b>Approve it only if the codes match.</b> If they differ — or
-                  the message points you somewhere other than this site — do not reply.
+                  <Tx k="signin.code.explain" components={{ b: <b /> }} />
                 </div>
               </div>
             )}
             <button type="button" onClick={() => void finish()} disabled={busy} className={primary} data-tour="tb.gate.verify">
-              {busy ? "Checking…" : "I've replied — verify"}
+              {busy ? t("signin.checking") : t("signin.verify")}
             </button>
             <button type="button" onClick={() => void begin()} disabled={busy} className={ghost}>
-              Resend
+              {t("signin.resend")}
             </button>
             <button type="button" onClick={reset} disabled={busy} className={`w-full text-xs py-1.5 ${muted}`}>
-              Use a different npub
+              {t("signin.differentNpub")}
             </button>
           </>
         )}
@@ -383,8 +392,10 @@ function Trouble({ raw, appName }: { raw: string; appName: string }) {
   );
 }
 
-function ttl(expiresAt: number): string {
+function ttl(expiresAt: number, t: Translate): string {
   const min = Math.max(0, Math.floor((expiresAt - Date.now()) / 60000));
   const hr = Math.floor(min / 60);
-  return hr >= 1 ? `${hr}h ${min % 60}m` : `${min}m`;
+  return hr >= 1
+    ? t("signin.recent.leftHours", { hours: hr, minutes: min % 60 })
+    : t("signin.recent.leftMinutes", { minutes: min });
 }

@@ -8,6 +8,7 @@
 
 import { finalizeEvent, type Event as NostrEvent } from "nostr-tools";
 
+import { translate } from "./i18n/index.ts";
 import { getSessionNsecBytes, hasSessionNsec } from "./sessionNsec.ts";
 import {
   getNostrProfile,
@@ -66,9 +67,7 @@ export async function publishProfile(npub: string, content: Kind0): Promise<Publ
     const pubkey = await signer.getPublicKey();
     signed = await signer.signEvent({ ...template, pubkey });
   } else {
-    throw new Error(
-      "No signer available — sign in with a session key or a NIP-07 extension to publish your Nostr profile.",
-    );
+    throw new Error(translate("profile.noSigner"));
   }
   return publishNostrProfile(npub, JSON.stringify(signed));
 }

@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { onProofExpired } from "../client.ts";
+import { translate } from "../i18n/index.ts";
 import { currentClaim, logOut } from "../identity.ts";
 import { canSignFor, isProven } from "../signedIn.ts";
 
@@ -53,7 +54,7 @@ export function useSession(): Session {
       onProofExpired(() => {
         // A tab that can sign for THIS npub lost nothing.
         if (canSignFor(currentClaim())) return;
-        setNotice("Your session lapsed while you were away. Sign in again to carry on.");
+        setNotice(translate("signin.sessionLapsed"));
         setState(read());
       }),
     [],

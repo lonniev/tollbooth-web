@@ -6,10 +6,12 @@
 
 import { useMemo } from "react";
 import { invoiceQrText, qrModules, qrPath } from "../qr.ts";
+import { useT } from "./useT.ts";
 
 const QUIET = 4;
 
 export default function InvoiceQr({ bolt11, size = 220, className }: { bolt11?: string | null; size?: number; className?: string }) {
+  const t = useT();
   const drawn = useMemo(() => {
     const text = invoiceQrText(bolt11);
     if (!text) return null;
@@ -20,7 +22,7 @@ export default function InvoiceQr({ bolt11, size = 220, className }: { bolt11?: 
   return (
     <svg
       role="img"
-      aria-label="QR code of this Lightning invoice"
+      aria-label={t("invoice.qrLabel")}
       viewBox={`0 0 ${drawn.box} ${drawn.box}`}
       width={size}
       height={size}

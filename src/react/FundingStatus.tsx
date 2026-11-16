@@ -42,8 +42,10 @@ import {
   sessionStatus,
   type CheckBalanceResult,
 } from "../standardTools.ts";
+import type { TranslationKey } from "../i18n/index.ts";
 import { formatDateTime } from "../timezone.ts";
 import { cx } from "./cx.ts";
+import { useT } from "./useT.ts";
 import { useTimezone } from "./useTimezone.ts";
 
 export interface FundingStatusClassNames {
@@ -94,7 +96,11 @@ export interface OperatorFundingStatusProps extends FundingStatusProps {
   authorityThresholds?: BalanceThresholds;
 }
 
-const STATE_LABELS: Record<StatusLevel, string> = { ok: "ok", warning: "warning", blocked: "blocked" };
+const STATE_LABELS: Record<StatusLevel, TranslationKey> = {
+  ok: "funding.state.ok",
+  warning: "funding.state.warning",
+  blocked: "funding.state.blocked",
+};
 
 type Read = () => Promise<StatusRow[] | null>;
 
@@ -134,7 +140,7 @@ function StatusList({
   intro,
   stateLabels = {},
   renderRow,
-  refreshLabel = "Refresh",
+  refreshLabel,
   classNames: c = {},
   rows,
   loading,
@@ -142,23 +148,25 @@ function StatusList({
   refresh,
 }: FundingStatusProps & { rows: StatusRow[]; loading: boolean; error: string | null; refresh: () => void }) {
   const [, zone] = useTimezone();
+  const t = useT();
+  const refreshWords = refreshLabel === undefined ? t("funding.refresh") : refreshLabel;
   const overall = worstState(rows);
   return (
     <section className={c.root}>
       <div className={c.header}>
         {heading && <div className={c.heading}>{heading}</div>}
         {rows.length > 0 && !loading && (
-          <span className={cx(c.overall, c[overall])}>{stateLabels[overall] ?? STATE_LABELS[overall]}</span>
+          <span className={cx(c.overall, c[overall])}>{stateLabels[overall] ?? t(STATE_LABELS[overall])}</span>
         )}
-        {refreshLabel !== null && (
+        {refreshWords !== null && (
           <button type="button" onClick={refresh} disabled={loading} className={c.chip}>
-            {loading ? "Checking…" : refreshLabel}
+            {loading ? t("funding.checking") : refreshWords}
           </button>
         )}
       </div>
       {intro && <p className={c.intro}>{intro}</p>}
       {error && <p className={c.error}>{error}</p>}
-      {loading && rows.length === 0 && <p className={c.loading}>Checking…</p>}
+      {loading && rows.length === 0 && <p className={c.loading}>{t("funding.checking")}</p>}
       {rows.length > 0 && (
         <ul className={c.list}>
           {rows.map((r) => {
@@ -170,9 +178,9 @@ function StatusList({
                 ) : (
                   <>
                     <span className={c.dependency}>{r.dependency}</span>{" "}
-                    <span className={cx(c.state, c[r.state])}>{stateLabels[r.state] ?? STATE_LABELS[r.state]}</span>
+                    <span className={cx(c.state, c[r.state])}>{stateLabels[r.state] ?? t(STATE_LABELS[r.state])}</span>
                     <p className={c.detail}>{r.detail}</p>
-                    <p className={c.checked}>checked {checked}</p>
+                    <p className={c.checked}>{t("funding.checked", { when: checked })}</p>
                   </>
                 )}
               </li>
@@ -206,9 +214,10 @@ function heldStatus(status: string | undefined): "valid" | "lapsed" | "not_held"
 export function PatronFundingStatus({
   thresholds,
   siteRows,
-  heading = "Account health",
+  heading,
   ...rest
 }: PatronFundingStatusProps) {
+  const t = useT();
   const read: Read = async () => {
     const checkedAt = new Date().toISOString();
     const [site, proof, bal] = await Promise.all([
@@ -219,16 +228,17 @@ export function PatronFundingStatus({
     return [...site, composeProofRow(proof, checkedAt), composeCreditsRow(bal, checkedAt, thresholds)];
   };
   const state = useRows(read);
-  return <StatusList heading={heading} {...rest} {...state} rows={state.rows ?? []} refresh={() => void state.refresh()} />;
+  return <StatusList heading={heading === undefined ? t("funding.patronHeading") : heading} {...rest} {...state} rows={state.rows ?? []} refresh={() => void state.refresh()} />;
 }
 
 /** What only the operator can fix. Renders nothing for anyone else. */
 export function OperatorFundingStatus({
   authorityThresholds,
   siteRows,
-  heading = "Operator dependencies",
+  heading,
   ...rest
 }: OperatorFundingStatusProps) {
+  const t = useT();
   const read: Read = async () => {
     const checkedAt = new Date().toISOString();
     // Gate first: a patron fires none of the operator's probes.
@@ -252,5 +262,5 @@ export function OperatorFundingStatus({
   const state = useRows(read);
   // Nothing until the viewer is known to be the operator — no flash for patrons.
   if (state.rows === null) return null;
-  return <StatusList heading={heading} {...rest} {...state} rows={state.rows} refresh={() => void state.refresh()} />;
+  return <StatusList heading={heading === undefined ? t("funding.operatorHeading") : heading} {...rest} {...state} rows={state.rows} refresh={() => void state.refresh()} />;
 }

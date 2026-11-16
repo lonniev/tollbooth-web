@@ -12,13 +12,14 @@
 
 import { cx } from "./cx.ts";
 import {
-  SIGN_IN_ACTORS,
+  SIGN_IN_ACTOR_KEYS,
   SIGN_IN_STEPS,
   stepState,
   type SignInActor,
   type SignInStage,
   type SignInStep,
 } from "./signInFlow.ts";
+import { useT } from "./useT.ts";
 
 export interface SignInStepsClassNames {
   root?: string;
@@ -50,12 +51,13 @@ export interface SignInStepsProps {
 export default function SignInSteps({
   stage,
   steps = SIGN_IN_STEPS,
-  actors = SIGN_IN_ACTORS,
-  label = "How signing in works",
+  actors,
+  label,
   classNames: c = {},
 }: SignInStepsProps) {
+  const t = useT();
   return (
-    <ol aria-label={label} className={c.root} data-tour="tb.gate.steps">
+    <ol aria-label={label === undefined ? t("signin.steps.label") : label} className={c.root} data-tour="tb.gate.steps">
       {steps.map((s, i) => {
         const state = stepState(s, stage);
         return (
@@ -68,8 +70,8 @@ export default function SignInSteps({
             <span aria-hidden className={c.glyph}>
               {s.glyph}
             </span>
-            <span className={c.label}>{s.label}</span>
-            <span className={c.actor}>{actors[s.actor]}</span>
+            <span className={c.label}>{s.labelKey ? t(s.labelKey) : s.label}</span>
+            <span className={c.actor}>{actors ? actors[s.actor] : t(SIGN_IN_ACTOR_KEYS[s.actor])}</span>
             {i < steps.length - 1 && (
               <span aria-hidden className={c.connector}>
                 {"\u203A"}

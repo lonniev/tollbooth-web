@@ -9,6 +9,8 @@
  * the ecosystem forbids is a service leaking keys, not a person claiming one.
  */
 
+import { translate, type TranslationKey } from "./i18n/index.ts";
+
 /** True only when the browser holds the session nsec for the signed-in npub. */
 export function sessionKeyClaimVisible(opts: {
   hasSessionNsec: boolean;
@@ -45,13 +47,12 @@ export type PasswordManagerOutcome =
   | "prompted" // a form was submitted so a browser password manager could offer to save
   | "unsupported"; // nothing the page can do here
 
+const OUTCOME_KEYS: Record<PasswordManagerOutcome, TranslationKey> = {
+  stored: "sessionKey.passwordManager.stored",
+  prompted: "sessionKey.passwordManager.prompted",
+  unsupported: "sessionKey.passwordManager.unsupported",
+};
+
 export function passwordManagerOutcomeLabel(o: PasswordManagerOutcome): string {
-  switch (o) {
-    case "stored":
-      return "Offered to your browser’s password manager.";
-    case "prompted":
-      return "Submitted so your browser’s password manager can offer to save it. Nothing was written to an OS keychain — a web page cannot do that.";
-    case "unsupported":
-      return "This browser has no password-manager save path the page can reach. Download the .env file or copy the key instead.";
-  }
+  return translate(OUTCOME_KEYS[o]);
 }

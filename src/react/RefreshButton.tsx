@@ -16,6 +16,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { RefreshCw } from "lucide-react";
 import { cx } from "./cx.ts";
+import { useT } from "./useT.ts";
 
 export interface RefreshButtonClassNames {
   root?: string;
@@ -44,11 +45,13 @@ const GLYPH: CSSProperties = { display: "inline-flex" };
 export default function RefreshButton({
   onRefresh,
   busy = false,
-  label = "Refresh",
+  label: labelProp,
   icon,
   iconSize = 20,
   classNames: c = {},
 }: RefreshButtonProps) {
+  const t = useT();
+  const label = labelProp === undefined ? t("refresh.label") : labelProp;
   const [running, setRunning] = useState(false);
   const live = useRef(true);
   useEffect(() => {

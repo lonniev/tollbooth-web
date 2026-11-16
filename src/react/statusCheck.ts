@@ -7,6 +7,7 @@
  */
 
 import { redact } from "../debugLog.ts";
+import { translate } from "../i18n/index.ts";
 import { isNetworkError } from "../networkError.ts";
 import type { ServiceStatus } from "../standardTools.ts";
 
@@ -42,9 +43,9 @@ export function statusErrorMessage(error: unknown): string {
     .trim();
   const line = isNetworkError(error)
     ? why
-      ? `Could not reach the service — ${why}`
-      : "Could not reach the service"
-    : why || "The service did not answer";
+      ? translate("status.unreachableWhy", { why })
+      : translate("status.unreachable")
+    : why || translate("status.noAnswer");
   return line.length > STATUS_ERROR_MAX ? `${line.slice(0, STATUS_ERROR_MAX - 1)}…` : line;
 }
 

@@ -99,3 +99,26 @@ export { ACTIVITY_EVENTS, DEFAULT_IDLE_MS, idleThreshold, offerDue } from "./tou
 export { lintStep, lintTour, lintTours, MAX_SAYS, MAX_SENTENCES, MAX_TITLE } from "./tour/lint.ts";
 export { accountPanelsSteps, accountTour, signInTour, TB_TARGETS, walletSteps, walletTour } from "./tour/tours.ts";
 export { onTourChange, readTourPrefs, settleTourPrefs, tourStorageKey, writeTourPrefs } from "./tourPrefs.ts";
+export {
+  DEFAULT_LANGUAGE,
+  getLanguage,
+  isLanguage,
+  LANGUAGE_STORAGE_KEY,
+  languageForBrowser,
+  languageFrom,
+  languageLocale,
+  LANGUAGES,
+  onLanguageChange,
+  registerNamespace,
+  setLanguage,
+  startLanguage,
+  translate,
+  type Language,
+  type LanguageCode,
+  type Resource,
+  type ResourceLoader,
+  type ResourceLoaders,
+  type Translation,
+  type TranslationKey,
+  type Vars,
+} from "./i18n/index.ts";

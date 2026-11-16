@@ -11,6 +11,8 @@
 import type { ReactNode } from "react";
 import { ariaSort, clampPage, lastPage, nextSort, type SortDir } from "../table.ts";
 import { cx } from "./cx.ts";
+import { getLanguage } from "../i18n/index.ts";
+import { useT } from "./useT.ts";
 
 export interface SortHeaderClassNames {
   /** The header cell: the <th>, or the <div> when `as="div"`. */
@@ -103,24 +105,25 @@ export interface PageControlsProps {
 
 /** First / ← Prev / Page N of M · K total / Next → / Last. */
 export function PageControls({ page, pageSize, total, onPage, hideSinglePage = false, classNames: c = {} }: PageControlsProps) {
+  const t = useT();
   const last = lastPage(total, pageSize);
   if (hideSinglePage && last === 0) return null;
   const p = clampPage(page, total, pageSize);
   return (
-    <nav aria-label="Pages" className={c.root}>
-      <button type="button" className={c.chip} disabled={p === 0} onClick={() => onPage(0)} title="First page" aria-label="First page">
+    <nav aria-label={t("table.pages")} className={c.root}>
+      <button type="button" className={c.chip} disabled={p === 0} onClick={() => onPage(0)} title={t("table.firstPage")} aria-label={t("table.firstPage")}>
         ⏮
       </button>
       <button type="button" className={c.chip} disabled={p === 0} onClick={() => onPage(p - 1)}>
-        ← Prev
+        {t("table.prev")}
       </button>
       <span className={c.label}>
-        Page {p + 1} of {last + 1} · {total.toLocaleString("en-US")} total
+        {t("table.pageOf", { page: p + 1, pages: last + 1, total: total.toLocaleString(getLanguage()) })}
       </span>
       <button type="button" className={c.chip} disabled={p >= last} onClick={() => onPage(p + 1)}>
-        Next →
+        {t("table.next")}
       </button>
-      <button type="button" className={c.chip} disabled={p >= last} onClick={() => onPage(last)} title="Last page" aria-label="Last page">
+      <button type="button" className={c.chip} disabled={p >= last} onClick={() => onPage(last)} title={t("table.lastPage")} aria-label={t("table.lastPage")}>
         ⏭
       </button>
     </nav>

@@ -6,7 +6,9 @@
  */
 
 import type { ReactNode } from "react";
+import type { TranslationKey } from "../i18n/index.ts";
 import { THEMES, type Theme } from "../theme.ts";
+import { useT } from "./useT.ts";
 import { useTheme } from "./useTheme.ts";
 
 export interface ThemeToggleClassNames {
@@ -24,12 +26,13 @@ export interface ThemeToggleProps {
   classNames?: ThemeToggleClassNames;
 }
 
-const LABELS: Record<Theme, string> = { dark: "Dark", light: "Light", system: "System" };
+const LABELS: Record<Theme, TranslationKey> = { dark: "theme.dark", light: "theme.light", system: "theme.system" };
 
 export default function ThemeToggle({ themes = THEMES, labels = {}, fallback = "dark", classNames: c = {} }: ThemeToggleProps) {
+  const tr = useT();
   const [theme, setTheme] = useTheme(fallback);
   return (
-    <div role="radiogroup" aria-label="Theme" className={c.root}>
+    <div role="radiogroup" aria-label={tr("theme.label")} className={c.root}>
       {themes.map((t) => {
         const on = t === theme;
         return (
@@ -38,11 +41,11 @@ export default function ThemeToggle({ themes = THEMES, labels = {}, fallback = "
             type="button"
             role="radio"
             aria-checked={on}
-            aria-label={LABELS[t]}
+            aria-label={tr(LABELS[t])}
             onClick={() => setTheme(t)}
             className={[c.chip, on && c.active].filter(Boolean).join(" ") || undefined}
           >
-            {labels[t] ?? LABELS[t]}
+            {labels[t] ?? tr(LABELS[t])}
           </button>
         );
       })}
