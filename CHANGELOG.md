@@ -2,6 +2,13 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.10.0] — 2026-11-16
+
+### Added
+
+- A guest's first language now follows where they are. With no stored choice, the site asks its own Cloudflare edge for the guest's country (`/cdn-cgi/trace`, no other company involved): a country that speaks one of the six languages is shown in it, a country that speaks several lets the browser's language choose among them, and anywhere else reads English. It used to follow the browser alone.
+- Sites translate with the package's machinery and nothing of their own: `Tx` (from `/react`) takes `ns` to draw a site's sentence with a link inside it; `registerNamespace` also takes structured content (lists of lessons, quotes), read with `useContent(ns, key)` or `content(ns, key)`, English for any piece a language lacks; `useLanguageLocale()` gives the locale for dates and numbers as React state; `localeProblems(en, locale)` lets a site's test hold its translations to English. See "Languages" in the README.
+
 ## [3.9.0] — 2026-11-16
 
 ### Added
