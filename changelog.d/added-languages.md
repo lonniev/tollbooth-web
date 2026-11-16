@@ -4,3 +4,4 @@
 - `useLanguage()` gives `{ language, setLanguage, languages }` for a site that draws its own control. `getLanguage`, `setLanguage`, `startLanguage`, `onLanguageChange`, `languageLocale` and `LANGUAGES` are exported from the package root.
 - Dates and numbers the package writes follow the chosen language.
 - `i18next` and `react-i18next` are dependencies of the package, so a site installs nothing new.
+- A visitor whose language is not one of the six reads English, with dates and numbers in their own browser's style.

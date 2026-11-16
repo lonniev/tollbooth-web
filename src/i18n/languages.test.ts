@@ -40,4 +40,8 @@ test("dates take the browser's regional form of the chosen language", () => {
   assert.equal(localeFor("fr", ["en-GB", "fr-CA"]), "fr-CA");
   assert.equal(localeFor("ja", ["en-US"]), "ja");
   assert.equal(localeFor("hi", undefined), "hi");
+  // A visitor whose language is not offered reads English with their own number and date style.
+  assert.equal(localeFor("en", ["de-DE", "nl"]), "de-DE");
+  assert.equal(localeFor("en", []), "en");
+  assert.equal(localeFor("fr", ["de-DE"]), "fr");
 });

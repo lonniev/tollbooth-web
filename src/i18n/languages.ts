@@ -58,5 +58,9 @@ export function localeFor(language: LanguageCode, preferred: readonly string[] |
   for (const tag of preferred ?? []) {
     if (typeof tag === "string" && baseOf(tag) === language) return tag;
   }
+  // English is also what everyone whose language is not offered reads. Their
+  // dates and numbers keep their own browser's style, as they did before.
+  const own = (preferred ?? []).find((tag) => typeof tag === "string" && tag.length > 0);
+  if (language === DEFAULT_LANGUAGE && own) return own;
   return language;
 }
