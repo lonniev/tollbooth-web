@@ -2,6 +2,18 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.9.0] — 2026-11-16
+
+### Added
+
+- Every screen the package draws can now be read in English, French, Spanish, Japanese, Chinese or Hindi. All of its text comes from one English resource through i18next, and a language's translation is fetched only when a reader chooses it. Until a translation ships, and for any word one lacks, the screen reads in English, so a site that changes nothing looks as it did.
+- `LanguageChooser` (from `@tollbooth-dpyc/web/react`) is the ready-made control: six buttons in each language's own name. Place `<LanguageChooser />` anywhere, for example on the Profile page, and import `@tollbooth-dpyc/web/theme.css` for its look or pass `classNames={{ root, chip, active }}`. The choice is kept on the device under `tollbooth:language`. With no choice stored, `AppShell` starts in the browser's language.
+- A site translates its own text without importing i18next. Register once, before rendering: `registerNamespace("mysite", en, { fr: () => import("./locales/fr.ts"), es: () => import("./locales/es.ts") })`, where `en` is a flat object such as `{ "home.greeting": "Hello {{name}}", "home.rows_one": "{{count}} row", "home.rows_other": "{{count}} rows" }` and each loader's module default-exports the same keys. In a component, `const t = useT("mysite")` then `t("home.greeting", { name })` and `t("home.rows", { count })`. Outside React, `translate(key, vars, "mysite")`.
+- `useLanguage()` gives `{ language, setLanguage, languages }` for a site that draws its own control. `getLanguage`, `setLanguage`, `startLanguage`, `onLanguageChange`, `languageLocale` and `LANGUAGES` are exported from the package root.
+- Dates and numbers the package writes follow the chosen language.
+- `i18next` and `react-i18next` are dependencies of the package, so a site installs nothing new.
+- A visitor whose language is not one of the six reads English, with dates and numbers in their own browser's style.
+
 ## [3.8.0] — 2026-11-15
 
 ### Added
