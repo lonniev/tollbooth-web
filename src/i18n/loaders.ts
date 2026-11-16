@@ -17,4 +17,10 @@
 import type { LanguageCode } from "./languages.ts";
 import type { Translation } from "./types.ts";
 
-export const LOCALE_LOADERS: Partial<Record<LanguageCode, () => Promise<{ default: Translation }>>> = {};
+export const LOCALE_LOADERS: Partial<Record<LanguageCode, () => Promise<{ default: Translation }>>> = {
+  fr: () => import("./locales/fr.ts"),
+  es: () => import("./locales/es.ts"),
+  ja: () => import("./locales/ja.ts"),
+  zh: () => import("./locales/zh.ts"),
+  hi: () => import("./locales/hi.ts"),
+};
