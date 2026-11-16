@@ -15,6 +15,7 @@
 import { nip19 } from "nostr-tools";
 import { wrapEvent } from "nostr-tools/nip17";
 import { SimplePool } from "nostr-tools/pool";
+import { translate } from "./i18n/index.ts";
 
 /** Public write relays used for the gift-wrapped DM fan-out. */
 export const SESSION_KEY_DM_RELAYS = [
@@ -37,16 +38,16 @@ export function sessionKeyDmBody(appName: string, nsec: string): string {
 export function recipientPubkeyHex(npubBech32: string): string {
   const trimmed = npubBech32.trim();
   if (!trimmed.startsWith("npub1")) {
-    throw new Error("Recipient must be an npub1… address.");
+    throw new Error(translate("sessionKey.dm.recipientMustBeNpub"));
   }
   const decoded = nip19.decode(trimmed);
   if (decoded.type !== "npub") {
-    throw new Error("Recipient must be an npub1… address.");
+    throw new Error(translate("sessionKey.dm.recipientMustBeNpub"));
   }
   // nostr-tools v2 returns the 32-byte x-only pubkey as a hex string.
   const data = decoded.data;
   if (typeof data === "string" && /^[0-9a-f]{64}$/i.test(data)) return data;
-  throw new Error("Could not read that npub.");
+  throw new Error(translate("sessionKey.dm.npubUnreadable"));
 }
 
 export interface SessionKeyDmResult {

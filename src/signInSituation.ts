@@ -12,6 +12,8 @@
  * underneath rather than swallowing it. Interpreting an error is not hiding it.
  */
 
+import { translate } from "./i18n/index.ts";
+
 export interface Situation {
   /** What to say first. One sentence, addressed to the person, not the log. */
   lead: string;
@@ -32,15 +34,14 @@ const WARMING = [
 
 const UNREACHABLE = ["failed to fetch", "networkerror", "load failed", "timeout", "timed out"];
 
-export function readSignInFailure(raw: string, appName = "The service"): Situation {
-  const detail = (raw || "").trim() || "The service gave no reason.";
+export function readSignInFailure(raw: string, name?: string): Situation {
+  const appName = name === undefined ? translate("signin.failure.theService") : name;
+  const detail = (raw || "").trim() || translate("signin.failure.noReason");
   const hay = detail.toLowerCase();
 
   if (WARMING.some((s) => hay.includes(s))) {
     return {
-      lead:
-        `${appName} was still waking up and could not reach the relay directory. ` +
-        "Nothing is wrong with your key — try again in a few seconds.",
+      lead: translate("signin.failure.warming", { appName }),
       retryable: true,
       detail,
     };
@@ -48,7 +49,7 @@ export function readSignInFailure(raw: string, appName = "The service"): Situati
 
   if (UNREACHABLE.some((s) => hay.includes(s))) {
     return {
-      lead: `${appName} could not be reached from this device. Check the connection and try again.`,
+      lead: translate("signin.failure.unreachable", { appName }),
       retryable: true,
       detail,
     };

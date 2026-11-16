@@ -7,12 +7,16 @@
  * lies about the pick.
  */
 
+import type { TranslationKey } from "../i18n/index.ts";
 import { TIMEZONE_OPTIONS, detectBrowserTimeZone } from "../timezone.ts";
+import { useT } from "./useT.ts";
 import { useTimezone } from "./useTimezone.ts";
 
 export interface TimezoneOption {
   value: string;
   label: string;
+  /** The package's own word for `label`, shown in the reader's language. */
+  labelKey?: TranslationKey;
 }
 
 export interface TimezonePickerClassNames {
@@ -34,20 +38,20 @@ export interface TimezonePickerProps {
   classNames?: TimezonePickerClassNames;
 }
 
-const defaultAuto = (detected: string) => `Automatic (${detected})`;
-const defaultOption = (o: TimezoneOption) => o.label;
-
 export default function TimezonePicker({
   options = TIMEZONE_OPTIONS,
   label,
-  autoLabel = defaultAuto,
-  optionLabel = defaultOption,
+  autoLabel: autoLabelProp,
+  optionLabel: optionLabelProp,
   id = "tb-timezone",
   classNames: c = {},
 }: TimezonePickerProps) {
+  const t = useT();
   const [pref, , setPref] = useTimezone();
+  const autoLabel = autoLabelProp ?? ((detected: string) => t("timezone.automatic", { zone: detected }));
+  const optionLabel = optionLabelProp ?? ((o: TimezoneOption) => (o.labelKey ? t(o.labelKey) : o.label));
   const listed = pref === "auto" || options.some((o) => o.value === pref);
-  const shown = listed ? options : [...options, { value: pref, label: pref }];
+  const shown: readonly TimezoneOption[] = listed ? options : [...options, { value: pref, label: pref }];
   return (
     <div className={c.root}>
       {label && (
@@ -59,7 +63,7 @@ export default function TimezonePicker({
         id={id}
         value={pref}
         onChange={(e) => setPref(e.target.value)}
-        aria-label={label ? undefined : "Time zone"}
+        aria-label={label ? undefined : t("timezone.label")}
         className={c.select}
       >
         <option value="auto">{autoLabel(detectBrowserTimeZone())}</option>

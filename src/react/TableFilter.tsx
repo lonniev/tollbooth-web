@@ -20,6 +20,7 @@ import { Search, SlidersHorizontal, X } from "lucide-react";
 import { filterActive } from "../table.ts";
 import { oncePerFrame, reclampPanel } from "./panelPlacement.ts";
 import { cx } from "./cx.ts";
+import { useT } from "./useT.ts";
 
 export interface DateFieldOption {
   value: string;
@@ -114,13 +115,18 @@ export default function TableFilter<F extends object>({
   onClear,
   clearPlacement = "beside",
   searchIcon = <Search size="1em" aria-hidden />,
-  clearLabel = (
-    <>
-      <X size="1em" aria-hidden /> Clear
-    </>
-  ),
+  clearLabel: clearLabelProp,
   classNames: c = {},
 }: TableFilterProps<F>) {
+  const t = useT();
+  const clearLabel =
+    clearLabelProp === undefined ? (
+      <>
+        <X size="1em" aria-hidden /> {t("table.clear")}
+      </>
+    ) : (
+      clearLabelProp
+    );
   const active = filterActive(
     { search: search?.value, dateFrom: dates?.from, dateTo: dates?.to },
     questions?.summary ?? "",
@@ -146,6 +152,7 @@ export default function TableFilter<F extends object>({
 function SearchBox({ search, icon, c }: { search: TableFilterSearch; icon: ReactNode; c: TableFilterClassNames }) {
   // Edited freely, applied on Enter or the chip; follows the applied value
   // when it changes elsewhere (Clear).
+  const t = useT();
   const [input, setInput] = useState(search.value);
   useEffect(() => setInput(search.value), [search.value]);
   return (
@@ -157,12 +164,12 @@ function SearchBox({ search, icon, c }: { search: TableFilterSearch; icon: React
         onKeyDown={(e) => {
           if (e.key === "Enter") search.onSearch(input);
         }}
-        placeholder={search.placeholder ?? "Search…"}
+        placeholder={search.placeholder ?? t("table.searchPlaceholder")}
         title={search.title}
-        aria-label="Search"
+        aria-label={t("table.search")}
         className={c.input}
       />
-      <button type="button" onClick={() => search.onSearch(input)} title="Search" aria-label="Search" className={c.chip}>
+      <button type="button" onClick={() => search.onSearch(input)} title={t("table.search")} aria-label={t("table.search")} className={c.chip}>
         {icon}
       </button>
     </div>
@@ -170,14 +177,15 @@ function SearchBox({ search, icon, c }: { search: TableFilterSearch; icon: React
 }
 
 function DateRange({ dates, c }: { dates: TableFilterDates; c: TableFilterClassNames }) {
+  const t = useT();
   return (
     <div className={c.dates}>
       {dates.fields && dates.fields.length > 0 && dates.onField && (
         <select
           value={dates.field}
           onChange={(e) => dates.onField!(e.target.value)}
-          title="Which date the range filters"
-          aria-label="Date to filter"
+          title={t("table.dateFieldTitle")}
+          aria-label={t("table.dateField")}
           className={c.select}
         >
           {dates.fields.map((o) => (
@@ -192,8 +200,8 @@ function DateRange({ dates, c }: { dates: TableFilterDates; c: TableFilterClassN
         value={dates.from}
         max={dates.to || undefined}
         onChange={(e) => dates.onFrom(e.target.value)}
-        title="From (inclusive)"
-        aria-label="From date"
+        title={t("table.fromTitle")}
+        aria-label={t("table.fromDate")}
         className={c.date}
       />
       <span className={c.separator} aria-hidden>
@@ -204,8 +212,8 @@ function DateRange({ dates, c }: { dates: TableFilterDates; c: TableFilterClassN
         value={dates.to}
         min={dates.from || undefined}
         onChange={(e) => dates.onTo(e.target.value)}
-        title="To (inclusive)"
-        aria-label="To date"
+        title={t("table.toTitle")}
+        aria-label={t("table.toDate")}
         className={c.date}
       />
     </div>
@@ -222,6 +230,7 @@ function QuestionPanel<F extends object>({
   clear: ReactNode;
   c: TableFilterClassNames;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
@@ -282,6 +291,7 @@ function QuestionPanel<F extends object>({
   }, [open]);
 
   const on = q.summary !== "";
+  const markLabel = on ? t("table.filtered", { summary: q.summary }) : t("table.filter");
   const set = (key: keyof F, v: unknown) => q.onChange({ ...q.value, [key]: v } as F);
 
   return (
@@ -291,15 +301,15 @@ function QuestionPanel<F extends object>({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        title={on ? `Filtered: ${q.summary}` : "Filter"}
-        aria-label={on ? `Filtered: ${q.summary}` : "Filter"}
+        title={markLabel}
+        aria-label={markLabel}
         className={cx(c.chip, on && c.chipActive)}
       >
         {q.icon ?? <SlidersHorizontal size="1em" aria-hidden />}
         {on && <span className={c.summary}>{q.summary}</span>}
       </button>
       {open && (
-        <div className={c.panel} ref={panel} role="group" aria-label="Filter">
+        <div className={c.panel} ref={panel} role="group" aria-label={t("table.filter")}>
           {q.questions.map((question) => {
             const id = `tf-${String(question.key)}`;
             return question.kind === "toggle" ? (

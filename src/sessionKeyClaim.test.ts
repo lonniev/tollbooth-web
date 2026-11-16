@@ -9,6 +9,7 @@ import {
   sessionKeyEnvContents,
   sessionKeyEnvFilename,
 } from "./sessionKeyClaim.ts";
+import { en } from "./i18n/en.ts";
 
 const NPUB_A = "npub16qarmz80zwag03nhvgz67903glq9qams632834zy4h3ha3klfycqyn35wf";
 const NPUB_B = "npub1sn0wdenkukak0d9dfczze4k2vx40yxj6q9aspp6t30mmgpz44yfs7s8f0w";
@@ -80,11 +81,14 @@ describe("the SessionKeyClaim card", () => {
   });
 
   it("takes a deliberate step before the key is shown or used", () => {
-    assert.match(src, /Claim your session key/);
+    assert.equal(en["sessionKey.claim"], "Claim your session key");
+    assert.match(src, /t\("sessionKey\.claim"/);
     // The key is painted only behind the Reveal toggle, which starts off.
     assert.match(src, /\{showKey && \(/);
     assert.match(src, /const \[showKey, setShowKey\] = useState\(false\)/);
-    assert.match(src, /showKey \? "Conceal the key" : "Reveal the key"/);
+    assert.match(src, /showKey \? t\("sessionKey\.action\.conceal"\) : t\("sessionKey\.action\.reveal"\)/);
+    assert.equal(en["sessionKey.action.conceal"], "Conceal the key");
+    assert.equal(en["sessionKey.action.reveal"], "Reveal the key");
     assert.match(src, /onClick=\{\(\) => setShowKey\(\(v\) => !v\)\}/);
     // getSessionNsec() is rendered in exactly one place: inside that toggle.
     const painted = src.match(/\{getSessionNsec\(\)\}/g) ?? [];
@@ -93,14 +97,15 @@ describe("the SessionKeyClaim card", () => {
   });
 
   it("names every icon action for screen readers and as a tooltip", () => {
-    for (const label of [
-      "Download a .env file",
-      "Save to your password manager",
-      "Send by encrypted DM",
-    ]) {
-      assert.match(src, new RegExp(`label="${label.replace(".", "\\.")}"`));
+    for (const [key, label] of [
+      ["sessionKey.action.download", "Download a .env file"],
+      ["sessionKey.action.passwordManager", "Save to your password manager"],
+      ["sessionKey.action.dm", "Send by encrypted DM"],
+    ] as const) {
+      assert.equal(en[key], label);
+      assert.match(src, new RegExp(`label=\\{t\\("${key.replace(/\./g, "\\.")}"\\)\\}`));
     }
-    assert.match(src, /label=\{copied \? "Copied" : "Copy the key"\}/);
+    assert.match(src, /label=\{copied \? t\("sessionKey\.action\.copied"\) : t\("sessionKey\.action\.copy"\)\}/);
     assert.match(src, /aria-label=\{label\}/);
     assert.match(src, /title=\{label\}/);
     assert.match(src, /focus-visible:ring-2/);

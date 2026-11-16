@@ -23,6 +23,7 @@ import { useCallback, useEffect, useId, useMemo, useState, type ReactNode } from
 import { Bitcoin, Clock, Gift, Hash, Heart, Package, PartyPopper, RefreshCw, Search, Ticket, TrendingUp } from "lucide-react";
 import { listTools } from "../client.ts";
 import { tollboothConfig, toolName } from "../config.ts";
+import { translate } from "../i18n/index.ts";
 import { LIGHTNING_WALLETS_TOOL } from "../lightningWallets.ts";
 import {
   filterSheet,
@@ -38,6 +39,8 @@ import { formatSats } from "../wallet.ts";
 import RefreshButton from "./RefreshButton.tsx";
 import WalletChooser from "./WalletChooser.tsx";
 import { cx } from "./cx.ts";
+import Tx from "./Tx.tsx";
+import { useT } from "./useT.ts";
 
 export interface PriceSheetProps {
   /** The title. Default the site's `appName`; null for none. */
@@ -82,7 +85,7 @@ const OFFER_ICONS: Record<string, typeof Gift> = {
 
 export default function PriceSheet({
   heading,
-  eyebrow = "Price sheet",
+  eyebrow: givenEyebrow,
   model: given,
   schemas: givenSchemas,
   restricted = false,
@@ -100,11 +103,13 @@ export default function PriceSheet({
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [schemas, setSchemas] = useState<ToolSchema[] | null>(givenSchemas ?? null);
+  const t = useT();
+  const eyebrow = givenEyebrow === undefined ? t("price.eyebrow") : givenEyebrow;
 
   const load = useCallback(async () => {
     try {
       const m = await getPricingModel();
-      if (m.status === "error" || m.error) setError(m.error ?? "The pricing model could not be read.");
+      if (m.status === "error" || m.error) setError(m.error ?? translate("price.modelError"));
       else {
         setModel(m);
         setError(null);
@@ -156,7 +161,7 @@ export default function PriceSheet({
           <RefreshButton
             onRefresh={load}
             busy={!sheet && !error}
-            label="Refresh prices"
+            label={t("price.refresh")}
             iconSize={18}
             classNames={{ root: "tb-ps-refresh", spinning: "tb-ps-spin" }}
           />
@@ -187,8 +192,8 @@ export default function PriceSheet({
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Find a tool"
-                aria-label="Find a tool"
+                placeholder={t("price.find")}
+                aria-label={t("price.find")}
               />
             </label>
           )}
@@ -199,8 +204,8 @@ export default function PriceSheet({
                 <li key={band.key} className="tb-ps-band">
                   <Fare price={band.price} />
                   <ul className="tb-ps-tools">
-                    {band.tools.map((t) => (
-                      <ToolCard key={t.id} tool={t} label={label} schema={byName.get(t.fullName)} />
+                    {band.tools.map((tool) => (
+                      <ToolCard key={tool.id} tool={tool} label={label} schema={byName.get(tool.fullName)} />
                     ))}
                   </ul>
                 </li>
@@ -211,16 +216,16 @@ export default function PriceSheet({
           {shown.free.length > 0 && (
             <details className="tb-ps-free" open={freeOpen || query.trim() !== ""}>
               <summary>
-                <span className="tb-ps-free-title">Free</span>
+                <span className="tb-ps-free-title">{t("price.free")}</span>
                 <span className="tb-ps-count">{shown.free.length}</span>
               </summary>
               <ul className="tb-ps-free-list">
-                {shown.free.map((t) => (
-                  <li key={t.id}>
-                    <span className="tb-ps-free-name" title={t.fullName}>
-                      {label(t)}
+                {shown.free.map((tool) => (
+                  <li key={tool.id}>
+                    <span className="tb-ps-free-name" title={tool.fullName}>
+                      {label(tool)}
                     </span>
-                    {t.intent && <span className="tb-ps-free-intent">{t.intent}</span>}
+                    {tool.intent && <span className="tb-ps-free-intent">{tool.intent}</span>}
                   </li>
                 ))}
               </ul>
@@ -228,7 +233,7 @@ export default function PriceSheet({
           )}
 
           {shown.bands.length === 0 && shown.free.length === 0 && (
-            <p className="tb-ps-empty">{query.trim() ? "No tool matches." : "No tools are priced yet."}</p>
+            <p className="tb-ps-empty">{query.trim() ? t("price.noMatch") : t("price.noneYet")}</p>
           )}
         </>
       )}
@@ -239,12 +244,13 @@ export default function PriceSheet({
 }
 
 function CreditLife({ expiry }: { expiry: ExpiryPolicy }) {
+  const t = useT();
   const [glyph, title, line] =
     expiry.state === "days"
-      ? [String(expiry.days), `Credits last ${expiry.days} day${expiry.days === 1 ? "" : "s"}`, `Each top-up expires ${expiry.days} day${expiry.days === 1 ? "" : "s"} after it is bought.`]
+      ? [String(expiry.days), t("price.creditsLast", { count: expiry.days }), t("price.topUpExpires", { count: expiry.days })]
       : expiry.state === "never"
-        ? ["∞", "Credits never expire", "A top-up keeps until it is spent."]
-        : ["∞", "No expiry set", "Credits bought now carry no expiry date."];
+        ? ["∞", t("price.neverTitle"), t("price.neverLine")]
+        : ["∞", t("price.unsetTitle"), t("price.unsetLine")];
   return (
     <div className="tb-ps-fact" data-expiry={expiry.state}>
       <svg className="tb-ps-ring" viewBox="0 0 56 56" aria-hidden>
@@ -263,11 +269,12 @@ function CreditLife({ expiry }: { expiry: ExpiryPolicy }) {
 
 function FareSpan({ sheet }: { sheet: Sheet }) {
   const { span } = sheet;
+  const t = useT();
   const figure = !span ? "0" : span.low === span.high ? formatSats(span.low) : `${formatSats(span.low)}–${formatSats(span.high)}`;
   return (
     <div className="tb-ps-fact">
       <div className="tb-ps-span">
-        <span className="tb-ps-span-n" aria-label={`${figure} sats`}>
+        <span className="tb-ps-span-n" aria-label={t("price.satsLabel", { n: figure })}>
           <Btc />
           {figure}
         </span>
@@ -275,20 +282,21 @@ function FareSpan({ sheet }: { sheet: Sheet }) {
       </div>
       <div>
         <div className="tb-ps-fact-title">
-          {sheet.paidCount} paid · {sheet.free.length} free
+          {t("price.paidFree", { paid: sheet.paidCount, free: sheet.free.length })}
         </div>
-        <div className="tb-ps-fact-line">Fees are paid from your tranche of api_sats.</div>
+        <div className="tb-ps-fact-line">{t("price.feesLine")}</div>
       </div>
     </div>
   );
 }
 
 function Fare({ price }: { price: SheetPrice }) {
+  const t = useT();
   switch (price.kind) {
     case "flat":
       return (
         <div className="tb-ps-fare">
-          <data className="tb-ps-fare-n" value={price.sats} aria-label={`${formatSats(price.sats)} sats`}>
+          <data className="tb-ps-fare-n" value={price.sats} aria-label={t("price.satsLabel", { n: formatSats(price.sats) })}>
             <Btc />
             {formatSats(price.sats)}
           </data>
@@ -298,35 +306,28 @@ function Fare({ price }: { price: SheetPrice }) {
     case "range":
       return (
         <div className="tb-ps-fare">
-          <span className="tb-ps-fare-n" aria-label={`${formatSats(price.from)} to ${formatSats(price.to)} sats`}>
+          <span className="tb-ps-fare-n" aria-label={t("price.rangeLabel", { from: formatSats(price.from), to: formatSats(price.to) })}>
             <Btc />
             {formatSats(price.from)}–{formatSats(price.to)}
           </span>
           <span className="tb-ps-fare-u" aria-hidden>sats</span>
-          <span className="tb-ps-fare-note">by {price.by.map((p) => p.replace(/_/g, " ")).join(", ")}</span>
+          <span className="tb-ps-fare-note">{t("price.by", { params: price.by.map((p) => p.replace(/_/g, " ")).join(", ") })}</span>
         </div>
       );
     case "percent":
       return (
         <div className="tb-ps-fare">
           <span className="tb-ps-fare-n">{price.percent}%</span>
-          {price.of && <span className="tb-ps-fare-u">of {price.of.replace(/_/g, " ")}</span>}
+          {price.of && <span className="tb-ps-fare-u">{t("price.of", { what: price.of.replace(/_/g, " ") })}</span>}
           {(price.min !== undefined || price.max !== undefined) && (
             <span className="tb-ps-fare-note">
-              {price.min !== undefined && (
-                <>
-                  min <Btc />
-                  {formatSats(price.min)}
-                </>
+              {price.min !== undefined && price.max !== undefined ? (
+                <Tx k="price.minMax" vars={{ min: formatSats(price.min), max: formatSats(price.max) }} components={{ btc: <Btc /> }} />
+              ) : price.min !== undefined ? (
+                <Tx k="price.min" vars={{ min: formatSats(price.min) }} components={{ btc: <Btc /> }} />
+              ) : (
+                <Tx k="price.max" vars={{ max: formatSats(price.max!) }} components={{ btc: <Btc /> }} />
               )}
-              {price.min !== undefined && price.max !== undefined && " · "}
-              {price.max !== undefined && (
-                <>
-                  max <Btc />
-                  {formatSats(price.max)}
-                </>
-              )}{" "}
-              sats
             </span>
           )}
         </div>
@@ -349,6 +350,7 @@ function ToolCard({
   schema?: ToolSchema;
 }) {
   const popId = useId();
+  const t = useT();
   return (
     <li
       className="tb-ps-tool"
@@ -365,7 +367,7 @@ function ToolCard({
           return (
             <span key={o.type} className="tb-ps-offer" data-offer={o.type}>
               {Icon && <Icon size={12} aria-hidden />}
-              {o.label}
+              {o.labelKey ? t(o.labelKey) : o.label}
             </span>
           );
         })}
@@ -378,6 +380,7 @@ function ToolCard({
 function CallSyntax({ id, schema }: { id: string; schema: ToolSchema }) {
   const params = toolSignature(schema.inputSchema);
   const described = params.filter((p) => p.description);
+  const t = useT();
   return (
     <div id={id} role="tooltip" className="tb-ps-call">
       <pre className="tb-ps-call-sig">
@@ -389,7 +392,7 @@ function CallSyntax({ id, schema }: { id: string; schema: ToolSchema }) {
             <div key={p.name}>
               <dt>
                 {p.name}
-                {!p.required && <span className="tb-ps-call-opt">optional</span>}
+                {!p.required && <span className="tb-ps-call-opt">{t("price.optional")}</span>}
               </dt>
               <dd>{p.description}</dd>
             </div>

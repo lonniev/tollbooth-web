@@ -9,6 +9,7 @@
  * idempotent and safe to repeat, unlike receive_npub_proof.
  */
 
+import { getLanguage, translate } from "./i18n/index.ts";
 import type { CheckPaymentResult, PatronCoupon, PurchaseCreditsResult } from "./standardTools.ts";
 
 /** One invoice the patron has been handed. */
@@ -121,7 +122,7 @@ export function topUpReducer(state: TopUpState, event: TopUpEvent): TopUpState {
     case "create":
       if (state.phase === "creating" || state.phase === "awaiting") return state;
       return parseSats(event.sats) === null
-        ? { phase: "idle", message: "Choose a whole number of sats above zero." }
+        ? { phase: "idle", message: translate("topUp.chooseAmount") }
         : { phase: "creating", sats: event.sats };
 
     case "created": {
@@ -131,7 +132,7 @@ export function topUpReducer(state: TopUpState, event: TopUpEvent): TopUpState {
         return {
           phase: "failed",
           invoice: null,
-          message: event.result.error ?? "The service did not return an invoice. Try again.",
+          message: event.result.error ?? translate("topUp.noInvoice"),
         };
       }
       return { phase: "awaiting", invoice, checking: false, status: null, checks: 0 };
@@ -153,9 +154,9 @@ export function topUpReducer(state: TopUpState, event: TopUpEvent): TopUpState {
             credited: typeof r.credits_granted === "number" ? r.credits_granted : state.invoice.sats,
           };
         case "expired":
-          return { phase: "failed", invoice: state.invoice, message: "The invoice expired. Make a new one." };
+          return { phase: "failed", invoice: state.invoice, message: translate("topUp.expired") };
         case "invalid":
-          return { phase: "failed", invoice: state.invoice, message: "The payment was invalid." };
+          return { phase: "failed", invoice: state.invoice, message: translate("topUp.invalid") };
         default:
           return {
             ...state,
@@ -185,7 +186,7 @@ export function topUpReducer(state: TopUpState, event: TopUpEvent): TopUpState {
  * so it says so; once it stops, the patron's own check is the way on.
  */
 export function awaitingWords(status: string | null, watching: boolean): string {
-  return status ?? (watching ? "Watching for your payment." : "Paid? Tap Check now.");
+  return status ?? (watching ? translate("topUp.watching") : translate("topUp.paidCheckNow"));
 }
 
 /** Whether a poll should run now: an invoice is out, nothing is in flight, and the budget is not spent. */
@@ -195,7 +196,7 @@ export function shouldPoll(state: TopUpState, maxChecks: number): boolean {
 
 /** Sats as the fleet writes them. Null is unknown, and unknown is a dash, never 0. */
 export function formatSats(n: number | null | undefined): string {
-  return typeof n === "number" && Number.isFinite(n) ? n.toLocaleString("en-US") : "—";
+  return typeof n === "number" && Number.isFinite(n) ? n.toLocaleString(getLanguage()) : "—";
 }
 
 // ── Coupons ────────────────────────────────────────────────────────────────
@@ -204,24 +205,23 @@ export function formatSats(n: number | null | undefined): string {
 export function couponStatusLabel(status: string): string {
   switch (status) {
     case "active":
-      return "Active";
+      return translate("coupon.status.active");
     case "window_closed":
-      return "Expired";
+      return translate("coupon.status.windowClosed");
     case "window_not_started":
-      return "Not yet active";
+      return translate("coupon.status.windowNotStarted");
     case "patron_limit":
-      return "All uses claimed";
+      return translate("coupon.status.patronLimit");
     case "total_limit":
-      return "Fully claimed";
+      return translate("coupon.status.totalLimit");
     default:
       return status;
   }
 }
 
 export function couponUsesText(c: Pick<PatronCoupon, "uses_per_patron" | "uses_remaining">): string {
-  if (c.uses_per_patron == null) return "∞ uses";
-  const n = c.uses_per_patron;
-  return `${c.uses_remaining ?? 0} of ${n} use${n === 1 ? "" : "s"} left`;
+  if (c.uses_per_patron == null) return translate("coupon.usesUnlimited");
+  return translate("coupon.usesLeft", { left: c.uses_remaining ?? 0, count: c.uses_per_patron });
 }
 
 /** Whole days until the window closes, never below zero; null when the date is unreadable. */
@@ -234,12 +234,14 @@ export function couponDaysLeft(validUntil: string, now: number = Date.now()): nu
 export function couponExpiryText(validUntil: string, now: number = Date.now()): string | null {
   const days = couponDaysLeft(validUntil, now);
   if (days === null) return null;
-  return days === 0 ? "expires today" : `expires in ${days} day${days === 1 ? "" : "s"}`;
+  return days === 0 ? translate("coupon.expiresToday") : translate("coupon.expiresIn", { count: days });
 }
 
 /** What a successful redeem_coupon says back. */
 export function redeemedText(r: { name?: string; discount_percent?: number; uses_remaining?: number | null }): string {
-  const left =
-    r.uses_remaining != null ? ` — ${r.uses_remaining} use${r.uses_remaining === 1 ? "" : "s"} left` : "";
-  return `${r.name ?? "Coupon"}: ${r.discount_percent ?? 0}% off${left}.`;
+  const name = r.name ?? translate("coupon.fallbackName");
+  const percent = r.discount_percent ?? 0;
+  return r.uses_remaining != null
+    ? translate("coupon.redeemedLeft", { name, percent, count: r.uses_remaining })
+    : translate("coupon.redeemed", { name, percent });
 }

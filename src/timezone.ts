@@ -11,6 +11,8 @@
  * Lifted from eXcalibur's `lib/timezone.ts` (roastify held a copy).
  */
 
+import { en as account } from "./i18n/en.ts";
+import { languageLocale, type TranslationKey } from "./i18n/index.ts";
 import { propertyChanged } from "./properties.ts";
 import { mirrorProperty } from "./propertyMirrors.ts";
 import { readStored, writeStored, key } from "./storage.ts";
@@ -19,24 +21,28 @@ export type TimezonePref = "auto" | (string & {});
 
 const PREF = "timezone";
 
+type CityKey = Extract<keyof typeof account, `timezone.city.${string}`>;
+
+const city = (value: string, labelKey: CityKey) => ({ value, label: account[labelKey] as string, labelKey });
+
 /** A starter set of major cities, west to east, plus UTC. Values are IANA names. */
-export const TIMEZONE_OPTIONS: readonly { value: string; label: string }[] = [
-  { value: "Pacific/Honolulu", label: "Honolulu" },
-  { value: "America/Anchorage", label: "Anchorage" },
-  { value: "America/Los_Angeles", label: "Los Angeles" },
-  { value: "America/Denver", label: "Denver" },
-  { value: "America/Chicago", label: "Chicago" },
-  { value: "America/New_York", label: "New York" },
-  { value: "America/Sao_Paulo", label: "São Paulo" },
-  { value: "Europe/London", label: "London" },
-  { value: "Europe/Berlin", label: "Berlin" },
-  { value: "Europe/Athens", label: "Athens" },
-  { value: "Asia/Dubai", label: "Dubai" },
-  { value: "Asia/Kolkata", label: "Mumbai" },
-  { value: "Asia/Singapore", label: "Singapore" },
-  { value: "Asia/Tokyo", label: "Tokyo" },
-  { value: "Australia/Sydney", label: "Sydney" },
-  { value: "Pacific/Auckland", label: "Auckland" },
+export const TIMEZONE_OPTIONS: readonly { value: string; label: string; labelKey?: TranslationKey }[] = [
+  city("Pacific/Honolulu", "timezone.city.honolulu"),
+  city("America/Anchorage", "timezone.city.anchorage"),
+  city("America/Los_Angeles", "timezone.city.losAngeles"),
+  city("America/Denver", "timezone.city.denver"),
+  city("America/Chicago", "timezone.city.chicago"),
+  city("America/New_York", "timezone.city.newYork"),
+  city("America/Sao_Paulo", "timezone.city.saoPaulo"),
+  city("Europe/London", "timezone.city.london"),
+  city("Europe/Berlin", "timezone.city.berlin"),
+  city("Europe/Athens", "timezone.city.athens"),
+  city("Asia/Dubai", "timezone.city.dubai"),
+  city("Asia/Kolkata", "timezone.city.mumbai"),
+  city("Asia/Singapore", "timezone.city.singapore"),
+  city("Asia/Tokyo", "timezone.city.tokyo"),
+  city("Australia/Sydney", "timezone.city.sydney"),
+  city("Pacific/Auckland", "timezone.city.auckland"),
   { value: "UTC", label: "UTC" },
 ];
 
@@ -229,7 +235,7 @@ export function formatDateTime(
   timeZone: string,
   opts?: Intl.DateTimeFormatOptions,
 ): string {
-  return render(iso, (d) => d.toLocaleString(undefined, { timeZone, ...opts }));
+  return render(iso, (d) => d.toLocaleString(languageLocale(), { timeZone, ...opts }));
 }
 
 export function formatDate(
@@ -237,7 +243,7 @@ export function formatDate(
   timeZone: string,
   opts?: Intl.DateTimeFormatOptions,
 ): string {
-  return render(iso, (d) => d.toLocaleDateString(undefined, { timeZone, ...opts }));
+  return render(iso, (d) => d.toLocaleDateString(languageLocale(), { timeZone, ...opts }));
 }
 
 export function formatTime(
@@ -245,14 +251,14 @@ export function formatTime(
   timeZone: string,
   opts?: Intl.DateTimeFormatOptions,
 ): string {
-  return render(iso, (d) => d.toLocaleTimeString(undefined, { timeZone, ...opts }));
+  return render(iso, (d) => d.toLocaleTimeString(languageLocale(), { timeZone, ...opts }));
 }
 
 /** An hour of the day (0–23) as the patron's locale writes it: "9 AM", "21". */
 export function formatHourLabel(hour: number, timeZone: string): string {
   // A fixed winter date, so only the hour matters.
   const utc = zonedWallTimeToUtcMs(2024, 1, 15, hour, 0, 0, timeZone);
-  return new Date(utc).toLocaleTimeString(undefined, { timeZone, hour: "numeric" });
+  return new Date(utc).toLocaleTimeString(languageLocale(), { timeZone, hour: "numeric" });
 }
 
 /** The hour (0–23) of an instant in `timeZone`, or null for a bad instant. */

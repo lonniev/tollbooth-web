@@ -12,6 +12,7 @@ import { currentClaim } from "../identity.ts";
 import { asText, getOperatorProperties, setOperatorProperty, type PropertyInfo } from "../properties.ts";
 import { sessionStatus } from "../standardTools.ts";
 import { errBox, iconButton, input } from "./ui.ts";
+import { useT } from "./useT.ts";
 
 export interface OperatorPropertiesClassNames {
   root?: string;
@@ -29,7 +30,9 @@ export interface OperatorPropertiesProps {
   classNames?: OperatorPropertiesClassNames;
 }
 
-export default function OperatorProperties({ heading = "Operator", classNames: c = {} }: OperatorPropertiesProps) {
+export default function OperatorProperties({ heading: headingProp, classNames: c = {} }: OperatorPropertiesProps) {
+  const t = useT();
+  const heading = headingProp === undefined ? t("operator.heading") : headingProp;
   const [props, setProps] = useState<PropertyInfo[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,13 +53,13 @@ export default function OperatorProperties({ heading = "Operator", classNames: c
     setError(null);
     const r = await setOperatorProperty(name, value).catch((e: Error) => ({ success: false, error: e.message }));
     if (!r.success) {
-      setError(r.error ?? "Not kept.");
+      setError(r.error ?? t("operator.notKept"));
       return;
     }
     setProps((ps) => ps?.map((p) => (p.name === name
       ? { ...p, value: "value" in r ? r.value : p.default, is_default: !!("is_default" in r && r.is_default) }
       : p)) ?? null);
-  }, []);
+  }, [t]);
 
   if (!props) return null;
   return (
@@ -71,6 +74,7 @@ export default function OperatorProperties({ heading = "Operator", classNames: c
 }
 
 function Row({ p, c, save }: { p: PropertyInfo; c: OperatorPropertiesClassNames; save: (n: string, v: string) => void }) {
+  const t = useT();
   const id = useId();
   return (
     <div className={c.row ?? "flex items-center gap-2 py-1"}>
@@ -80,7 +84,7 @@ function Row({ p, c, save }: { p: PropertyInfo; c: OperatorPropertiesClassNames;
       <Control id={id} p={p} className={c.control ?? `${input} max-w-xs`} save={(v) => save(p.name, v)} />
       <button
         type="button"
-        aria-label={`${p.label}: default`}
+        aria-label={t("operator.resetLabel", { label: p.label })}
         title={asText(p.default)}
         disabled={p.is_default}
         onClick={() => save(p.name, "")}

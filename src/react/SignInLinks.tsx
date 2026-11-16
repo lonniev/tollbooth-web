@@ -10,7 +10,8 @@
 
 import type { ReactNode } from "react";
 import { cx } from "./cx.ts";
-import { SIGN_IN_LINKS, SIGN_IN_LINKS_CREDIT, type SignInLink } from "./signInTools.ts";
+import { SIGN_IN_LINKS, type SignInLink } from "./signInTools.ts";
+import { useT } from "./useT.ts";
 
 export interface SignInLinksClassNames {
   root?: string;
@@ -39,12 +40,14 @@ export interface SignInLinksProps {
 
 export default function SignInLinks({
   links = SIGN_IN_LINKS,
-  lead = "New to Nostr? These two are all it takes.",
+  lead: leadProp,
   credit = true,
   classNames: c = {},
 }: SignInLinksProps) {
+  const t = useT();
+  const lead = leadProp === undefined ? t("signin.links.lead") : leadProp;
   return (
-    <nav aria-label="Tools for signing in" className={c.root} data-tour="tb.gate.links">
+    <nav aria-label={t("signin.links.label")} className={c.root} data-tour="tb.gate.links">
       {lead && <p className={c.lead}>{lead}</p>}
       <ul className={c.list}>
         {links.map((l) => (
@@ -53,13 +56,13 @@ export default function SignInLinks({
               {l.logo && <img src={l.logo} alt="" width={40} height={40} className={c.logo} />}
               <span className={c.text}>
                 <span className={c.name}>{l.name}</span>
-                <span className={c.line}>{l.line}</span>
+                <span className={c.line}>{l.lineKey ? t(l.lineKey) : l.line}</span>
               </span>
             </a>
           </li>
         ))}
       </ul>
-      {credit && <p className={c.credit}>{SIGN_IN_LINKS_CREDIT}</p>}
+      {credit && <p className={c.credit}>{t("signin.links.credit")}</p>}
     </nav>
   );
 }

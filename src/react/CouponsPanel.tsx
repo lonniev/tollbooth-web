@@ -5,16 +5,15 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { forgetCoupon, listMyCoupons, redeemCoupon, type PatronCoupon } from "../standardTools.ts";
+import { translate } from "../i18n/index.ts";
 import { couponExpiryText, couponStatusLabel, couponUsesText, redeemedText } from "../wallet.ts";
-
-const DEFAULT_INTRO =
-  "Redeem an operator's code once. The discount applies on its own to later paid calls until its uses or its window run out.";
-const DEFAULT_EMPTY = "No coupons yet. Paste a code above to claim its discount.";
+import Tx from "./Tx.tsx";
+import { useT } from "./useT.ts";
 
 function confirmForget(): boolean {
   return (
     typeof window === "undefined" ||
-    window.confirm("Remove this coupon from your list? You can redeem the code again while its window allows.")
+    window.confirm(translate("coupon.confirmForget"))
   );
 }
 
@@ -25,6 +24,7 @@ export default function CouponsPanel() {
   const [code, setCode] = useState("");
   const [redeeming, setRedeeming] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const t = useT();
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -56,7 +56,7 @@ export default function CouponsPanel() {
         setCode("");
         void refresh();
       } else {
-        setMsg({ ok: false, text: r.error ?? "That code could not be redeemed." });
+        setMsg({ ok: false, text: r.error ?? t("coupon.notRedeemed") });
       }
     } catch (e) {
       setMsg({ ok: false, text: (e as Error).message });
@@ -78,8 +78,8 @@ export default function CouponsPanel() {
 
   return (
     <section className="tb-wallet-section tb-wallet-coupons" data-tour="tb.account.coupons">
-      <h2 className="tb-wallet-title">My coupons</h2>
-      <p className="tb-wallet-note">{DEFAULT_INTRO}</p>
+      <h2 className="tb-wallet-title">{t("coupon.heading")}</h2>
+      <p className="tb-wallet-note">{t("coupon.intro")}</p>
 
       <div className="tb-wallet-row">
         <input
@@ -89,8 +89,8 @@ export default function CouponsPanel() {
           onKeyDown={(e) => {
             if (e.key === "Enter") void redeem();
           }}
-          placeholder="Coupon code"
-          aria-label="Coupon code"
+          placeholder={t("coupon.codeLabel")}
+          aria-label={t("coupon.codeLabel")}
           autoCapitalize="characters"
           autoCorrect="off"
           spellCheck={false}
@@ -103,7 +103,7 @@ export default function CouponsPanel() {
           disabled={redeeming || !code.trim()}
           className="tb-wallet-action tb-wallet-primary"
         >
-          {redeeming ? "Redeeming…" : "Redeem"}
+          {redeeming ? t("coupon.redeeming") : t("coupon.redeem")}
         </button>
       </div>
 
@@ -114,11 +114,11 @@ export default function CouponsPanel() {
       )}
 
       {loading ? (
-        <p className="tb-wallet-note">Loading…</p>
+        <p className="tb-wallet-note">{t("coupon.loading")}</p>
       ) : loadError ? (
         <p className="tb-wallet-error">{loadError}</p>
       ) : coupons.length === 0 ? (
-        <p className="tb-wallet-note">{DEFAULT_EMPTY}</p>
+        <p className="tb-wallet-note">{t("coupon.empty")}</p>
       ) : (
         <ul className="tb-wallet-list">
           {coupons.map((coupon) => (
@@ -133,10 +133,11 @@ export default function CouponsPanel() {
 function CouponRow({ coupon, onForget }: { coupon: PatronCoupon; onForget: () => void }) {
   const active = coupon.status === "active";
   const expiry = active ? couponExpiryText(coupon.valid_until) : null;
+  const t = useT();
   return (
     <li className="tb-wallet-coupon">
       <div>
-        <b>{coupon.name}</b> {coupon.discount_percent}% off
+        <Tx k="coupon.rowHead" vars={{ name: coupon.name, percent: coupon.discount_percent }} components={{ b: <b /> }} />
         <div className="tb-wallet-note">
           <span className={active ? "tb-wallet-ok" : undefined}>{couponStatusLabel(coupon.status)}</span>
           {" · "}
@@ -147,10 +148,10 @@ function CouponRow({ coupon, onForget }: { coupon: PatronCoupon; onForget: () =>
       <button
         type="button"
         onClick={onForget}
-        title="Remove from your list (the code can be redeemed again while its window allows)"
+        title={t("coupon.removeTitle")}
         className="tb-wallet-action"
       >
-        Remove
+        {t("coupon.remove")}
       </button>
     </li>
   );

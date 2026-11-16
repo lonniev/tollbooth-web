@@ -8,6 +8,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Camera, ChevronDown, Loader2, X } from "lucide-react";
 import { avatarFor, isAvatarUrl, setStoredAvatar, shortNpub } from "../avatar.ts";
 import { tollboothConfig } from "../config.ts";
+import type { TranslationKey } from "../i18n/index.ts";
 import { canSignProfile, fetchProfile, publishProfile } from "../nostrProfile.ts";
 import {
   collapsedDisplayName,
@@ -20,13 +21,20 @@ import type { Kind0 } from "../standardTools.ts";
 import Avatar from "./Avatar.tsx";
 import AvatarPicker from "./AvatarPicker.tsx";
 import { card, input, muted } from "./ui.ts";
+import { useT } from "./useT.ts";
 
-const FIELDS: { key: keyof Kind0; label: string; placeholder: string }[] = [
-  { key: "display_name", label: "Display name", placeholder: "Satoshi" },
-  { key: "lud16", label: "Lightning address (lud16)", placeholder: "you@walletofsatoshi.com" },
-  { key: "nip05", label: "NIP-05", placeholder: "name@domain.com" },
-  { key: "website", label: "Website", placeholder: "https://…" },
-  { key: "about", label: "About", placeholder: "A short bio…" },
+const FIELDS: {
+  key: keyof Kind0;
+  label?: string;
+  labelKey?: TranslationKey;
+  placeholder?: string;
+  placeholderKey?: TranslationKey;
+}[] = [
+  { key: "display_name", labelKey: "profile.field.displayName", placeholder: "Satoshi" },
+  { key: "lud16", labelKey: "profile.field.lightningAddress", placeholderKey: "profile.placeholder.lightningAddress" },
+  { key: "nip05", label: "NIP-05", placeholderKey: "profile.placeholder.nip05" },
+  { key: "website", labelKey: "profile.field.website", placeholder: "https://…" },
+  { key: "about", labelKey: "profile.field.about", placeholderKey: "profile.placeholder.about" },
 ];
 
 export default function NostrProfilePanel({
@@ -37,6 +45,7 @@ export default function NostrProfilePanel({
   /** After relays accept the kind-0 — for a site that mirrors the name or avatar elsewhere. */
   onPublished?: (profile: Kind0) => void;
 }) {
+  const t = useT();
   const { appName } = tollboothConfig();
   const [profile, setProfile] = useState<Kind0>({});
   const [loading, setLoading] = useState(true);
@@ -117,13 +126,13 @@ export default function NostrProfilePanel({
         // kind-0 picture is a URL; a glyph stays local to this site.
         picture: glyph ? "" : picture,
       });
-      const tail = glyph ? " (Emoji avatar kept local — a Nostr picture must be a URL.)" : "";
+      const tail = glyph ? ` ${t("profile.emojiKeptLocal")}` : "";
       if (r.error) setMsg({ ok: false, text: r.error });
       else if ((r.ok ?? 0) > 0) {
-        setMsg({ ok: true, text: `Published to ${r.ok}/${r.total} relays.${tail}` });
+        setMsg({ ok: true, text: `${t("profile.published", { ok: String(r.ok), total: String(r.total) })}${tail}` });
         onPublished?.(profile);
       }
-      else setMsg({ ok: false, text: `No relay accepted the event.${tail}` });
+      else setMsg({ ok: false, text: `${t("profile.noRelay")}${tail}` });
     } catch (e) {
       setMsg({ ok: false, text: (e as Error).message });
     } finally {
@@ -142,7 +151,7 @@ export default function NostrProfilePanel({
               setExpanded(true);
               setShowPicker((v) => !v);
             }}
-            aria-label={showPicker ? "Done changing avatar" : "Change avatar"}
+            aria-label={showPicker ? t("profile.avatarDone") : t("profile.avatarChange")}
             aria-expanded={showPicker}
             className="absolute -bottom-0.5 -right-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full border border-[var(--tb-line)] bg-[var(--tb-surface)] shadow-sm"
           >
@@ -154,11 +163,11 @@ export default function NostrProfilePanel({
           <div className="flex items-center gap-2 flex-wrap">
             <div className="text-sm font-medium truncate">{collapsedDisplayName(profile.display_name ?? "")}</div>
             {mode === "how-to-set" && (
-              <span className={`text-[0.6875rem] px-1.5 py-0.5 rounded-md bg-[var(--tb-surface-2)] ${muted}`}>Read-only</span>
+              <span className={`text-[0.6875rem] px-1.5 py-0.5 rounded-md bg-[var(--tb-surface-2)] ${muted}`}>{t("profile.readOnly")}</span>
             )}
           </div>
-          <button type="button" onClick={copyNpub} title="Copy full npub" className={`mt-0.5 font-mono text-xs ${muted}`}>
-            {copied ? "Copied" : shortNpub(npub)}
+          <button type="button" onClick={copyNpub} title={t("profile.copyNpub")} className={`mt-0.5 font-mono text-xs ${muted}`}>
+            {copied ? t("profile.copied") : shortNpub(npub)}
           </button>
         </div>
 
@@ -169,7 +178,7 @@ export default function NostrProfilePanel({
           aria-controls={fieldsId}
           className="flex-none inline-flex items-center gap-1 rounded-full border border-[var(--tb-line)] px-2.5 py-1.5 text-xs"
         >
-          {expanded ? "Hide" : "Edit"}
+          {expanded ? t("profile.hide") : t("profile.edit")}
           <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? "rotate-180" : ""}`} aria-hidden="true" />
         </button>
       </div>
@@ -182,20 +191,20 @@ export default function NostrProfilePanel({
 
       {loading ? (
         <div className={`flex items-center gap-1.5 text-xs py-2 mt-3 ${muted}`}>
-          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Reading from relays…
+          <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("profile.reading")}
         </div>
       ) : (
         <div id={fieldsId} hidden={!expanded} className={expanded ? "mt-3 grid gap-x-3 gap-y-2 sm:grid-cols-2" : undefined}>
           {FIELDS.map((f) => (
             <label key={f.key} className={`block text-xs ${muted} ${f.key === "about" ? "sm:col-span-2" : ""}`}>
-              {f.label}
+              {f.labelKey ? t(f.labelKey) : f.label}
               {f.key === "about" ? (
                 <textarea
                   value={profile[f.key] ?? ""}
                   onChange={(e) => set(f.key, e.target.value)}
                   rows={2}
                   className={`mt-1 ${input} font-sans resize-none`}
-                  placeholder={f.placeholder}
+                  placeholder={f.placeholderKey ? t(f.placeholderKey) : f.placeholder}
                   readOnly={mode === "how-to-set"}
                 />
               ) : (
@@ -203,7 +212,7 @@ export default function NostrProfilePanel({
                   value={profile[f.key] ?? ""}
                   onChange={(e) => set(f.key, e.target.value)}
                   className={`mt-1 ${input} font-sans`}
-                  placeholder={f.placeholder}
+                  placeholder={f.placeholderKey ? t(f.placeholderKey) : f.placeholder}
                   readOnly={mode === "how-to-set"}
                 />
               )}
@@ -239,7 +248,7 @@ export default function NostrProfilePanel({
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div id={explainerId} className="text-sm font-medium">{explainer.title}</div>
-                  <button type="button" onClick={() => setShowHowTo(false)} aria-label="Close" className={muted}>
+                  <button type="button" onClick={() => setShowHowTo(false)} aria-label={t("profile.close")} className={muted}>
                     <X className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
                 </div>

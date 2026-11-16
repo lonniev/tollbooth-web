@@ -1,8 +1,8 @@
 /**
  * A sentence with elements inside it, kept whole for the translator:
  *
- *     "signin.paste": "Paste your <b>npub</b> here, {{name}}."
- *     <Tx k="signin.paste" vars={{ name }} components={{ b: <strong /> }} />
+ *     English:  Paste your <b>npub</b> here, {{name}}.
+ *     Drawn by: <Tx k={thatKey} vars={{ name }} components={{ b: <strong /> }} />
  *
  * Each `<tag>` in the string is drawn with `components.tag`, so a language may
  * move the element to where its grammar wants it. Package-internal.
@@ -21,5 +21,5 @@ export interface TxProps {
 
 export default function Tx({ k, vars, components }: TxProps) {
   useT(); // re-render when the language changes
-  return <Trans i18n={i18n} ns={TOLLBOOTH_NAMESPACE} i18nKey={k} values={vars} components={components} />;
+  return <Trans i18n={i18n} ns={TOLLBOOTH_NAMESPACE} i18nKey={k as string} values={vars} components={components} />;
 }

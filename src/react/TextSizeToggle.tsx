@@ -6,9 +6,18 @@
 
 import { useState } from "react";
 import { tollboothConfig } from "../config.ts";
+import type { TranslationKey } from "../i18n/index.ts";
 import {
-  TEXT_SCALE, TEXT_SIZE_NAMES, TEXT_SIZES, applyTextSize, readTextSize, writeTextSize, type TextSize,
+  TEXT_SCALE, TEXT_SIZES, applyTextSize, readTextSize, writeTextSize, type TextSize,
 } from "../textSize.ts";
+import { useT } from "./useT.ts";
+
+const NAME_KEYS: Record<TextSize, TranslationKey> = {
+  standard: "textSize.standard",
+  large: "textSize.large",
+  larger: "textSize.larger",
+  largest: "textSize.largest",
+};
 
 export interface TextSizeToggleClassNames {
   root?: string;
@@ -18,6 +27,7 @@ export interface TextSizeToggleClassNames {
 }
 
 export default function TextSizeToggle({ classNames: c = {} }: { classNames?: TextSizeToggleClassNames }) {
+  const t = useT();
   const prefix = tollboothConfig().storagePrefix;
   const [size, setSize] = useState<TextSize>(() => readTextSize(prefix));
   const choose = (next: TextSize) => {
@@ -26,12 +36,12 @@ export default function TextSizeToggle({ classNames: c = {} }: { classNames?: Te
     setSize(next);
   };
   return (
-    <div role="radiogroup" aria-label="Text size" className={c.root}>
+    <div role="radiogroup" aria-label={t("textSize.label")} className={c.root}>
       {TEXT_SIZES.map((s) => {
         const on = s === size;
         return (
-          <button key={s} type="button" role="radio" aria-checked={on} aria-label={TEXT_SIZE_NAMES[s]}
-            title={TEXT_SIZE_NAMES[s]} onClick={() => choose(s)}
+          <button key={s} type="button" role="radio" aria-checked={on} aria-label={t(NAME_KEYS[s])}
+            title={t(NAME_KEYS[s])} onClick={() => choose(s)}
             className={[c.chip, on && c.active].filter(Boolean).join(" ") || undefined}>
             <span aria-hidden style={{ fontSize: `${0.8 * TEXT_SCALE[s]}em`, fontWeight: 600 }}>A</span>
           </button>

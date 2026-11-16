@@ -9,6 +9,7 @@
  */
 
 import { callTool } from "./client.ts";
+import { translate } from "./i18n/index.ts";
 
 export const LIGHTNING_WALLETS_TOOL = "oracle_lightning_wallets";
 
@@ -114,5 +115,9 @@ export function cashWalletDoors(list: LightningWallets | null, store: Store): Ca
 
 /** The custody label's words. */
 export function custodyWords(c: Custody): string {
-  return c === "custodial" ? "Holds your sats for you" : c === "self-custodial" ? "Your keys, on your phone" : "Either way";
+  return c === "custodial"
+    ? translate("walletChooser.custody.custodial")
+    : c === "self-custodial"
+      ? translate("walletChooser.custody.selfCustodial")
+      : translate("walletChooser.custody.either");
 }

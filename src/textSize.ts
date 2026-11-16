@@ -5,6 +5,8 @@
  * already the reader's size; the Appearance section on the Profile changes it.
  */
 
+import { en as account } from "./i18n/en.ts";
+
 export type TextSize = "standard" | "large" | "larger" | "largest";
 
 export const TEXT_SIZES: readonly TextSize[] = ["standard", "large", "larger", "largest"];
@@ -13,10 +15,10 @@ export const TEXT_SIZES: readonly TextSize[] = ["standard", "large", "larger", "
 export const TEXT_SCALE: Record<TextSize, number> = { standard: 1, large: 1.125, larger: 1.25, largest: 1.5 };
 
 export const TEXT_SIZE_NAMES: Record<TextSize, string> = {
-  standard: "Standard text",
-  large: "Large text",
-  larger: "Larger text",
-  largest: "Largest text",
+  standard: account["textSize.standard"],
+  large: account["textSize.large"],
+  larger: account["textSize.larger"],
+  largest: account["textSize.largest"],
 };
 
 export function isTextSize(v: unknown): v is TextSize {

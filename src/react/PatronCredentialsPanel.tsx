@@ -20,7 +20,9 @@ import {
 } from "../standardTools.ts";
 import { cx } from "./cx.ts";
 import { afterReceive, afterRequest, type CredentialPhase } from "./patronCredentialsFlow.ts";
+import Tx from "./Tx.tsx";
 import { errBox, muted } from "./ui.ts";
+import { useT } from "./useT.ts";
 
 export interface PatronCredentialsPanelClassNames {
   root?: string;
@@ -61,6 +63,7 @@ export default function PatronCredentialsPanel({
   onConnected,
   classNames: c = {},
 }: PatronCredentialsPanelProps) {
+  const t = useT();
   const [status, setStatus] = useState<PatronOnboardingResult | null>(null);
   const [checking, setChecking] = useState(true);
   const [phase, setPhase] = useState<CredentialPhase>({ kind: "idle" });
@@ -124,12 +127,12 @@ export default function PatronCredentialsPanel({
         {connected && (
           <span className={cx("ml-auto inline-flex items-center gap-1 text-xs text-[var(--tb-ok)]", c.connected)}>
             <CheckCircle2 size={16} aria-hidden />
-            Connected
+            {t("credentials.connected")}
           </span>
         )}
       </header>
 
-      {checking && <p className={cx("text-sm", muted, c.note)}>Checking…</p>}
+      {checking && <p className={cx("text-sm", muted, c.note)}>{t("credentials.checking")}</p>}
 
       {!checking && connected && <p className={cx("text-sm", muted, c.text)}>{connectedText}</p>}
 
@@ -139,7 +142,7 @@ export default function PatronCredentialsPanel({
           <div className={cx("flex flex-wrap items-center gap-2", c.actions)}>
             <button type="button" onClick={start} disabled={busy} className={cx("inline-flex items-center gap-1.5", c.primary)}>
               <Send size={16} aria-hidden />
-              Connect
+              {t("credentials.connect")}
             </button>
             {keySource && (
               <a
@@ -160,12 +163,15 @@ export default function PatronCredentialsPanel({
       {phase.kind === "sent" && (
         <div className="space-y-3">
           <p className={cx("text-sm", muted, c.text)}>
-            Check your Nostr messages for one marked <span className={cx("font-mono", c.phrase)}>{phase.phrase}</span> and
-            reply with your keys.
+            <Tx
+              k="credentials.checkMessages"
+              vars={{ phrase: phase.phrase }}
+              components={{ phrase: <span className={cx("font-mono", c.phrase)} /> }}
+            />
           </p>
           {phase.relay && (
             <p className={cx("text-xs", muted, c.note)}>
-              Reply on <span className="font-mono">{phase.relay}</span>: replies elsewhere are missed.
+              <Tx k="credentials.replyOn" vars={{ relay: phase.relay }} components={{ relay: <span className="font-mono" /> }} />
             </p>
           )}
           <button
@@ -175,7 +181,7 @@ export default function PatronCredentialsPanel({
             className={cx("inline-flex items-center gap-1.5", c.chip)}
           >
             <Inbox size={16} aria-hidden />
-            {busy ? "Looking…" : "I replied"}
+            {busy ? t("credentials.looking") : t("credentials.iReplied")}
           </button>
         </div>
       )}

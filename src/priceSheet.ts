@@ -8,6 +8,9 @@
  * percent fare names what it is a percent of, and min/max cost clamp both.
  */
 
+import { en as english } from "./i18n/en.ts";
+import { translate } from "./i18n/index.ts";
+import type { TranslationKey } from "./i18n/types.ts";
 import type { PricingModelResult, ToolPrice } from "./standardTools.ts";
 
 /** How long a tranche of api_sats lasts — or that the operator has not said. */
@@ -24,6 +27,8 @@ export type SheetPrice =
 export interface SheetOffer {
   type: string;
   label: string;
+  /** The label's key, so a page can show it in the reader's language. */
+  labelKey?: TranslationKey;
 }
 
 export interface SheetTool {
@@ -69,15 +74,28 @@ export interface PriceSheetOptions {
 
 /** The patron-facing name of each constraint a patron can meet, per Pricing Studio. */
 export const OFFER_LABELS: Readonly<Record<string, string>> = {
-  free_trial: "Free trial",
-  loyalty_discount: "Loyalty discount",
-  bulk_bonus: "Bulk bonus",
-  happy_hour: "Happy hour",
-  surge_pricing: "Surge pricing",
-  temporal_window: "Limited time",
-  finite_supply: "Limited supply",
-  periodic_refresh: "Periodic allowance",
-  coupon: "Coupon",
+  free_trial: english["price.offer.freeTrial"],
+  loyalty_discount: english["price.offer.loyaltyDiscount"],
+  bulk_bonus: english["price.offer.bulkBonus"],
+  happy_hour: english["price.offer.happyHour"],
+  surge_pricing: english["price.offer.surgePricing"],
+  temporal_window: english["price.offer.temporalWindow"],
+  finite_supply: english["price.offer.finiteSupply"],
+  periodic_refresh: english["price.offer.periodicRefresh"],
+  coupon: english["price.offer.coupon"],
+};
+
+/** The key of each offer's label, for the reader's language. */
+export const OFFER_LABEL_KEYS: Readonly<Record<string, TranslationKey>> = {
+  free_trial: "price.offer.freeTrial",
+  loyalty_discount: "price.offer.loyaltyDiscount",
+  bulk_bonus: "price.offer.bulkBonus",
+  happy_hour: "price.offer.happyHour",
+  surge_pricing: "price.offer.surgePricing",
+  temporal_window: "price.offer.temporalWindow",
+  finite_supply: "price.offer.finiteSupply",
+  periodic_refresh: "price.offer.periodicRefresh",
+  coupon: "price.offer.coupon",
 };
 
 export function expiryPolicy(model: PricingModelResult): ExpiryPolicy {
@@ -143,10 +161,10 @@ function offers(t: ToolPrice): SheetOffer[] {
   for (const step of t.chain ?? []) {
     // A step aimed at named patrons is theirs, not a standing offer.
     if (step.patron_npubs && step.patron_npubs.length > 0) continue;
-    const label = OFFER_LABELS[step.type];
-    if (!label || seen.has(step.type)) continue;
+    const labelKey = OFFER_LABEL_KEYS[step.type];
+    if (!labelKey || seen.has(step.type)) continue;
     seen.add(step.type);
-    out.push({ type: step.type, label });
+    out.push({ type: step.type, label: translate(labelKey), labelKey });
   }
   return out;
 }

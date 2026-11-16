@@ -14,6 +14,7 @@
  * incomplete but not fatal), blocked (stopping work now).
  */
 
+import { languageLocale, translate } from "./i18n/index.ts";
 import type {
   CheckBalanceResult,
   OperatorOnboardingStatus,
@@ -63,34 +64,34 @@ export function worstState(rows: readonly StatusRow[]): StatusLevel {
 
 /** "3d", "5h", "12m", "now". */
 export function durationText(sec: number): string {
-  if (sec <= 0) return "now";
+  if (sec <= 0) return translate("funding.duration.now");
   const h = Math.floor(sec / 3600);
-  if (h >= 48) return `${Math.floor(h / 24)}d`;
-  if (h >= 1) return `${h}h`;
-  return `${Math.max(1, Math.floor(sec / 60))}m`;
+  if (h >= 48) return translate("funding.duration.days", { n: Math.floor(h / 24) });
+  if (h >= 1) return translate("funding.duration.hours", { n: h });
+  return translate("funding.duration.minutes", { n: Math.max(1, Math.floor(sec / 60)) });
 }
 
 function row(id: string, dependency: string, state: StatusLevel, detail: string, checked_at: string): StatusRow {
   return { id, dependency, state, detail, checked_at };
 }
 
-function sats(n: number): string {
-  return `${n.toLocaleString()} sats`;
+function num(n: number): string {
+  return n.toLocaleString(languageLocale());
 }
 
 // ── Patron ──────────────────────────────────────────────────────────────────
 
 /** The sign-in proof: a lapsed one drops the patron mid-session. */
 export function composeProofRow(proof: ProofKind, checkedAt: string): StatusRow {
-  const r = (state: StatusLevel, detail: string) => row("npub-proof", "Sign-in proof", state, detail, checkedAt);
-  if (proof.kind === "session_nsec") return r("ok", "This tab's session key signs a fresh proof on every call — no expiry.");
-  if (proof.kind === "none") return r("blocked", "No proof on hand — sign in again.");
-  if (proof.status === "lapsed") return r("blocked", "Proof has expired — sign in again to resume paid calls.");
-  if (proof.status === "not_held") return r("blocked", "The service no longer holds your proof — sign in again.");
-  if (proof.status === "unknown") return r("warning", "Could not read the proof's status — the next paid call may ask you to sign in again.");
+  const r = (state: StatusLevel, detail: string) => row("npub-proof", translate("funding.proof.name"), state, detail, checkedAt);
+  if (proof.kind === "session_nsec") return r("ok", translate("funding.proof.sessionKey"));
+  if (proof.kind === "none") return r("blocked", translate("funding.proof.none"));
+  if (proof.status === "lapsed") return r("blocked", translate("funding.proof.lapsed"));
+  if (proof.status === "not_held") return r("blocked", translate("funding.proof.notHeld"));
+  if (proof.status === "unknown") return r("warning", translate("funding.proof.unknown"));
   const sec = proof.expiresInSec;
-  if (sec != null && sec * 1000 < WARNING_WITHIN_MS) return r("warning", `Proof valid — expires in about ${durationText(sec)}.`);
-  return r("ok", sec != null && sec > 0 ? `Proof valid — expires in about ${durationText(sec)}.` : "Proof valid.");
+  if (sec != null && sec * 1000 < WARNING_WITHIN_MS) return r("warning", translate("funding.proof.expiresIn", { when: durationText(sec) }));
+  return r("ok", sec != null && sec > 0 ? translate("funding.proof.expiresIn", { when: durationText(sec) }) : translate("funding.proof.valid"));
 }
 
 /** The patron's balance and the expiry of its tranches — unused credits evaporate. */
@@ -100,28 +101,33 @@ export function composeCreditsRow(
   thresholds: BalanceThresholds = {},
   nowMs: number = Date.now(),
 ): StatusRow {
-  const r = (state: StatusLevel, detail: string) => row("credits", "Credit balance", state, detail, checkedAt);
-  if (bal.vault_unavailable) return r("warning", bal.warning || "The ledger is unavailable — the balance may be stale. Retry shortly.");
+  const r = (state: StatusLevel, detail: string) => row("credits", translate("funding.credits.name"), state, detail, checkedAt);
+  if (bal.vault_unavailable) return r("warning", bal.warning || translate("funding.credits.ledgerUnavailable"));
   if (bal.error) return r("warning", bal.error);
 
   const { low = 0, empty = 0 } = thresholds;
   const balance = bal.balance_api_sats ?? 0;
-  if (balance <= empty) return r("blocked", `${balance > 0 ? `Only ${sats(balance)} left` : "Balance is empty"} — top up before paid calls will succeed.`);
+  if (balance <= empty) return r("blocked", balance > 0 ? translate("funding.credits.onlyLeft", { n: num(balance) }) : translate("funding.credits.empty"));
 
   const next = Date.parse(bal.next_expiration_iso ?? "");
   const expiresInMs = Number.isNaN(next) ? null : next - nowMs;
-  if (expiresInMs != null && expiresInMs <= 0) return r("warning", `${sats(balance)} on hand — a tranche is at or past expiry.`);
+  if (expiresInMs != null && expiresInMs <= 0) return r("warning", translate("funding.credits.pastExpiry", { n: num(balance) }));
 
   const expiring = bal.expiring_within_24h_sats ?? 0;
   if ((expiresInMs != null && expiresInMs < WARNING_WITHIN_MS) || expiring > 0) {
-    const when =
-      expiresInMs != null ? `next expiry in about ${durationText(Math.floor(expiresInMs / 1000))}` : "tranches expire within 24h";
-    const howMuch = expiring > 0 ? `${sats(expiring)} expiring; ` : "";
-    return r("warning", `${sats(balance)} on hand — ${howMuch}${when}. Unused credits evaporate.`);
+    const n = num(balance);
+    if (expiresInMs == null) return r("warning", translate("funding.credits.expiringWithin24h", { n, expiring: num(expiring) }));
+    const when = durationText(Math.floor(expiresInMs / 1000));
+    return r(
+      "warning",
+      expiring > 0
+        ? translate("funding.credits.expiringNextExpiry", { n, expiring: num(expiring), when })
+        : translate("funding.credits.nextExpiry", { n, when }),
+    );
   }
-  if (balance <= low) return r("warning", `${sats(balance)} on hand — running low.`);
+  if (balance <= low) return r("warning", translate("funding.credits.low", { n: num(balance) }));
   const tranches = bal.active_tranches ?? 0;
-  return r("ok", `${sats(balance)} · ${tranches} active tranche${tranches === 1 ? "" : "s"}.`);
+  return r("ok", translate("funding.credits.ok", { n: num(balance), count: tranches }));
 }
 
 // ── Operator ────────────────────────────────────────────────────────────────
@@ -137,15 +143,15 @@ export function isOperator(npub: string, status: Pick<SessionStatusResult, "oper
 
 /** The credentials the operator still has to deliver by Secure Courier. */
 export function composeOnboardingRow(onb: OperatorOnboardingStatus, checkedAt: string): StatusRow {
-  const r = (state: StatusLevel, detail: string) => row("credentials", "Operator credentials", state, detail, checkedAt);
+  const r = (state: StatusLevel, detail: string) => row("credentials", translate("funding.credentials.name"), state, detail, checkedAt);
   if (onb.vault_situation) return r("warning", onb.vault_situation);
   if (onb.error) return r("warning", onb.error);
   const missing = (onb.missing ?? []).map((m) => m.field);
-  if (missing.length) return r("blocked", `Missing via Secure Courier: ${missing.join(", ")}.`);
+  if (missing.length) return r("blocked", translate("funding.credentials.missing", { fields: missing.join(", ") }));
   const optional = (onb.optional_missing ?? []).map((m) => m.field);
-  if (optional.length) return r("warning", `Optional, not delivered: ${optional.join(", ")}.`);
-  if (onb.ready) return r("ok", "Every required credential is delivered.");
-  return r("warning", onb.summary || "Couldn't tell which credentials are delivered.");
+  if (optional.length) return r("warning", translate("funding.credentials.optional", { fields: optional.join(", ") }));
+  if (onb.ready) return r("ok", translate("funding.credentials.ready"));
+  return r("warning", onb.summary || translate("funding.credentials.unknown"));
 }
 
 /** The operator's balance at its Authority — what certifies patron top-ups. */
@@ -154,14 +160,14 @@ export function composeAuthorityRow(
   checkedAt: string,
   thresholds: BalanceThresholds = {},
 ): StatusRow {
-  const r = (state: StatusLevel, detail: string) => row("authority-balance", "Authority balance", state, detail, checkedAt);
-  if (bal.success === false || bal.error) return r("warning", bal.error || "Authority balance check failed.");
+  const r = (state: StatusLevel, detail: string) => row("authority-balance", translate("funding.authority.name"), state, detail, checkedAt);
+  if (bal.success === false || bal.error) return r("warning", bal.error || translate("funding.authority.failed"));
   const balance = bal.balance_api_sats;
-  if (balance == null) return r("warning", "The Authority did not return a balance.");
+  if (balance == null) return r("warning", translate("funding.authority.noBalance"));
   const { low = 0, empty = 0 } = thresholds;
-  if (balance <= empty) return r("blocked", "Tax balance is empty — patron top-ups cannot be certified until you fund the Authority.");
-  if (balance <= low) return r("warning", `${sats(balance)} left to certify patron purchases — running low.`);
-  return r("ok", `${sats(balance)} available to certify patron purchases.`);
+  if (balance <= empty) return r("blocked", translate("funding.authority.empty"));
+  if (balance <= low) return r("warning", translate("funding.authority.low", { n: num(balance) }));
+  return r("ok", translate("funding.authority.ok", { n: num(balance) }));
 }
 
 /** The operator's database, from `session_status`'s lifecycle and the vault. */
@@ -171,13 +177,13 @@ export function composePersistenceRow(
   onb: OperatorOnboardingStatus,
   checkedAt: string,
 ): StatusRow {
-  const r = (state: StatusLevel, detail: string) => row("persistence", "Neon persistence", state, detail, checkedAt);
+  const r = (state: StatusLevel, detail: string) => row("persistence", translate("funding.persistence.name"), state, detail, checkedAt);
   const lc = life.lifecycle;
-  if (lc === "quota_exceeded") return r("blocked", life.message || "Database quota exceeded — paid tools are locked until capacity is restored.");
-  if (lc === "misconfigured") return r("blocked", life.message || "Persistence misconfigured — repair the database before paid tools will work.");
-  if (lc === "warming_up" || lc === "not_registered" || lc === "no_identity") return r("warning", life.message || `Operator lifecycle: ${lc}.`);
-  if (svc.vault_configured === false || onb.vault_ok === false) return r("blocked", "The vault is not configured — the operator cannot serve paid calls.");
-  return r("ok", lc ? `Lifecycle ${lc} — vault reachable.` : "Vault reachable.");
+  if (lc === "quota_exceeded") return r("blocked", life.message || translate("funding.persistence.quota"));
+  if (lc === "misconfigured") return r("blocked", life.message || translate("funding.persistence.misconfigured"));
+  if (lc === "warming_up" || lc === "not_registered" || lc === "no_identity") return r("warning", life.message || translate("funding.persistence.lifecycle", { lifecycle: lc }));
+  if (svc.vault_configured === false || onb.vault_ok === false) return r("blocked", translate("funding.persistence.noVault"));
+  return r("ok", lc ? translate("funding.persistence.lifecycleOk", { lifecycle: lc }) : translate("funding.persistence.ok"));
 }
 
 /**
@@ -188,13 +194,13 @@ export function composeDurableJobsRow(svc: ServiceStatus, checkedAt: string): St
   const dj = svc.durable_jobs;
   const aj = svc.async_jobs;
   if (!dj && !aj) return null;
-  const r = (state: StatusLevel, detail: string) => row("durable-jobs", "Durable job dispatch", state, detail, checkedAt);
-  if (dj?.detached_executor_error) return r("blocked", `Detached executor error: ${dj.detached_executor_error}`);
+  const r = (state: StatusLevel, detail: string) => row("durable-jobs", translate("funding.jobs.name"), state, detail, checkedAt);
+  if (dj?.detached_executor_error) return r("blocked", translate("funding.jobs.executorError", { error: dj.detached_executor_error }));
   const active = !!dj?.detached_executor_active;
   const resolved = dj?.detached_executor_resolved !== false;
   const durable = aj?.durable_across_recycles;
-  if (active && resolved && durable !== false) return r("ok", `Detached executor active${aj?.backend ? ` · docket ${aj.backend}` : ""}.`);
-  if (active && durable === false) return r("warning", "The executor is up, but the job backend does not survive a recycle — long jobs may be lost.");
-  if (!active) return r("warning", "In-process jobs only — a long job may be cut off by a recycle.");
-  return r("warning", "Detached executor present but not fully resolved.");
+  if (active && resolved && durable !== false) return r("ok", aj?.backend ? translate("funding.jobs.activeBackend", { backend: aj.backend }) : translate("funding.jobs.active"));
+  if (active && durable === false) return r("warning", translate("funding.jobs.notDurable"));
+  if (!active) return r("warning", translate("funding.jobs.inProcess"));
+  return r("warning", translate("funding.jobs.unresolved"));
 }

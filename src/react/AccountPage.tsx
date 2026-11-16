@@ -27,6 +27,7 @@ import TextSizeToggle from "./TextSizeToggle.tsx";
 import ThemeToggle, { type ThemeToggleProps } from "./ThemeToggle.tsx";
 import TimezonePicker, { type TimezonePickerProps } from "./TimezonePicker.tsx";
 import UsageSummary, { type UsageSummaryProps } from "./UsageSummary.tsx";
+import { useT } from "./useT.ts";
 import { useTimezone } from "./useTimezone.ts";
 
 export interface AccountSectionText {
@@ -82,7 +83,7 @@ const opts = <T extends object>(v: boolean | T | undefined): T => (typeof v === 
 
 export default function AccountPage({
   npub,
-  heading = "Profile",
+  heading: headingProp,
   profile,
   sessionKey,
   operator,
@@ -95,10 +96,13 @@ export default function AccountPage({
   between = {},
   after,
   onSignOut,
-  signOutLabel = "Log out",
+  signOutLabel: signOutLabelProp,
   classNames: c = {},
 }: AccountPageProps) {
+  const t = useT();
   const [tzPref, tzZone] = useTimezone();
+  const heading = headingProp === undefined ? t("account.heading") : headingProp;
+  const signOutLabel = signOutLabelProp === undefined ? t("account.signOut") : signOutLabelProp;
   const shown = {
     profile: profile !== false,
     sessionKey: sessionKey !== false,
@@ -125,18 +129,18 @@ export default function AccountPage({
         // Keyed by npub so a half-made ask never carries across a sign-in.
         return <PeersPanel key={npub} npub={npub} />;
       case "timezone": {
-        const { heading: h = "Display time zone", intro, note, ...picker } = opts<AccountTimezoneProps>(timezone);
+        const { heading: h, intro, note, ...picker } = opts<AccountTimezoneProps>(timezone);
         return (
-          <Section heading={h} intro={intro} c={c}>
+          <Section heading={h === undefined ? t("account.timezoneHeading") : h} intro={intro} c={c}>
             <TimezonePicker {...picker} />
             {note && <p className={c.sectionNote}>{note(tzPref, tzZone)}</p>}
           </Section>
         );
       }
       case "theme": {
-        const { heading: h = "Appearance", intro, ...toggle } = opts<AccountThemeProps>(theme);
+        const { heading: h, intro, ...toggle } = opts<AccountThemeProps>(theme);
         return (
-          <Section heading={h} intro={intro} c={c}>
+          <Section heading={h === undefined ? t("account.appearanceHeading") : h} intro={intro} c={c}>
             <div style={{ display: "grid", gap: "0.75rem", justifyItems: "start" }}>
               <ThemeToggle {...toggle} />
               <TextSizeToggle classNames={toggle.classNames} />

@@ -7,6 +7,7 @@
 import { useEffect, useState } from "react";
 import { cashWalletDoors, lightningWallets, storeFor, type LightningWallets } from "../lightningWallets.ts";
 import { TB_TARGETS } from "../tour/tours.ts";
+import { useT } from "./useT.ts";
 
 let asked: Promise<LightningWallets | null> | null = null;
 
@@ -20,6 +21,7 @@ function theList(): Promise<LightningWallets | null> {
 
 export default function CashWallets() {
   const [list, setList] = useState<LightningWallets | null>(null);
+  const t = useT();
   const store = typeof navigator === "undefined" ? null : storeFor(navigator.userAgent);
 
   useEffect(() => {
@@ -30,7 +32,7 @@ export default function CashWallets() {
 
   return (
     <div className="tb-cash" data-tour={TB_TARGETS.walletCash}>
-      <p className="tb-cash-says">No Wallet yet? Use cash with these.</p>
+      <p className="tb-cash-says">{t("wallet.cashSays")}</p>
       <div className="tb-cash-doors">
         {cashWalletDoors(list, store).map((w) => (
           <a key={w.id} href={w.href} target="_blank" rel="noopener noreferrer" className="tb-cash-door">

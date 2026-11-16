@@ -35,6 +35,7 @@ import {
 import { readStored, writeStored } from "../storage.ts";
 import { debugSpacerPx, debugSpacerRoom } from "./debugSpacer.ts";
 import { useDebugLog } from "./useDebugLog.ts";
+import { useT } from "./useT.ts";
 
 export interface DebugPanelProps {
   /** The tab's label. Default "Debug". */
@@ -66,11 +67,12 @@ const tab =
 const plainTab = `${tab} bg-[var(--tb-surface-2)] text-[var(--tb-ink)] border-[var(--tb-line)]`;
 
 export default function DebugPanel({
-  title = "Debug",
+  title,
   defaultOpen = false,
   captureErrors = true,
   children,
 }: DebugPanelProps) {
+  const t = useT();
   const log = useDebugLog();
   const [open, setOpen] = useState<boolean>(() => {
     const saved = readStored(OPEN_KEY);
@@ -138,6 +140,17 @@ export default function DebugPanel({
         ? "bg-[var(--tb-notice-bg)] text-[var(--tb-notice-ink)] border-[var(--tb-notice-line)]"
         : "bg-[var(--tb-surface-2)] text-[var(--tb-ink)] border-[var(--tb-line)]";
 
+  const label = open ? t("debug.hide") : title === undefined ? t("debug.title") : title;
+  const counts = { label, total: log.length, failures, notices };
+  const toggleText =
+    failures > 0
+      ? notices > 0
+        ? t("debug.toggleBoth", counts)
+        : t("debug.toggleErr", counts)
+      : notices > 0
+        ? t("debug.toggleNotice", counts)
+        : t("debug.toggle", counts);
+
   return (
     <>
       {/* In-flow room for the OPEN log only; the collapsed tab overlays the page. */}
@@ -147,24 +160,22 @@ export default function DebugPanel({
         <div className="pointer-events-auto flex flex-wrap justify-end gap-1 pr-3">
           {open && (
             <>
-              <button type="button" onClick={copy} className={plainTab} aria-label="Copy the whole log">
-                {copied === "ok" ? "Copied" : copied === "failed" ? "Copy failed" : "Copy"}
+              <button type="button" onClick={copy} className={plainTab} aria-label={t("debug.copyAria")}>
+                {copied === "ok" ? t("debug.copied") : copied === "failed" ? t("debug.copyFailed") : t("debug.copy")}
               </button>
               <button type="button" onClick={clearDebug} className={plainTab}>
-                Clear
+                {t("debug.clear")}
               </button>
             </>
           )}
           <button type="button" onClick={toggle} aria-expanded={open} className={`${tab} ${toggleTone}`}>
-            {open ? "Hide" : title} ({log.length}
-            {failures > 0 ? ` · ${failures} err` : ""}
-            {notices > 0 ? ` · ${notices} notice` : ""})
+            {toggleText}
           </button>
         </div>
         {open && (
           <div className="pointer-events-auto max-h-[40vh] w-full overflow-y-auto border-t border-[var(--tb-line)] bg-[var(--tb-surface)] p-3 font-mono text-xs text-[var(--tb-ink)]">
             {children && <div className="mb-2 border-b border-[var(--tb-line)] pb-2 font-sans">{children}</div>}
-            {log.length === 0 && <div className="text-[var(--tb-muted)]">No MCP activity yet.</div>}
+            {log.length === 0 && <div className="text-[var(--tb-muted)]">{t("debug.empty")}</div>}
             {log.map((entry, i) => {
               const sev = debugSeverity(entry);
               const flag = sev === "ok" ? null : FLAGGED[sev];

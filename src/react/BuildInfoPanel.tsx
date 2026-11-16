@@ -15,6 +15,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { buildFacts } from "../buildInfo.ts";
 import { serviceStatus, type ServiceStatus } from "../standardTools.ts";
 import { cx } from "./cx.ts";
+import { useT } from "./useT.ts";
 
 export interface BuildInfoFrontend {
   version?: string;
@@ -89,12 +90,14 @@ function Row({ c, label, value, href }: { c: C; label: ReactNode; value: string;
 export default function BuildInfoPanel({
   status,
   frontend,
-  heading = "Build & license",
+  heading: headingProp,
   intro,
   licence = APACHE,
   children,
   classNames: c = {},
 }: BuildInfoPanelProps) {
+  const t = useT();
+  const heading = headingProp === undefined ? t("build.heading") : headingProp;
   const [fetched, setFetched] = useState<ServiceStatus | null>(null);
 
   useEffect(() => {
@@ -120,33 +123,33 @@ export default function BuildInfoPanel({
 
       {frontend && (
         <>
-          <Section c={c}>Frontend</Section>
-          <Row c={c} label="Version" value={feVersion || "—"} />
-          {frontend.builtAt && <Row c={c} label="Built at" value={frontend.builtAt} />}
-          {isHttps(frontend.source) && <Row c={c} label="Source" value={bare(frontend.source)} href={frontend.source} />}
+          <Section c={c}>{t("build.frontend")}</Section>
+          <Row c={c} label={t("build.version")} value={feVersion || "—"} />
+          {frontend.builtAt && <Row c={c} label={t("build.builtAt")} value={frontend.builtAt} />}
+          {isHttps(frontend.source) && <Row c={c} label={t("build.source")} value={bare(frontend.source)} href={frontend.source} />}
         </>
       )}
 
-      <Section c={c}>MCP server</Section>
-      <Row c={c} label="Version" value={f.version ?? "—"} />
-      <Row c={c} label="Commit" value={f.commit ?? "—"} href={f.commitHref} />
-      <Row c={c} label="tollbooth-dpyc" value={f.sdkVersion ? `wheel ${f.sdkVersion}` : "—"} />
-      {f.repo && <Row c={c} label="Source" value={f.repo} href={f.repoHref} />}
+      <Section c={c}>{t("build.mcpServer")}</Section>
+      <Row c={c} label={t("build.version")} value={f.version ?? "—"} />
+      <Row c={c} label={t("build.commit")} value={f.commit ?? "—"} href={f.commitHref} />
+      <Row c={c} label="tollbooth-dpyc" value={f.sdkVersion ? t("build.wheel", { version: f.sdkVersion }) : "—"} />
+      {f.repo && <Row c={c} label={t("build.source")} value={f.repo} href={f.repoHref} />}
 
       {children}
 
       <Section c={c}>Tollbooth-DPYC™</Section>
-      <Row c={c} label="Marketing" value="tollbooth-dpyc.com" href="https://tollbooth-dpyc.com" />
-      <Row c={c} label="Community" value="github.com/lonniev/dpyc-community" href="https://github.com/lonniev/dpyc-community" />
-      <Row c={c} label="Wheel source" value="github.com/lonniev/tollbooth-dpyc" href="https://github.com/lonniev/tollbooth-dpyc" />
+      <Row c={c} label={t("build.marketing")} value="tollbooth-dpyc.com" href="https://tollbooth-dpyc.com" />
+      <Row c={c} label={t("build.community")} value="github.com/lonniev/dpyc-community" href="https://github.com/lonniev/dpyc-community" />
+      <Row c={c} label={t("build.wheelSource")} value="github.com/lonniev/tollbooth-dpyc" href="https://github.com/lonniev/tollbooth-dpyc" />
 
-      <Section c={c}>License</Section>
+      <Section c={c}>{t("build.license")}</Section>
       <Row c={c} label={licence.name} value={licence.href ? bare(licence.href) : licence.name} href={isHttps(licence.href) ? licence.href : null} />
 
-      <Section c={c}>Patent &amp; trademarks</Section>
-      <Row c={c} label="Patent" value="Patent Pending — US Provisional 64/045,999" />
-      <Row c={c} label="Filing" value="dpyc-community/docs/patent" href="https://github.com/lonniev/dpyc-community/tree/main/docs/patent" />
-      <Row c={c} label="Trademarks" value="DPYC™ · Tollbooth DPYC™ · Don't Pester Your Customer™" />
+      <Section c={c}>{t("build.patentAndTrademarks")}</Section>
+      <Row c={c} label={t("build.patent")} value={t("build.patentPending")} />
+      <Row c={c} label={t("build.filing")} value="dpyc-community/docs/patent" href="https://github.com/lonniev/dpyc-community/tree/main/docs/patent" />
+      <Row c={c} label={t("build.trademarks")} value="DPYC™ · Tollbooth DPYC™ · Don't Pester Your Customer™" />
     </section>
   );
 }

@@ -23,6 +23,7 @@ import { matchesPath } from "./navState.ts";
 import { useAvatar } from "./useAvatar.ts";
 import { useDisclosure } from "./useDisclosure.ts";
 import { useMediaQuery } from "./useMediaQuery.ts";
+import { useT } from "./useT.ts";
 
 export interface SiteNavItem {
   href: string;
@@ -124,12 +125,15 @@ export default function SiteNav({
   trailing,
   account,
   collapse = "(max-width: 639px)",
-  label = "Main",
-  menuLabel = "Menu",
+  label: labelProp,
+  menuLabel: menuLabelProp,
   menuIcon = <Menu aria-hidden size={20} />,
   closeIcon = <X aria-hidden size={20} />,
   classNames: c = {},
 }: SiteNavProps) {
+  const t = useT();
+  const label = labelProp === undefined ? t("nav.main") : labelProp;
+  const menuLabel = menuLabelProp === undefined ? t("nav.menu") : menuLabelProp;
   const folded = useMediaQuery(collapse);
   const menu = useDisclosure<HTMLElement, HTMLUListElement>();
   const menuId = useId();
@@ -232,15 +236,11 @@ function AccountMenu({
   renderLink: (props: SiteNavLinkProps) => ReactNode;
   c: SiteNavClassNames;
 }) {
-  const {
-    npub,
-    heading = "Nostr identity",
-    links = [],
-    onSignOut,
-    signOutLabel = "Log out",
-    avatarSize = 32,
-    label = "Account",
-  } = account;
+  const t = useT();
+  const { npub, links = [], onSignOut, avatarSize = 32 } = account;
+  const heading = account.heading === undefined ? t("nav.identity") : account.heading;
+  const signOutLabel = account.signOutLabel === undefined ? t("nav.logOut") : account.signOutLabel;
+  const label = account.label === undefined ? t("nav.account") : account.label;
   const avatar = useAvatar(npub);
   const menu = useDisclosure<HTMLDivElement, HTMLDivElement>();
   const menuId = useId();

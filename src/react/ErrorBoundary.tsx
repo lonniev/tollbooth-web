@@ -12,6 +12,7 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { debugLogText, debugPush } from "../debugLog.ts";
 import { errorReport } from "../errorReport.ts";
+import { translate } from "../i18n/index.ts";
 
 export interface ErrorFallbackProps {
   error: Error;
@@ -84,15 +85,14 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, State> 
     const { error, stack, copied } = this.state;
     if (!error) return this.props.children;
 
-    const { fallback, title = "Something went sideways", showDetail = true, classNames: c = {} } = this.props;
+    const { fallback, showDetail = true, classNames: c = {} } = this.props;
+    const title = this.props.title === undefined ? translate("crash.title") : this.props.title;
     if (typeof fallback === "function") {
       return fallback({ error, componentStack: stack, report: this.report, reset: this.reset });
     }
     if (fallback !== undefined) return fallback;
 
-    const message =
-      this.props.message ??
-      "The page hit an unexpected error. It is saved to the debug log — copy it into a bug report. Reloading usually clears it.";
+    const message = this.props.message ?? translate("crash.message");
     return (
       <div role="alert" className={c.root}>
         <h1 className={c.title}>{title}</h1>
@@ -105,13 +105,13 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, State> 
         )}
         <div className={c.actions}>
           <button type="button" onClick={this.copy} className={c.chip}>
-            {copied ? "Copied" : "Copy error + log"}
+            {copied ? translate("crash.copied") : translate("crash.copy")}
           </button>
           <button type="button" onClick={this.reset} className={c.chip}>
-            Try again
+            {translate("crash.tryAgain")}
           </button>
           <button type="button" onClick={() => window.location.reload()} className={c.chip}>
-            Reload
+            {translate("crash.reload")}
           </button>
         </div>
       </div>

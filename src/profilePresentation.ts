@@ -2,6 +2,8 @@
  * Pure rules for the Nostr profile panel, testable under node:test.
  */
 
+import { translate } from "./i18n/index.ts";
+
 export type PublishControlMode = "publish" | "how-to-set";
 
 /** Without a session key or NIP-07 signer, explain instead of publishing. */
@@ -10,8 +12,8 @@ export function publishControlMode(canSign: boolean): PublishControlMode {
 }
 
 export function publishControlLabel(mode: PublishControlMode, publishing: boolean): string {
-  if (mode === "how-to-set") return "How to set…";
-  return publishing ? "Publishing…" : "Publish to Nostr";
+  if (mode === "how-to-set") return translate("profile.howToSet");
+  return publishing ? translate("profile.publishing") : translate("profile.publish");
 }
 
 /**
@@ -23,16 +25,16 @@ export function publishControlDisabled(mode: PublishControlMode, publishing: boo
 }
 
 export function collapsedDisplayName(displayName: string): string {
-  return displayName.trim() || "Nostr profile";
+  return displayName.trim() || translate("profile.fallbackName");
 }
 
 export function howToSetExplainer(appName: string): { title: string; paragraphs: string[] } {
   return {
-    title: "How to set your Nostr profile",
+    title: translate("profile.howTo.title"),
     paragraphs: [
-      `Nostr identity is a secure keypair. Your profile is owned by the key, not by ${appName}.`,
-      "To change it, use your preferred Nostr client — the one that already holds your key.",
-      `${appName} could accept your nsec directly, but deliberately does not ask for it. Handing a private key to a web front end is the thing the keypair model exists to avoid.`,
+      translate("profile.howTo.ownedByKey", { appName }),
+      translate("profile.howTo.useClient"),
+      translate("profile.howTo.noNsec", { appName }),
     ],
   };
 }

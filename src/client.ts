@@ -16,6 +16,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { tollboothConfig, toolName } from "./config.ts";
 import { debugPush, redact } from "./debugLog.ts";
 import { holderConnection, isHolder, type HolderConnection } from "./holder.ts";
+import { translate } from "./i18n/index.ts";
 import { forgetRecentLogin, getStoredNpub } from "./identity.ts";
 import { isTransportFailure, NetworkError } from "./networkError.ts";
 import { signingFetch, signRequest, signsForSignedInNpub } from "./requestSigning.ts";
@@ -90,7 +91,7 @@ async function getClient(): Promise<Client> {
     });
   }
   await connecting;
-  if (!client) throw new Error("Could not connect to the service.");
+  if (!client) throw new Error(translate("client.couldNotConnect"));
   return client;
 }
 
@@ -370,7 +371,7 @@ export function operatorClient(url: string, options: OperatorClientOptions = {})
         cursor = page.nextCursor;
       } while (cursor);
       const p = prefixFromTools(names);
-      if (p === null) throw new Error(`${url} lists no service_status tool: not a Tollbooth operator.`);
+      if (p === null) throw new Error(translate("client.notOperator", { url }));
       return p;
     })().catch((e) => {
       prefixed = null; // a cold or unreachable operator may answer next time
@@ -414,14 +415,14 @@ export function operatorClient(url: string, options: OperatorClientOptions = {})
         "request_npub_proof",
         { patron_npub: npub, verify_at: globalThis.location.origin, ...(reason ? { reason } : {}) },
       );
-      if (!r.success || !r.nonce) throw new Error(r.error ?? r.message ?? "The proof request was not sent.");
+      if (!r.success || !r.nonce) throw new Error(r.error ?? r.message ?? translate("client.proofNotSent"));
       return r.nonce;
     },
     async proveFinish(npub, nonce) {
       const r = await call<{ success?: boolean; error?: string; message?: string }>(
         "receive_npub_proof", { patron_npub: npub, nonce },
       );
-      if (!r.success) throw new Error(r.error ?? r.message ?? "No approval found yet: approve the DM, then try again.");
+      if (!r.success) throw new Error(r.error ?? r.message ?? translate("client.noApproval"));
     },
   };
   operators.set(url, op);

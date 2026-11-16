@@ -10,6 +10,7 @@ import { TB_TARGETS } from "../tour/tours.ts";
 import { TOP_UP_AMOUNTS, amountReducer, awaitingWords, formatSats, parseSats, payLink, presetChosen } from "../wallet.ts";
 import CashWallets from "./CashWallets.tsx";
 import InvoiceQr from "./InvoiceQr.tsx";
+import { useT } from "./useT.ts";
 import { useTopUp } from "./useTopUp.ts";
 import type { DecorateTile } from "./Wallet.tsx";
 import WalletChooser from "./WalletChooser.tsx";
@@ -26,6 +27,7 @@ export default function TopUp({ onSettled, decorateTile, forNpub }: TopUpProps) 
   const [amount, pick] = useReducer(amountReducer, "");
   const [custom, setCustom] = useState(false);
   const [copied, setCopied] = useState(false);
+  const t = useT();
   const sats = parseSats(amount);
   const creating = state.phase === "creating";
 
@@ -47,7 +49,7 @@ export default function TopUp({ onSettled, decorateTile, forNpub }: TopUpProps) 
 
   return (
     <section className="tb-wallet-section tb-wallet-topup">
-      <h2 className="tb-wallet-title">Top up with Lightning</h2>
+      <h2 className="tb-wallet-title">{t("topUp.heading")}</h2>
 
       {(state.phase === "idle" || creating) && (
         <>
@@ -70,7 +72,7 @@ export default function TopUp({ onSettled, decorateTile, forNpub }: TopUpProps) 
                     {look?.mark && <span className="tb-wallet-tile-mark">{look.mark}</span>}
                     <span className="tb-wallet-tile-body">
                       {look?.name && <span className="tb-wallet-tile-name">{look.name}</span>}
-                      <span className="tb-wallet-tile-sats">{n.toLocaleString("en-US")}</span>
+                      <span className="tb-wallet-tile-sats">{formatSats(n)}</span>
                       <span className="tb-wallet-tile-unit">sats</span>
                     </span>
                   </button>
@@ -87,8 +89,8 @@ export default function TopUp({ onSettled, decorateTile, forNpub }: TopUpProps) 
                 className="tb-wallet-tile"
               >
                 <span className="tb-wallet-tile-body">
-                  <span className="tb-wallet-tile-sats">Custom</span>
-                  <span className="tb-wallet-tile-unit">amount</span>
+                  <span className="tb-wallet-tile-sats">{t("topUp.custom")}</span>
+                  <span className="tb-wallet-tile-unit">{t("topUp.customUnit")}</span>
                 </span>
               </button>
             </div>
@@ -103,8 +105,8 @@ export default function TopUp({ onSettled, decorateTile, forNpub }: TopUpProps) 
               onKeyDown={(e) => {
                 if (e.key === "Enter" && sats && !creating) create(sats);
               }}
-              placeholder="Amount in sats"
-              aria-label="Amount in sats"
+              placeholder={t("topUp.amountLabel")}
+              aria-label={t("topUp.amountLabel")}
               className="tb-wallet-input tb-wallet-custom"
             />
           )}
@@ -114,9 +116,9 @@ export default function TopUp({ onSettled, decorateTile, forNpub }: TopUpProps) 
             onClick={() => sats && create(sats)}
             className="tb-wallet-action tb-wallet-primary tb-wallet-create"
           >
-            Create invoice
+            {t("topUp.createInvoice")}
           </button>
-          {creating && <p className="tb-wallet-note">Making a Lightning invoice…</p>}
+          {creating && <p className="tb-wallet-note">{t("topUp.creating")}</p>}
           {state.phase === "idle" && state.message && <p className="tb-wallet-error">{state.message}</p>}
           <div data-tour={TB_TARGETS.walletDoor}><WalletChooser /></div>
           <CashWallets />
@@ -125,15 +127,15 @@ export default function TopUp({ onSettled, decorateTile, forNpub }: TopUpProps) 
 
       {state.phase === "awaiting" && (
         <div className="tb-wallet-invoice">
-          <p className="tb-wallet-note">Invoice for {formatSats(state.invoice.sats)} sats</p>
+          <p className="tb-wallet-note">{t("topUp.invoiceFor", { n: formatSats(state.invoice.sats) })}</p>
           <InvoiceQr bolt11={state.invoice.bolt11} className="tb-wallet-qr" />
           <div className="tb-wallet-row">
             {state.invoice.bolt11 && (
-              <a href={payLink(state.invoice) ?? "#"} className="tb-wallet-action tb-wallet-primary">Open in wallet</a>
+              <a href={payLink(state.invoice) ?? "#"} className="tb-wallet-action tb-wallet-primary">{t("topUp.openInWallet")}</a>
             )}
             {state.invoice.bolt11 && (
               <button type="button" onClick={() => void copy(state.invoice.bolt11!)} className="tb-wallet-action">
-                {copied ? "Copied" : "Copy invoice"}
+                {copied ? t("topUp.copied") : t("topUp.copyInvoice")}
               </button>
             )}
             {state.invoice.checkoutLink && (
@@ -143,7 +145,7 @@ export default function TopUp({ onSettled, decorateTile, forNpub }: TopUpProps) 
                 rel="noreferrer"
                 className={state.invoice.bolt11 ? "tb-wallet-action" : "tb-wallet-action tb-wallet-primary"}
               >
-                Open checkout
+                {t("topUp.openCheckout")}
               </a>
             )}
           </div>
@@ -151,18 +153,18 @@ export default function TopUp({ onSettled, decorateTile, forNpub }: TopUpProps) 
           <p className="tb-wallet-note" aria-live="polite">{awaitingWords(state.status, watching)}</p>
           <div className="tb-wallet-row">
             <button type="button" disabled={state.checking} onClick={check} className="tb-wallet-action">
-              {state.checking ? "Checking…" : "Check now"}
+              {state.checking ? t("topUp.checking") : t("topUp.checkNow")}
             </button>
-            <button type="button" onClick={cancel} className="tb-wallet-action">Cancel</button>
+            <button type="button" onClick={cancel} className="tb-wallet-action">{t("topUp.cancel")}</button>
           </div>
         </div>
       )}
 
       {state.phase === "settled" && (
         <>
-          <p className="tb-wallet-note tb-wallet-ok" aria-live="polite">Paid. {formatSats(state.credited)} sats added.</p>
+          <p className="tb-wallet-note tb-wallet-ok" aria-live="polite">{t("topUp.paid", { n: formatSats(state.credited) })}</p>
           <div className="tb-wallet-row">
-            <button type="button" onClick={again} className="tb-wallet-action">Done</button>
+            <button type="button" onClick={again} className="tb-wallet-action">{t("topUp.done")}</button>
           </div>
         </>
       )}
@@ -171,7 +173,7 @@ export default function TopUp({ onSettled, decorateTile, forNpub }: TopUpProps) 
         <>
           <p className="tb-wallet-error">{state.message}</p>
           <div className="tb-wallet-row">
-            <button type="button" onClick={reset} className="tb-wallet-action">Try again</button>
+            <button type="button" onClick={reset} className="tb-wallet-action">{t("topUp.tryAgain")}</button>
           </div>
         </>
       )}

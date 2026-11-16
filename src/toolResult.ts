@@ -3,6 +3,8 @@
  * without a server.
  */
 
+import { translate } from "./i18n/index.ts";
+
 export interface ContentBlock {
   type: string;
   text?: string;
@@ -33,7 +35,7 @@ export function errorText(result: RawToolResult): string {
   return (result.content ?? [])
     .filter((b) => b.type === "text" && typeof b.text === "string")
     .map((b) => String(b.text))
-    .join("\n") || "Tool call failed";
+    .join("\n") || translate("client.toolFailed");
 }
 
 export function readToolResult(result: RawToolResult): ReadResult {
@@ -72,7 +74,7 @@ export function proofBounceMessage(payload: unknown): string | null {
   const p = payload as Record<string, unknown>;
   const code = String(p.error_code ?? "").toLowerCase();
   if (p.success === false && code === "proof_required") {
-    return String(p.error ?? "Sign-in required.");
+    return String(p.error ?? translate("client.signInRequired"));
   }
   return null;
 }
@@ -100,7 +102,7 @@ export function deadGrantMessage(payload: unknown): string | null {
   const code = String(p.error_code ?? "").toLowerCase();
   if (p.success !== false || code !== "proof_invalid") return null;
   if (GRANT_STILL_GOOD.has(String(p.reason ?? "").toLowerCase())) return null;
-  return String(p.error ?? "Your sign-in has expired.");
+  return String(p.error ?? translate("client.signInExpired"));
 }
 
 /** Whether a payload reports failure, for the debug log's colouring. */

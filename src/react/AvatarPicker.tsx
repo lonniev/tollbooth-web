@@ -7,16 +7,18 @@
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { avatarChoices } from "../avatar.ts";
+import { translate, type TranslationKey } from "../i18n/index.ts";
 import Avatar from "./Avatar.tsx";
 import { errBox, input, muted } from "./ui.ts";
+import { useT } from "./useT.ts";
 
-const COLLECTIONS = [
-  { prefix: "fluent-emoji-flat", label: "Fluent — Microsoft, flat" },
-  { prefix: "twemoji", label: "Twemoji — Twitter's set" },
-  { prefix: "noto", label: "Noto — Google" },
-  { prefix: "openmoji", label: "OpenMoji — CC-BY-SA" },
-  { prefix: "emojione-v1", label: "EmojiOne — classic" },
-] as const;
+const COLLECTIONS: readonly { prefix: string; labelKey: TranslationKey }[] = [
+  { prefix: "fluent-emoji-flat", labelKey: "avatar.collection.fluent" },
+  { prefix: "twemoji", labelKey: "avatar.collection.twemoji" },
+  { prefix: "noto", labelKey: "avatar.collection.noto" },
+  { prefix: "openmoji", labelKey: "avatar.collection.openmoji" },
+  { prefix: "emojione-v1", labelKey: "avatar.collection.emojione" },
+];
 const PAGE_SIZE = 30;
 
 const iconUrl = (prefix: string, name: string) => `https://api.iconify.design/${prefix}/${name}.svg`;
@@ -29,6 +31,7 @@ const tile = (selected: boolean) =>
   }`;
 
 export default function AvatarPicker({ value, onChange }: { value: string; onChange: (next: string) => void }) {
+  const t = useT();
   const [tab, setTab] = useState<"catalog" | "glyphs">("catalog");
   const [collection, setCollection] = useState<string>(COLLECTIONS[0].prefix);
   const [names, setNames] = useState<string[]>([]);
@@ -44,7 +47,7 @@ export default function AvatarPicker({ value, onChange }: { value: string; onCha
     setPage(0);
     fetch(`https://api.iconify.design/collection?prefix=${collection}`)
       .then((r) => {
-        if (!r.ok) throw new Error(`Iconify returned ${r.status}`);
+        if (!r.ok) throw new Error(translate("avatar.iconifyStatus", { status: r.status }));
         return r.json();
       })
       .then((data: { uncategorized?: string[]; categories?: Record<string, string[]> }) => {
@@ -67,16 +70,16 @@ export default function AvatarPicker({ value, onChange }: { value: string; onCha
   return (
     <div>
       <div className="flex gap-2 mb-3 text-xs">
-        {(["catalog", "glyphs"] as const).map((t) => (
+        {(["catalog", "glyphs"] as const).map((name) => (
           <button
-            key={t}
+            key={name}
             type="button"
-            onClick={() => setTab(t)}
+            onClick={() => setTab(name)}
             className={`px-3 py-1.5 rounded-full transition-colors ${
-              tab === t ? "bg-[var(--tb-accent)] text-[var(--tb-on-accent)]" : `${muted} hover:bg-[var(--tb-surface-2)]`
+              tab === name ? "bg-[var(--tb-accent)] text-[var(--tb-on-accent)]" : `${muted} hover:bg-[var(--tb-surface-2)]`
             }`}
           >
-            {t === "catalog" ? "Catalog" : "Glyphs"}
+            {name === "catalog" ? t("avatar.catalog") : t("avatar.glyphs")}
           </button>
         ))}
       </div>
@@ -86,7 +89,7 @@ export default function AvatarPicker({ value, onChange }: { value: string; onCha
           <div className="flex items-center gap-2 mb-3">
             <select value={collection} onChange={(e) => setCollection(e.target.value)} className={`${input} py-1.5 text-xs font-sans`}>
               {COLLECTIONS.map((c) => (
-                <option key={c.prefix} value={c.prefix}>{c.label}</option>
+                <option key={c.prefix} value={c.prefix}>{t(c.labelKey)}</option>
               ))}
             </select>
             {!loading && !error && names.length > 0 && (
@@ -96,10 +99,10 @@ export default function AvatarPicker({ value, onChange }: { value: string; onCha
 
           {loading && (
             <p className={`flex items-center justify-center gap-1.5 py-6 text-xs ${muted}`}>
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading catalog…
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("avatar.loadingCatalog")}
             </p>
           )}
-          {error && <div className={errBox}>Couldn't reach Iconify: {error}</div>}
+          {error && <div className={errBox}>{t("avatar.unreachable", { error })}</div>}
 
           {!loading && !error && (
             <>
@@ -114,8 +117,8 @@ export default function AvatarPicker({ value, onChange }: { value: string; onCha
                 })}
               </div>
               <div className="flex items-center justify-center gap-3 mt-3 text-xs">
-                <button type="button" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="px-3 py-1 rounded-full border border-[var(--tb-line)] disabled:opacity-30">← Prev</button>
-                <button type="button" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1} className="px-3 py-1 rounded-full border border-[var(--tb-line)] disabled:opacity-30">Next →</button>
+                <button type="button" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="px-3 py-1 rounded-full border border-[var(--tb-line)] disabled:opacity-30">{t("avatar.prev")}</button>
+                <button type="button" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1} className="px-3 py-1 rounded-full border border-[var(--tb-line)] disabled:opacity-30">{t("avatar.next")}</button>
               </div>
             </>
           )}
@@ -133,12 +136,12 @@ export default function AvatarPicker({ value, onChange }: { value: string; onCha
       )}
 
       <details className="mt-3">
-        <summary className={`text-xs uppercase tracking-wider cursor-pointer ${muted}`}>Custom (image URL or glyph)</summary>
+        <summary className={`text-xs uppercase tracking-wider cursor-pointer ${muted}`}>{t("avatar.custom")}</summary>
         <input
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="https://… or a single emoji"
+          placeholder={t("avatar.customPlaceholder")}
           className={`mt-2 ${input} py-1.5 text-xs`}
         />
       </details>
@@ -146,7 +149,7 @@ export default function AvatarPicker({ value, onChange }: { value: string; onCha
       {value && (
         <div className="mt-4 flex items-center gap-3">
           <Avatar value={value} size={48} />
-          <span className={`text-xs ${muted}`}>Selected — applies immediately.</span>
+          <span className={`text-xs ${muted}`}>{t("avatar.selected")}</span>
         </div>
       )}
     </div>
