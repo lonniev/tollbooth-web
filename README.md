@@ -472,7 +472,7 @@ registerNamespace("mysite-content", { lessons, quotes }, { fr: () => import("./c
 ```
 
 - Words: `const t = useT("mysite")`, then `t("home.greeting", { name })`. Plurals are `_one` / `_other` keys read with `{ count }`. Outside React, `translate(key, vars, "mysite")`.
-- A sentence with a link inside it: `"home.more": "Read <link>the guide</link> first."`, drawn by `<Tx ns="mysite" k="home.more" components={{ link: <a href="/guide" /> }} />`.
+- A sentence with a link inside it: `"home.more": "Read <guide>the guide</guide> first."`, drawn by `<Tx ns="mysite" k="home.more" components={{ guide: <a href="/guide" /> }} />`. A self-closing `<sats/>` draws the element with its own children, for a styled number or a link whose words come from elsewhere. Never name a tag after an empty HTML element (`link`, `img`, `br`, `input`, `meta`…): the words fall outside it.
 - Structured content (lists of lessons, quotes): `useContent<Lesson[]>("mysite-content", "lessons")`, English for any piece a language lacks.
 - Dates and numbers: `languageLocale()`, re-read inside a component that calls `useLanguage()`.
 - A test that holds each translation to English: `assert.deepEqual(localeProblems(en, fr), [])` (same keys, `{{placeholders}}` and `<tags>`).

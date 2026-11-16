@@ -6,7 +6,9 @@
  *
  * Each `<tag>` in the string is drawn with `components.tag`, so a language may
  * move the element to where its grammar wants it. A site draws its own words
- * with `ns`, as `<Tx ns="mysite" k={key} components={{ link: <a href="/more" /> }} />`.
+ * with `ns`, as `<Tx ns="mysite" k={key} components={{ more: <a href="/more" /> }} />`.
+ * A self-closing `<more/>` keeps the element's own children. Never name a tag
+ * `link`, `img`, `br` or another empty HTML element: the words fall outside it.
  */
 
 import type { ReactElement } from "react";
