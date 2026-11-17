@@ -543,6 +543,28 @@ const es: Translation = {
   "client.toolFailed": "Falló la llamada a la herramienta",
   "client.signInRequired": "Necesitas iniciar sesión.",
   "client.signInExpired": "Tu sesión venció.",
+  // ── Markdown ──
+  "markdown.done": "Listo",
+  "markdown.view": "Escribir o previsualizar",
+  "markdown.write": "Escribir",
+  "markdown.preview": "Vista previa",
+  "markdown.empty": "Todavía no hay nada escrito.",
+  "markdown.tools": "Formato",
+  "markdown.filler": "palabras",
+  "markdown.help": "Aquí funciona Markdown: **negrita**, _cursiva_, ## título, - lista, - [ ] lista de tareas, [enlace](https://…), `código`, y ``` bloques de código.",
+  "markdown.tool.bold": "Negrita",
+  "markdown.tool.italic": "Cursiva",
+  "markdown.tool.heading": "Título",
+  "markdown.tool.bullets": "Lista",
+  "markdown.tool.numbers": "Lista numerada",
+  "markdown.tool.checklist": "Lista de tareas",
+  "markdown.tool.quote": "Cita",
+  "markdown.tool.link": "Enlace",
+  "markdown.tool.code": "Código",
+  "markdown.tool.codeBlock": "Bloque de código",
+  "markdown.charsLeft_one": "Queda {{count}} carácter",
+  "markdown.charsLeft_many": "Quedan {{count}} caracteres",
+  "markdown.charsLeft_other": "Quedan {{count}} caracteres",
 };
 
 export default es;

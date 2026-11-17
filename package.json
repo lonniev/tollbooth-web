@@ -29,10 +29,15 @@
       "types": "./dist/agentGuide.d.ts",
       "default": "./dist/agentGuide.js"
     },
+    "./markdown": {
+      "types": "./dist/markdown/index.d.ts",
+      "default": "./dist/markdown/index.js"
+    },
     "./theme.css": "./theme.css",
     "./tour.css": "./tour.css",
     "./price-sheet.css": "./price-sheet.css",
-    "./wallet.css": "./wallet.css"
+    "./wallet.css": "./wallet.css",
+    "./markdown.css": "./markdown.css"
   },
   "files": [
     "dist",
@@ -40,6 +45,7 @@
     "tour.css",
     "price-sheet.css",
     "wallet.css",
+    "markdown.css",
     "README.md",
     "LICENSE"
   ],
@@ -71,6 +77,9 @@
     "driver.js": "1.12.1",
     "i18next": "27.1.2",
     "qrcode-generator": "2.0.4",
-    "react-i18next": "18.0.1"
+    "react-i18next": "18.0.1",
+    "react-markdown": "10.1.0",
+    "remark-breaks": "4.0.0",
+    "remark-gfm": "4.0.1"
   }
 }

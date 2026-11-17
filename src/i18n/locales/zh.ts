@@ -532,6 +532,27 @@ const zh: Translation = {
   "client.toolFailed": "工具调用失败",
   "client.signInRequired": "需要登录。",
   "client.signInExpired": "你的登录已过期。",
+  // ── Markdown ──
+  "markdown.done": "完成",
+  "markdown.view": "编辑或预览",
+  "markdown.write": "编辑",
+  "markdown.preview": "预览",
+  "markdown.empty": "还没有内容。",
+  "markdown.tools": "格式",
+  "markdown.filler": "文字",
+  "markdown.help": "这里可以使用 Markdown：**粗体**、_斜体_、## 标题、- 列表、- [ ] 清单、[链接](https://…)、`代码`，以及 ``` 代码块。",
+  "markdown.tool.bold": "粗体",
+  "markdown.tool.italic": "斜体",
+  "markdown.tool.heading": "标题",
+  "markdown.tool.bullets": "列表",
+  "markdown.tool.numbers": "编号列表",
+  "markdown.tool.checklist": "清单",
+  "markdown.tool.quote": "引用",
+  "markdown.tool.link": "链接",
+  "markdown.tool.code": "代码",
+  "markdown.tool.codeBlock": "代码块",
+  "markdown.charsLeft_one": "还可输入 {{count}} 个字符",
+  "markdown.charsLeft_other": "还可输入 {{count}} 个字符",
 };
 
 export default zh;

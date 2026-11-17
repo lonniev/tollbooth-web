@@ -1,0 +1,57 @@
+/*
+ * Markdown a person wrote (`.tb-md`) and the big editor to write it in
+ * (`.tb-md-sheet`), the same on every Tollbooth DPYC™ site. Colours come from the
+ * `--tb-*` tokens; a site may set these after importing this file:
+ *
+ *   @import "@tollbooth-dpyc/web/markdown.css";
+ */
+
+:root {
+  --tb-md-quote: var(--tb-accent);
+  --tb-md-sheet-bg: var(--tb-surface);
+}
+
+.tb-md { display: grid; gap: 0.625rem; line-height: 1.6; overflow-wrap: anywhere; }
+.tb-md h1, .tb-md h2, .tb-md h3 { font-weight: 700; line-height: 1.3; margin: 0; }
+.tb-md h1 { font-size: 1.5rem; }
+.tb-md h2 { font-size: 1.25rem; }
+.tb-md h3 { font-size: 1.125rem; }
+.tb-md p { margin: 0; }
+.tb-md ul { list-style: disc; padding-left: 1.5rem; margin: 0; }
+.tb-md ol { list-style: decimal; padding-left: 1.5rem; margin: 0; }
+.tb-md li.task-list-item { list-style: none; margin-left: -1.25rem; }
+.tb-md li input[type="checkbox"] { width: 1.1rem; height: 1.1rem; margin-right: 0.5rem; vertical-align: -0.15rem; }
+.tb-md a { color: var(--tb-accent); text-decoration: underline; text-underline-offset: 0.15em; }
+.tb-md blockquote { border-left: 4px solid var(--tb-md-quote); padding-left: 0.75rem; margin: 0; color: var(--tb-muted); }
+.tb-md code { font-family: ui-monospace, monospace; font-size: 0.9em; background: var(--tb-surface-2); padding: 0.1rem 0.35rem; border-radius: 0.375rem; }
+.tb-md pre { background: var(--tb-surface-2); border: 1px solid var(--tb-line); border-radius: 0.75rem; padding: 0.75rem 1rem; overflow-x: auto; margin: 0; }
+.tb-md pre code { background: none; padding: 0; }
+.tb-md table { border-collapse: collapse; }
+.tb-md th, .tb-md td { border: 1px solid var(--tb-line); padding: 0.25rem 0.625rem; text-align: left; }
+.tb-md img { max-width: 100%; max-height: 24rem; border-radius: 0.75rem; }
+.tb-md hr { border: 0; border-top: 1px solid var(--tb-line); width: 100%; }
+
+.tb-md-muted { color: var(--tb-muted); margin: 0; }
+.tb-md-small { font-size: 0.875rem; }
+.tb-md-left { text-align: right; font-variant-numeric: tabular-nums; }
+
+.tb-md-sheet { width: min(56rem, 100vw); height: min(48rem, 100dvh); max-width: 100vw; max-height: 100dvh; margin: auto; padding: 1rem;
+  border: 2px solid var(--tb-line); border-radius: 1rem; background: var(--tb-md-sheet-bg); color: var(--tb-ink); box-sizing: border-box; }
+.tb-md-sheet[open] { display: grid; grid-template-rows: auto auto auto 1fr auto auto; gap: 0.75rem; }
+.tb-md-sheet::backdrop { background: rgb(0 0 0 / 0.6); }
+@media (max-width: 40rem) { .tb-md-sheet { width: 100vw; height: 100dvh; border-radius: 0; border: 0; } }
+.tb-md-head { display: flex; align-items: center; gap: 0.5rem; }
+.tb-md-title { margin: 0 auto 0 0; font-size: 1.125rem; font-weight: 700; }
+.tb-md-views, .tb-md-tools { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+.tb-md-sheet button { font: inherit; cursor: pointer; color: inherit; }
+.tb-md-done { min-height: 2.75rem; padding: 0 1.25rem; border-radius: 0.75rem; border: 1px solid var(--tb-accent);
+  background: var(--tb-accent); color: var(--tb-on-accent) !important; font-weight: 600; }
+.tb-md-pick { min-height: 2.75rem; padding: 0 1rem; border-radius: 999px; border: 1px solid var(--tb-line); background: var(--tb-surface); }
+.tb-md-pick[aria-pressed="true"] { border-color: var(--tb-accent); background: var(--tb-accent); color: var(--tb-on-accent) !important; }
+.tb-md-tool { display: inline-grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: 0.625rem;
+  border: 1px solid var(--tb-line); background: var(--tb-surface); }
+.tb-md-tool:hover, .tb-md-pick:hover { background: var(--tb-surface-2); }
+.tb-md-text { width: 100%; height: 100%; min-height: 12rem; box-sizing: border-box; resize: none; padding: 0.75rem;
+  border: 1px solid var(--tb-line); border-radius: 0.75rem; background: var(--tb-surface); color: var(--tb-ink);
+  font-family: ui-monospace, monospace; font-size: 1rem; line-height: 1.6; }
+.tb-md-preview { overflow-y: auto; min-height: 12rem; padding: 1rem; border: 1px solid var(--tb-line); border-radius: 0.75rem; background: var(--tb-surface); }

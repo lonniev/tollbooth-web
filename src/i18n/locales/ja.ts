@@ -569,6 +569,27 @@ const ja: Translation = {
   "client.toolFailed": "ツールの呼び出しに失敗しました",
   "client.signInRequired": "サインインが必要です。",
   "client.signInExpired": "サインインの期限が切れました。",
+  // ── Markdown ──
+  "markdown.done": "完了",
+  "markdown.view": "編集またはプレビュー",
+  "markdown.write": "編集",
+  "markdown.preview": "プレビュー",
+  "markdown.empty": "まだ何も書かれていません。",
+  "markdown.tools": "書式",
+  "markdown.filler": "テキスト",
+  "markdown.help": "ここでは Markdown が使えます：**太字**、_斜体_、## 見出し、- リスト、- [ ] チェックリスト、[リンク](https://…)、`コード`、``` コードブロック。",
+  "markdown.tool.bold": "太字",
+  "markdown.tool.italic": "斜体",
+  "markdown.tool.heading": "見出し",
+  "markdown.tool.bullets": "箇条書き",
+  "markdown.tool.numbers": "番号付きリスト",
+  "markdown.tool.checklist": "チェックリスト",
+  "markdown.tool.quote": "引用",
+  "markdown.tool.link": "リンク",
+  "markdown.tool.code": "コード",
+  "markdown.tool.codeBlock": "コードブロック",
+  "markdown.charsLeft_one": "残り{{count}}文字",
+  "markdown.charsLeft_other": "残り{{count}}文字",
 };
 
 export default ja;

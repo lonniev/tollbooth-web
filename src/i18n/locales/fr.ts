@@ -548,6 +548,28 @@ const fr: Translation = {
   "client.toolFailed": "L'appel de l'outil a échoué",
   "client.signInRequired": "Connexion requise.",
   "client.signInExpired": "Ta connexion a expiré.",
+  // ── Markdown ──
+  "markdown.done": "Terminé",
+  "markdown.view": "Écrire ou prévisualiser",
+  "markdown.write": "Écrire",
+  "markdown.preview": "Aperçu",
+  "markdown.empty": "Rien d’écrit pour l’instant.",
+  "markdown.tools": "Mise en forme",
+  "markdown.filler": "mots",
+  "markdown.help": "Le Markdown fonctionne ici : **gras**, _italique_, ## titre, - liste, - [ ] liste à cocher, [lien](https://…), `code`, et ``` blocs de code.",
+  "markdown.tool.bold": "Gras",
+  "markdown.tool.italic": "Italique",
+  "markdown.tool.heading": "Titre",
+  "markdown.tool.bullets": "Liste",
+  "markdown.tool.numbers": "Liste numérotée",
+  "markdown.tool.checklist": "Liste à cocher",
+  "markdown.tool.quote": "Citation",
+  "markdown.tool.link": "Lien",
+  "markdown.tool.code": "Code",
+  "markdown.tool.codeBlock": "Bloc de code",
+  "markdown.charsLeft_one": "Encore {{count}} caractère",
+  "markdown.charsLeft_many": "Encore {{count}} caractères",
+  "markdown.charsLeft_other": "Encore {{count}} caractères",
 };
 
 export default fr;
