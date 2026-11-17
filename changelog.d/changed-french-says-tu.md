@@ -1,0 +1,1 @@
+- French now says « tu » throughout, matching every DPYC site.
