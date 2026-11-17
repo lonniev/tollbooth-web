@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.11.0] — 2026-11-17
+
+### Added
+
+- `@tollbooth-dpyc/web/markdown`: `MarkdownText` draws what a person wrote in Markdown safely (no raw HTML, links only to http(s) and mailto, pictures only from https), and `MarkdownEditor` is a sheet to write it in, with a toolbar, a preview and the characters left. Styles in `markdown.css`; its words in all six languages. Moved here from ChipIn so every site can use it.
+
 ## [3.10.1] — 2026-11-16
 
 ### Changed

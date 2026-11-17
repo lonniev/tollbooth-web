@@ -1,1 +1,0 @@
-- `@tollbooth-dpyc/web/markdown`: `MarkdownText` draws what a person wrote in Markdown safely (no raw HTML, links only to http(s) and mailto, pictures only from https), and `MarkdownEditor` is a sheet to write it in, with a toolbar, a preview and the characters left. Styles in `markdown.css`; its words in all six languages. Moved here from ChipIn so every site can use it.
