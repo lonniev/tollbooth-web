@@ -532,6 +532,27 @@ const hi: Translation = {
   "client.toolFailed": "टूल कॉल नहीं चल पाई",
   "client.signInRequired": "साइन इन ज़रूरी है।",
   "client.signInExpired": "आपका साइन इन खत्म हो गया है।",
+  // ── Markdown ──
+  "markdown.done": "हो गया",
+  "markdown.view": "लिखें या झलक देखें",
+  "markdown.write": "लिखें",
+  "markdown.preview": "झलक",
+  "markdown.empty": "अभी कुछ नहीं लिखा गया।",
+  "markdown.tools": "फ़ॉर्मैटिंग",
+  "markdown.filler": "शब्द",
+  "markdown.help": "यहाँ Markdown चलता है: **बोल्ड**, _इटैलिक_, ## शीर्षक, - सूची, - [ ] चेकलिस्ट, [लिंक](https://…), `कोड`, और ``` कोड ब्लॉक।",
+  "markdown.tool.bold": "बोल्ड",
+  "markdown.tool.italic": "इटैलिक",
+  "markdown.tool.heading": "शीर्षक",
+  "markdown.tool.bullets": "सूची",
+  "markdown.tool.numbers": "क्रमांकित सूची",
+  "markdown.tool.checklist": "चेकलिस्ट",
+  "markdown.tool.quote": "उद्धरण",
+  "markdown.tool.link": "लिंक",
+  "markdown.tool.code": "कोड",
+  "markdown.tool.codeBlock": "कोड ब्लॉक",
+  "markdown.charsLeft_one": "{{count}} अक्षर बाकी",
+  "markdown.charsLeft_other": "{{count}} अक्षर बाकी",
 };
 
 export default hi;

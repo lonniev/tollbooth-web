@@ -491,10 +491,34 @@ them after:
 :root { --tb-accent: #4cc38a; }
 ```
 
+## Markdown: show it, and a big editor to write it
+
+`@tollbooth-dpyc/web/markdown` is its own entry point, so a site that shows no
+Markdown never loads the parser.
+
+- `MarkdownText` draws what a person wrote. Nothing in it can run: raw HTML is
+  skipped, links go only to http(s) or mailto and open in a new tab, and a
+  picture shows only from an https address.
+- `MarkdownEditor` is a sheet over the page (the whole screen on a phone) with a
+  toolbar (bold, italic, heading, lists, checklist, quote, link, code), a
+  preview, and the characters left. The site names what is being written.
+
+```css
+@import "@tollbooth-dpyc/web/markdown.css";
+```
+
+```tsx
+import { MarkdownEditor, MarkdownText } from "@tollbooth-dpyc/web/markdown";
+
+{editing && <MarkdownEditor value={brief} maxLength={4000} title="The brief"
+  placeholder="What, by when, and what done looks like" onDone={(text) => { setBrief(text); setEditing(false); }} />}
+<MarkdownText text={brief} />
+```
+
 ## Stability
 
 From 1.0.0 the public API — everything exported from `@tollbooth-dpyc/web`,
-`/react`, `/pages-proxy`, `/agent-guide` and the `theme.css` tokens — follows semver. Patch and
+`/react`, `/pages-proxy`, `/agent-guide`, `/markdown` and the `theme.css` tokens — follows semver. Patch and
 minor releases are safe to take unattended (the fleet's Renovate preset
 auto-merges them); a breaking change ships only as a new major, which Renovate
 holds for review.
