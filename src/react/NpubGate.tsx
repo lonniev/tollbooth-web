@@ -28,10 +28,12 @@ import {
   type RecentLogin,
 } from "../identity.ts";
 import { connectAsHolder, holderEnabled, isHolder } from "../holder.ts";
+import { npubFromInput } from "../npubInput.ts";
 import { setSessionNsec } from "../sessionNsec.ts";
 import { readSignInFailure } from "../signInSituation.ts";
 import { receiveNpubProof, requestNpubProof } from "../standardTools.ts";
 import { cx } from "./cx.ts";
+import { NpubChip } from "./NpubField.tsx";
 import SignInLinks, { type SignInLinksClassNames } from "./SignInLinks.tsx";
 import SignInSteps, { type SignInStepsClassNames } from "./SignInSteps.tsx";
 import { gateStage } from "./signInFlow.ts";
@@ -310,6 +312,7 @@ export default function NpubGate({
               autoCorrect="off"
               className={input}
             />
+            {(() => { const r = isNpub ? npubFromInput(trimmed) : null; return r && "npub" in r ? <NpubChip npub={r.npub} /> : null; })()}
             {generatedHint && (
               <div className={warnBox}>
                 <Tx k="signin.generated" components={{ b: <b /> }} />

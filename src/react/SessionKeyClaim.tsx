@@ -29,7 +29,9 @@ import {
   hasSessionNsec,
   sessionNsecNpub,
 } from "../sessionNsec.ts";
+import { npubFromInput } from "../npubInput.ts";
 import { shareOrDownload } from "../shareFile.ts";
+import { NpubChip } from "./NpubField.tsx";
 import { card, input, muted } from "./ui.ts";
 import { useT } from "./useT.ts";
 
@@ -298,6 +300,7 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
               className={`mt-1 h-11 ${input}`}
             />
           </label>
+          {(() => { const r = npubFromInput(recipient); return "npub" in r ? <NpubChip npub={r.npub} /> : null; })()}
           <button
             type="button"
             onClick={() => void sendDm()}

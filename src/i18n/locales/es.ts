@@ -565,6 +565,17 @@ const es: Translation = {
   "markdown.charsLeft_one": "Queda {{count}} carácter",
   "markdown.charsLeft_many": "Quedan {{count}} caracteres",
   "markdown.charsLeft_other": "Quedan {{count}} caracteres",
+  "npub.placeholder": "npub1… o nombre@dominio",
+  "npub.add": "Añadir",
+  "npub.me": "Yo",
+  "npub.remove": "Quitar a {{name}}",
+  "npub.copy": "Copiar el npub",
+  "npub.verified": "{{address}} designa esta clave",
+  "npub.looking": "Buscando {{address}}…",
+  "npub.problem.secret": "Es una clave secreta. Nunca la pegues aquí.",
+  "npub.problem.notNpub": "«{{text}}» no es un npub.",
+  "npub.problem.noAddress": "{{address}} no designa ningún npub.",
+  "npub.problem.tooMany": "Como máximo {{max}} npub.",
 };
 
 export default es;

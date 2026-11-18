@@ -590,6 +590,17 @@ const ja: Translation = {
   "markdown.tool.codeBlock": "コードブロック",
   "markdown.charsLeft_one": "残り{{count}}文字",
   "markdown.charsLeft_other": "残り{{count}}文字",
+  "npub.placeholder": "npub1… または name@domain",
+  "npub.add": "追加",
+  "npub.me": "自分",
+  "npub.remove": "{{name}}を削除",
+  "npub.copy": "npubをコピー",
+  "npub.verified": "{{address}}はこの鍵を指しています",
+  "npub.looking": "{{address}}を検索中…",
+  "npub.problem.secret": "これは秘密鍵です。ここには絶対に貼り付けないでください。",
+  "npub.problem.notNpub": "「{{text}}」はnpubではありません。",
+  "npub.problem.noAddress": "{{address}}はnpubを指していません。",
+  "npub.problem.tooMany": "npubは最大{{max}}個です。",
 };
 
 export default ja;

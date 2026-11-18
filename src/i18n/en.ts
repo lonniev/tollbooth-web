@@ -594,4 +594,16 @@ export const en = {
   "markdown.tool.codeBlock": "Code block",
   "markdown.charsLeft_one": "{{count}} character left",
   "markdown.charsLeft_other": "{{count}} characters left",
+  // ── An npub field ──
+  "npub.placeholder": "npub1… or name@domain",
+  "npub.add": "Add",
+  "npub.me": "Me",
+  "npub.remove": "Remove {{name}}",
+  "npub.copy": "Copy the npub",
+  "npub.verified": "{{address}} names this key",
+  "npub.looking": "Looking up {{address}}…",
+  "npub.problem.secret": "That is a secret key. Never paste it here.",
+  "npub.problem.notNpub": "“{{text}}” is not an npub.",
+  "npub.problem.noAddress": "{{address}} names no npub.",
+  "npub.problem.tooMany": "At most {{max}} npubs.",
 } as const;
