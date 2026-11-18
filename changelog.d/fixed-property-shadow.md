@@ -1,0 +1,1 @@
+- An unset property shows as an empty field, never the word "null"; its first suggestion (or its default) shows faintly in it as an example, and a text property with suggestions offers them to pick.

@@ -102,8 +102,10 @@ function Control({ id, p, className, save }: { id: string; p: PropertyInfo; clas
   const commit = () => {
     if (draft !== asText(p.value)) save(draft);
   };
+  // What to show faintly while the field is empty: the operator's own suggestion, else the default.
+  const hint = p.suggestions?.[0] ?? (p.default == null ? undefined : asText(p.default));
   const typed = {
-    id, className, value: draft,
+    id, className, value: draft, placeholder: hint,
     onChange: (e: { target: { value: string } }) => setDraft(e.target.value),
     onBlur: commit,
     onKeyDown: (e: { key: string }) => e.key === "Enter" && commit(),
@@ -133,7 +135,15 @@ function Control({ id, p, className, save }: { id: string; p: PropertyInfo; clas
         </>
       );
     }
-    default:
-      return <input spellCheck={false} {...typed} />;
+    default: {
+      if (!p.suggestions?.length) return <input spellCheck={false} {...typed} />;
+      const listId = `${id}-suggestions`;
+      return (
+        <>
+          <input list={listId} spellCheck={false} {...typed} />
+          <datalist id={listId}>{p.suggestions.map((s) => <option key={s} value={s} />)}</datalist>
+        </>
+      );
+    }
   }
 }
