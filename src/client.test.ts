@@ -14,6 +14,13 @@ test("standard and site-named bootstrap tools go without it; the rest carry it",
   assert.equal(takesNoNpub("almanac"), false);
 });
 
+test("the operator's properties go without an npub, which the SDK's tools refuse", () => {
+  // tollbooth-dpyc's get_operator_properties() and set_operator_property(name, value) take no npub;
+  // sending one fails as an unexpected argument, and the Operator panel then never appears.
+  assert.equal(takesNoNpub("get_operator_properties"), true);
+  assert.equal(takesNoNpub("set_operator_property"), true);
+});
+
 test("an operator's prefix is what its service_status tool names", () => {
   assert.equal(prefixFromTools(["goodearth_check_balance", "goodearth_service_status"]), "goodearth");
   assert.equal(prefixFromTools(["oracle_about"]), null);
