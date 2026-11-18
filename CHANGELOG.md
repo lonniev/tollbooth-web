@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.11.1] — 2026-11-18
+
+### Fixed
+
+- The Operator panel on the account page now appears for the operator. Its two calls, `get_operator_properties` and `set_operator_property`, were sent with the signed-in npub, which the SDK's tools refuse as an unexpected argument, so the panel hid itself on every site.
+
 ## [3.11.0] — 2026-11-17
 
 ### Added
