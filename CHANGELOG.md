@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.12.0] — 2026-11-18
+
+### Added
+
+- `escrowSigning`: sign a Cashu escrow move with the signed-in npub's own key without signing blind. `checkedEscrowMessage` rebuilds the NUT-20 or NUT-11 message from the operator's parts, refuses sats not locked to the signer, payouts above what is held, and anything that is not a Cashu message, then hands back the digest; `signEscrow` / `signEscrowWithSessionKey` sign it (BIP-340). `pricingStudioEscrowLink` opens Pricing Studio on a job's escrow.
+
 ## [3.11.2] — 2026-11-18
 
 ### Fixed
