@@ -53,6 +53,10 @@ const STANDARD_BOOTSTRAP = [
   "receive_patron_credentials",
   "request_peer_grant",
   "receive_peer_grant",
+  // The operator's own settings take no npub: reading them is free, and setting
+  // one is proved by the signed connection, which must be the operator's.
+  "get_operator_properties",
+  "set_operator_property",
 ];
 
 const STANDARD_QUIET = ["service_status", "get_nostr_profile"];
