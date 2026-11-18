@@ -2,6 +2,13 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.13.0] — 2026-11-18
+
+### Added
+
+- `NpubField` / `NpubListField` / `NpubChip` (react): ask for an npub helpfully. A typed or pasted `npub1…`, `nostr:` link, hex key, nprofile or NIP-05 address (`name@domain`) is checked as it is entered and becomes a chiclet: a colour from the npub, the person's Nostr picture and name, the NIP-05 address with ✓ when it names this very key, copy and Remove. A list field takes a pasted list, keeps each npub once and has a `max`. An nsec is refused outright. Styled by `theme.css` (`.tb-npub-*`); a site passes its own input and button classes with `look`. Pure helpers `npubFromInput`, `npubsFromText`, `withNpubs`, `resolveNip05`, `nip05Names`, `npubCard`.
+- The sign-in gate and the session-key DM box show the chiclet for an npub typed into them.
+
 ## [3.12.0] — 2026-11-18
 
 ### Added
