@@ -1,1 +1,0 @@
-- The Operator panel on the account page now appears for the operator. Its two calls, `get_operator_properties` and `set_operator_property`, were sent with the signed-in npub, which the SDK's tools refuse as an unexpected argument, so the panel hid itself on every site.
