@@ -27,6 +27,19 @@ export {
   setSessionNsec,
 } from "./sessionNsec.ts";
 export { signRequest } from "./requestSigning.ts";
+export {
+  checkedEscrowMessage,
+  escrowMessage,
+  isSignatureHex,
+  pricingStudioEscrowLink,
+  PRICING_STUDIO_SCHEME,
+  signEscrow,
+  signEscrowWithSessionKey,
+  type CheckedEscrow,
+  type EscrowMessageKind,
+  type EscrowParts,
+  type EscrowSignable,
+} from "./escrowSigning.ts";
 export { sessionKeyClaimVisible } from "./sessionKeyClaim.ts";
 export { handOffMode, shareOrDownload, type ShareOutcome } from "./shareFile.ts";
 export { canSignFor, isProven, type Claim } from "./signedIn.ts";
