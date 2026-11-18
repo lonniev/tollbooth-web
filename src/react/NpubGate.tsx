@@ -243,7 +243,7 @@ export default function NpubGate({
   }
 
   return (
-    <div className={cx("max-w-md mx-auto mt-12 px-4", c.root)}>
+    <div className={cx("mt-12 px-4", c.root)}>
       <h1 className="text-xl font-semibold mb-1">{t("signin.heading", { appName })}</h1>
       {welcome && <div className={cx("text-sm mb-3", c.welcome)}>{welcome}</div>}
       <p className={cx(`text-sm mb-5 ${muted}`, c.register)}>
