@@ -82,6 +82,8 @@ export function setOperatorProperty(name: string, value: string, opts?: CallOpti
 
 /** A value as the tools take it: text as it is, anything else as JSON. */
 export function asText(value: unknown): string {
+  // Unset is an empty field, never the word "null".
+  if (value === null || value === undefined) return "";
   return typeof value === "string" ? value : JSON.stringify(value);
 }
 

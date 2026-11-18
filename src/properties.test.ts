@@ -160,5 +160,7 @@ describe("properties", () => {
     assert.equal(asText("C"), "C");
     assert.equal(asText(false), "false");
     assert.equal(asText(["gdd", "rain"]), "[\"gdd\",\"rain\"]");
+    assert.equal(asText(null), "");
+    assert.equal(asText(undefined), "");
   });
 });
