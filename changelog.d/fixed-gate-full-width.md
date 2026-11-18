@@ -1,0 +1,1 @@
+- The sign-in gate no longer holds itself to a narrow centred column (`max-w-md`); it uses the width of the page or card a site puts it in.
