@@ -570,6 +570,17 @@ const fr: Translation = {
   "markdown.charsLeft_one": "Encore {{count}} caractère",
   "markdown.charsLeft_many": "Encore {{count}} caractères",
   "markdown.charsLeft_other": "Encore {{count}} caractères",
+  "npub.placeholder": "npub1… ou nom@domaine",
+  "npub.add": "Ajouter",
+  "npub.me": "Moi",
+  "npub.remove": "Retirer {{name}}",
+  "npub.copy": "Copier le npub",
+  "npub.verified": "{{address}} désigne cette clé",
+  "npub.looking": "Recherche de {{address}}…",
+  "npub.problem.secret": "C'est une clé secrète. Ne la colle jamais ici.",
+  "npub.problem.notNpub": "« {{text}} » n'est pas un npub.",
+  "npub.problem.noAddress": "{{address}} ne désigne aucun npub.",
+  "npub.problem.tooMany": "Au plus {{max}} npub.",
 };
 
 export default fr;

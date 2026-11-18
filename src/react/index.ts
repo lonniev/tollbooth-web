@@ -56,6 +56,7 @@ export { default as SignInLinks, type SignInLinksClassNames, type SignInLinksPro
 export { SIGN_IN_LINKS, SIGN_IN_LINKS_CREDIT, type SignInLink } from "./signInTools.ts";
 export { default as NostrProfilePanel } from "./NostrProfilePanel.tsx";
 export { default as PeersPanel, type PeersPanelProps } from "./PeersPanel.tsx";
+export { NpubChip, NpubField, NpubListField, type NpubFieldLook } from "./NpubField.tsx";
 export {
   PageControls,
   SortHeader,

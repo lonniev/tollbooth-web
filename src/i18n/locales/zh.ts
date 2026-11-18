@@ -553,6 +553,17 @@ const zh: Translation = {
   "markdown.tool.codeBlock": "代码块",
   "markdown.charsLeft_one": "还可输入 {{count}} 个字符",
   "markdown.charsLeft_other": "还可输入 {{count}} 个字符",
+  "npub.placeholder": "npub1… 或 name@domain",
+  "npub.add": "添加",
+  "npub.me": "我",
+  "npub.remove": "移除 {{name}}",
+  "npub.copy": "复制 npub",
+  "npub.verified": "{{address}} 指向此密钥",
+  "npub.looking": "正在查找 {{address}}…",
+  "npub.problem.secret": "这是私钥。切勿粘贴到这里。",
+  "npub.problem.notNpub": "“{{text}}”不是 npub。",
+  "npub.problem.noAddress": "{{address}} 未指向任何 npub。",
+  "npub.problem.tooMany": "最多 {{max}} 个 npub。",
 };
 
 export default zh;

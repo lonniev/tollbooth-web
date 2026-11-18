@@ -553,6 +553,17 @@ const hi: Translation = {
   "markdown.tool.codeBlock": "कोड ब्लॉक",
   "markdown.charsLeft_one": "{{count}} अक्षर बाकी",
   "markdown.charsLeft_other": "{{count}} अक्षर बाकी",
+  "npub.placeholder": "npub1… या name@domain",
+  "npub.add": "जोड़ें",
+  "npub.me": "मैं",
+  "npub.remove": "{{name}} हटाएँ",
+  "npub.copy": "npub कॉपी करें",
+  "npub.verified": "{{address}} इसी कुंजी को दर्शाता है",
+  "npub.looking": "{{address}} खोजा जा रहा है…",
+  "npub.problem.secret": "यह गुप्त कुंजी है। इसे यहाँ कभी न चिपकाएँ।",
+  "npub.problem.notNpub": "“{{text}}” npub नहीं है।",
+  "npub.problem.noAddress": "{{address}} किसी npub को नहीं दर्शाता।",
+  "npub.problem.tooMany": "अधिकतम {{max}} npub।",
 };
 
 export default hi;

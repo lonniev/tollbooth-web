@@ -28,6 +28,17 @@ export {
 } from "./sessionNsec.ts";
 export { signRequest } from "./requestSigning.ts";
 export {
+  nip05Names,
+  npubCard,
+  npubFromInput,
+  npubHue,
+  npubsFromText,
+  resolveNip05,
+  withNpubs,
+  type NpubCard,
+  type NpubReading,
+} from "./npubInput.ts";
+export {
   checkedEscrowMessage,
   escrowMessage,
   isSignatureHex,
