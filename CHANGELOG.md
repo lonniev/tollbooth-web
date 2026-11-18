@@ -2,6 +2,14 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.11.2] — 2026-11-18
+
+### Fixed
+
+- The sign-in gate no longer holds itself to a narrow centred column (`max-w-md`); it uses the width of the page or card a site puts it in.
+
+- An unset property shows as an empty field, never the word "null"; its first suggestion (or its default) shows faintly in it as an example, and a text property with suggestions offers them to pick.
+
 ## [3.11.1] — 2026-11-18
 
 ### Fixed
