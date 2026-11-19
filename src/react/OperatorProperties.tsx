@@ -123,7 +123,17 @@ function Control({ id, p, className, save }: { id: string; p: PropertyInfo; clas
           onChange={(e) => save(e.target.checked ? "true" : "false")} />
       );
     case "number":
-      return <input type="number" min={p.minimum} max={p.maximum} {...typed} />;
+      if (p.minimum == null || p.maximum == null) return <input type="number" min={p.minimum} max={p.maximum} {...typed} />;
+      // A bounded number is a slider, kept when it is let go of; its value reads beside it.
+      return (
+        <span className="flex min-w-0 flex-1 items-center gap-2">
+          <input id={id} type="range" className="min-w-0 flex-1" min={p.minimum} max={p.maximum}
+            step={Number.isInteger(p.minimum) && Number.isInteger(p.maximum) ? 1 : "any"}
+            value={draft === "" ? (hint ?? p.minimum) : draft}
+            onChange={(e) => setDraft(e.target.value)} onPointerUp={commit} onKeyUp={commit} onBlur={commit} />
+          <output htmlFor={id} className="w-12 text-right tabular-nums">{draft === "" ? hint : draft}</output>
+        </span>
+      );
     case "llm_model": {
       const listId = `${id}-models`;
       return (
