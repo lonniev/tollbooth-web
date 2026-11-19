@@ -1,0 +1,1 @@
+- Hindi addresses the reader informally (तुम), like French, Spanish and Chinese already do; Japanese drops a redundant あなた where the sentence reads naturally without it.
