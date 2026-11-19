@@ -74,6 +74,7 @@ export {
 } from "./RefreshButton.tsx";
 export { default as PriceSheet, type PriceSheetProps } from "./PriceSheet.tsx";
 export { default as QuoteScroller, type QuoteScrollerProps, type QuoteScrollerClassNames } from "./QuoteScroller.tsx";
+export { default as Term, type TermProps, type TermClassNames } from "./Term.tsx";
 export {
   default as SessionKeyClaim,
   type SessionKeyClaimProps,
