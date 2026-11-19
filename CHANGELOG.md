@@ -2,6 +2,13 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.15.0] — 2026-11-19
+
+### Added
+
+- `Term`: a tap-to-define disclosure for a site's vocabulary (opens on the finger's lift, closes on a press elsewhere, Escape or after a reading time), with `dwellMs`. First written for Good Earth and FieldData.
+- The Good Brew shelf: `cafeCollections`, `cafeProducts` and their parsers, and `makeCafeProxy` for a site's `/cafe` Pages Function. First written for FieldData.
+
 ## [3.14.0] — 2026-11-19
 
 ### Changed
