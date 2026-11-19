@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.14.0] — 2026-11-19
+
+### Changed
+
+- `OperatorProperties`: a `number` property with both a minimum and a maximum is a slider with its value beside it, kept when it is let go of. An unbounded number is still a number field.
+
 ## [3.13.0] — 2026-11-18
 
 ### Added
