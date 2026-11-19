@@ -1,1 +1,0 @@
-- `OperatorProperties`: a `number` property with both a minimum and a maximum is a slider with its value beside it, kept when it is let go of. An unbounded number is still a number field.
