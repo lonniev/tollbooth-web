@@ -1,0 +1,2 @@
+- `Term`: a tap-to-define disclosure for a site's vocabulary (opens on the finger's lift, closes on a press elsewhere, Escape or after a reading time), with `dwellMs`. First written for Good Earth and FieldData.
+- The Good Brew shelf: `cafeCollections`, `cafeProducts` and their parsers, and `makeCafeProxy` for a site's `/cafe` Pages Function. First written for FieldData.

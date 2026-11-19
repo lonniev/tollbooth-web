@@ -15,7 +15,7 @@ features. It is the peer of the `tollbooth-dpyc` Python wheel.
   `BalanceAndTopUp`, `PatronCredentialsPanel`, `UsageSummary`, `PriceSheet`, `PatronFundingStatus` /
   `OperatorFundingStatus`, `BuildInfoPanel`, `TimezonePicker`, `TableFilter`,
   `SortHeader` / `PageControls` / `TableShell`, `ThemeToggle`, `ErrorBoundary`,
-  `AvatarPicker`, `DebugPanel`, `QuoteScroller`, `useSession`,
+  `AvatarPicker`, `DebugPanel`, `QuoteScroller`, `Term`, `useSession`,
   `useTheme`, `useTimezone`, `useDebugLog`
 - **Time zone** — the patron's display zone and the conversions every clock
   needs (render, datetime-local, day-filter bounds), DST-correct
@@ -454,6 +454,49 @@ Props: `quotes`, `source`, `heading`, `spinner`, `intervalMs` (default 3500),
 `author`), `marks` (curly quotes by default; `false` for none, or
 `[open, close]`), and `renderQuote(quote)` to draw a quote's markup yourself
 (then `text`, `mark` and `author` are unused).
+
+### A word and what it means
+
+`<Term>` is a tap-to-define disclosure for a site's vocabulary. Tap the word and
+its sentence opens under it. It closes on a press elsewhere, on Escape, or by
+itself once there has been time to read it (`dwellMs`). It toggles when the
+finger lifts, because the iPad can drop the click. With no `label` it is a bare
+ⓘ beside a field label or a column header.
+
+The words are the site's own: keep a glossary in the reader's language and pass
+its sentence as `said`. How it looks is yours, through `classNames`.
+
+```tsx
+import { Term } from "@tollbooth-dpyc/web/react";
+
+<Term label="deemed acceptance" said={glossary.deemed} classNames={{ word: "term", panel: "term-panel" }} />
+<label>Deposit <Term said={glossary.deposit} badgeLabel={t("whatThisMeans")} classNames={{ badge: "term-badge", panel: "term-panel" }} /></label>
+```
+
+Props: `label`, `said`, `children` (what this page adds under the shared
+meaning), `align` (`"right"` by default), `badgeLabel`, and `classNames`
+(`root`, `word`, `badge`, `panel`, `extra`).
+
+### The Good Brew shelf
+
+A site that shows what the Good Brew café sells reads its public catalog
+through its own Pages Function, because the store sends no CORS headers. Only
+the two catalog reads pass, and orders are placed at the café.
+
+```js
+// functions/cafe/[[path]].js
+import { makeCafeProxy } from "@tollbooth-dpyc/web/pages-proxy";
+export const onRequestGet = makeCafeProxy("MySite-Catalog/1.0 (+https://mysite.tollbooth-dpyc.com)");
+```
+
+```ts
+import { cafeCollections, cafeProducts } from "@tollbooth-dpyc/web";
+const shelf = await cafeCollections(["books", "mcps"]);   // the site's collections, in its order
+const page = await cafeProducts("books", 0);              // zero-based, like PageControls
+```
+
+Descriptions arrive as plain words, handles are checked, and only the store's
+own images (`cdn.shopify.com`) are kept.
 
 ### Languages
 

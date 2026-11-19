@@ -66,3 +66,52 @@ export function makeMcpProxy(upstream: string, fetchImpl: Fetch = fetch) {
     }
   };
 }
+
+/**
+ * A Cloudflare Pages Function that reads the Good Brew café's public catalog
+ * for the site's shelf (see `../cafe.ts`). The store sends no CORS headers, so
+ * the browser reads it through here.
+ *
+ *   // functions/cafe/[[path]].js
+ *   import { makeCafeProxy } from "@tollbooth-dpyc/web/pages-proxy";
+ *   export const onRequestGet = makeCafeProxy("CommissionMarket-Catalog/1.0 (+https://commissionmarket.tollbooth-dpyc.com)");
+ *
+ * Only the two catalog reads pass: this is no general proxy, and no cookie or
+ * header of the browser's crosses it. The store refuses a request with no
+ * User-Agent, and a Function's fetch sends none, so the site names itself.
+ */
+
+const CAFE = "https://cafe.tollbooth-dpyc.com";
+const CAFE_PAGE_SIZE = 24;
+const CAFE_HANDLE = /^[a-z0-9][a-z0-9-]{0,99}$/;
+
+/** The store URL a request for `pathname` may read, or null. */
+export function cafeUpstreamFor(pathname: string, search = ""): string | null {
+  if (pathname === "/cafe/collections.json") return `${CAFE}/collections.json`;
+  const match = pathname.match(/^\/cafe\/collections\/([^/]+)\/products\.json$/);
+  if (!match || !CAFE_HANDLE.test(match[1])) return null;
+  const page = Number(new URLSearchParams(search).get("page") ?? 1);
+  if (!Number.isInteger(page) || page < 1 || page > 1000) return null;
+  return `${CAFE}/collections/${match[1]}/products.json?limit=${CAFE_PAGE_SIZE}&page=${page}`;
+}
+
+export function makeCafeProxy(userAgent: string, fetchImpl: typeof fetch = fetch) {
+  return async function onRequestGet(context: { request: Request }): Promise<Response> {
+    const url = new URL(context.request.url);
+    const upstream = cafeUpstreamFor(url.pathname, url.search);
+    if (!upstream) return new Response("Not found", { status: 404 });
+    let answer: Response;
+    try {
+      answer = await fetchImpl(upstream, {
+        headers: { accept: "application/json", "user-agent": userAgent },
+        cf: { cacheTtl: 900, cacheEverything: true },
+      } as RequestInit);
+    } catch {
+      return new Response("The café did not answer", { status: 502 });
+    }
+    if (!answer.ok) return new Response("The café did not answer", { status: 502 });
+    return new Response(answer.body, {
+      headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=900" },
+    });
+  };
+}

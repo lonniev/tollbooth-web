@@ -94,6 +94,19 @@ export { buildFacts, type BuildFacts } from "./buildInfo.ts";
 export * from "./funding.ts";
 export { errorReport } from "./errorReport.ts";
 export { loadQuotes, peekQuotes, shuffle, validQuotes, type Quote } from "./quotes.ts";
+export { DWELL_MAX_MS, DWELL_MIN_MS, dwellMs } from "./dwell.ts";
+export {
+  CAFE_HANDLE,
+  CAFE_URL,
+  PRODUCT_PAGE_SIZE,
+  cafeCollections,
+  cafeProducts,
+  parseCollections,
+  parseProducts,
+  plainText,
+  type CafeCollection,
+  type CafeProduct,
+} from "./cafe.ts";
 export {
   captureGlobalErrors,
   clearDebug,
