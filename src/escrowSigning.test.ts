@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 import { schnorr } from "@noble/curves/secp256k1.js";
+import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils.js";
 import { finalizeEvent, getEventHash } from "nostr-tools";
 
@@ -44,6 +45,17 @@ describe("checkedEscrowMessage", () => {
   it("refuses sats that are not locked to the signer", () => {
     assert.match(why(checkedEscrowMessage(proposal, V.npubs.stranger, 1_000)), /not locked to your key/);
     assert.match(why(checkedEscrowMessage(collect, V.npubs.client, 1_000)), /not locked to your key/);
+  });
+
+  it("takes a payout's NUT-08 blank outputs, or none, and refuses a payout output with sats", () => {
+    const none = copy(collect);
+    none.parts.outputs = [];
+    none.sign_digest = bytesToHex(sha256(escrowMessage(none.parts)));
+    assert.ok("digest" in checkedEscrowMessage(none, V.npubs[collect.signer], 1_000), why(checkedEscrowMessage(none, V.npubs[collect.signer], 1_000)));
+    const paid = copy(collect);
+    paid.parts.outputs[0].amount = 1;
+    paid.sign_digest = bytesToHex(sha256(escrowMessage(paid.parts)));
+    assert.match(why(checkedEscrowMessage(paid, V.npubs[collect.signer], 1_000)), /not a Cashu output/);
   });
 
   it("refuses a digest that is not the message's, so a foreign digest is never signed", () => {
