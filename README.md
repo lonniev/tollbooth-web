@@ -299,11 +299,11 @@ function Nav() {
 
 <AccountPage
   npub={session.npub}
-  between={{ sessionKey: <XConnectPanel /> }}
+  panels={{ site: <XConnectPanel />, money: <Wallet /> }}
   timezone={{ note: (pref, zone) => (pref === "auto" ? `Currently ${zone}.` : `Using ${zone}.`) }}
   build={{ status, frontend: { version: __APP_VERSION__, source: "https://github.com/you/site" } }}
   onSignOut={session.signOut}
-  classNames={{ root: "space-y-5", section: "card p-5", signOut: "chip" }}
+  classNames={{ root: "space-y-5", group: "grid gap-3", groupSummary: "text-lg font-semibold", section: "card p-5", signOut: "chip" }}
 />
 
 <RefreshButton onRefresh={load} label="Refresh posts" classNames={{ root: "h-12 w-12 rounded-lg" }} />
@@ -326,10 +326,14 @@ function Nav() {
   arrows, Home and End; tap targets are at least 40 px. Router-agnostic:
   `isActive` and `renderLink` (plain `<a>` and `location.pathname` by
   default); `matchesPath(pathname, href, end)` is segment-bounded.
-- `AccountPage`: Nostr profile, session key, usage, time zone, theme, coupons,
-  build — one order. Each section is `false` or its own props; `before`,
-  `after`, and `between[section]` (kept in place when that section is off)
-  hold the site's panels.
+- `AccountPage`: one grouping for every site, each group a `<details>` that
+  folds: **You** (Nostr profile, appearance, time zone, session key, then Log
+  out), **Money** (usage, peers), **This site**, **Operator** (operator
+  properties; drawn for the operator alone), **About** (build). Each built-in
+  section is `false` or its own props; `panels.you|money|site|operator` hold
+  the site's own panels, after that group's sections. A group's body is a grid
+  (`classNames.groupBody`, or a default one), never CSS columns, which split
+  cards. A tour step pointing inside a folded group opens it first.
 - `RefreshButton`: spins (`motion-safe:animate-spin`, or
   `classNames.spinning`), is disabled and `aria-busy` while `onRefresh`'s
   promise runs or `busy` is set; `label` is the tooltip and accessible name.

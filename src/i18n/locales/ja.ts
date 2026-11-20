@@ -328,6 +328,11 @@ const ja: Translation = {
   "account.signOut": "ログアウト",
   "account.timezoneHeading": "表示するタイムゾーン",
   "account.appearanceHeading": "見た目",
+  "account.group.you": "あなた",
+  "account.group.money": "お金",
+  "account.group.site": "このサイト",
+  "account.group.operator": "オペレーター",
+  "account.group.about": "このアプリについて",
   // NostrProfilePanel
   "profile.field.displayName": "表示名",
   "profile.field.lightningAddress": "ライトニングアドレス（lud16）",

@@ -9,7 +9,7 @@ import { RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useId, useState, type ReactNode } from "react";
 import { isOperator } from "../funding.ts";
 import { currentClaim } from "../identity.ts";
-import { asText, getOperatorProperties, setOperatorProperty, type PropertyInfo } from "../properties.ts";
+import { asText, getOperatorProperties, setOperatorProperty, withUnit, type PropertyInfo } from "../properties.ts";
 import { sessionStatus } from "../standardTools.ts";
 import { errBox, iconButton, input } from "./ui.ts";
 import { useT } from "./useT.ts";
@@ -19,6 +19,8 @@ export interface OperatorPropertiesClassNames {
   heading?: string;
   row?: string;
   label?: string;
+  /** The property's description, a line under its row. */
+  description?: string;
   control?: string;
   reset?: string;
   error?: string;
@@ -80,8 +82,9 @@ function Row({ p, c, save }: { p: PropertyInfo; c: OperatorPropertiesClassNames;
   const t = useT();
   const id = useId();
   return (
+    <div>
     <div className={c.row ?? "flex items-center gap-2 py-1"}>
-      <label htmlFor={id} title={p.description || undefined} className={c.label ?? "flex-1 text-sm"}>
+      <label htmlFor={id} className={c.label ?? "flex-1 text-sm"}>
         {p.label}
       </label>
       <Control id={id} p={p} className={c.control ?? `${input} max-w-xs`} save={(v) => save(p.name, v)} />
@@ -95,6 +98,8 @@ function Row({ p, c, save }: { p: PropertyInfo; c: OperatorPropertiesClassNames;
       >
         <RotateCcw size={16} aria-hidden />
       </button>
+    </div>
+    {p.description && <p className={c.description ?? "text-xs opacity-70"}>{p.description}</p>}
     </div>
   );
 }
@@ -126,7 +131,14 @@ function Control({ id, p, className, save }: { id: string; p: PropertyInfo; clas
           onChange={(e) => save(e.target.checked ? "true" : "false")} />
       );
     case "number":
-      if (p.minimum == null || p.maximum == null) return <input type="number" min={p.minimum} max={p.maximum} {...typed} />;
+      if (p.minimum == null || p.maximum == null) {
+        return (
+          <span className="flex items-center gap-2">
+            <input type="number" min={p.minimum} max={p.maximum} {...typed} />
+            {p.unit && <span>{p.unit}</span>}
+          </span>
+        );
+      }
       // A bounded number is a slider, kept when it is let go of; its value reads beside it.
       return (
         <span className="flex min-w-0 flex-1 items-center gap-2">
@@ -134,7 +146,9 @@ function Control({ id, p, className, save }: { id: string; p: PropertyInfo; clas
             step={Number.isInteger(p.minimum) && Number.isInteger(p.maximum) ? 1 : "any"}
             value={draft === "" ? (hint ?? p.minimum) : draft}
             onChange={(e) => setDraft(e.target.value)} onPointerUp={commit} onKeyUp={commit} onBlur={commit} />
-          <output htmlFor={id} className="w-12 text-right tabular-nums">{draft === "" ? hint : draft}</output>
+          <output htmlFor={id} className="text-right tabular-nums whitespace-nowrap">
+            {withUnit(draft === "" ? hint : draft, p.unit)}
+          </output>
         </span>
       );
     case "llm_model": {

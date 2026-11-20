@@ -8,6 +8,7 @@ import {
   onPropertyChange,
   readProperty,
   syncProperties,
+  withUnit,
   writeProperty,
   type PropertyInfo,
 } from "./properties.ts";
@@ -162,5 +163,15 @@ describe("properties", () => {
     assert.equal(asText(["gdd", "rain"]), "[\"gdd\",\"rain\"]");
     assert.equal(asText(null), "");
     assert.equal(asText(undefined), "");
+  });
+});
+
+describe("withUnit", () => {
+  it("writes a percent tight and any other unit after a space", () => {
+    assert.equal(withUnit("75", "%"), "75%");
+    assert.equal(withUnit("3", "commissions"), "3 commissions");
+    assert.equal(withUnit("3"), "3");
+    assert.equal(withUnit("", "%"), "");
+    assert.equal(withUnit(undefined, "%"), "");
   });
 });

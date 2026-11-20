@@ -6,7 +6,7 @@ export {
   type AccountThemeProps,
   type AccountTimezoneProps,
 } from "./AccountPage.tsx";
-export { ACCOUNT_SECTIONS, type AccountSection } from "./accountSections.ts";
+export { ACCOUNT_GROUPS, accountGroups, type AccountGroup, type AccountSection } from "./accountSections.ts";
 export {
   default as AppShell,
   useAppShell,

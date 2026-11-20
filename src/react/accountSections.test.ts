@@ -1,34 +1,37 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { ACCOUNT_SECTIONS, accountSteps, type AccountStep } from "./accountSections.ts";
+import { ACCOUNT_GROUPS, accountGroups } from "./accountSections.ts";
 
-const names = (steps: AccountStep[]) => steps.map((s) => (s.kind === "section" ? s.section : `+${s.section}`));
+const shape = (plan: ReturnType<typeof accountGroups>) =>
+  plan.map((g) => `${g.group}:${g.sections.join(",")}${g.panels ? "+" : ""}`);
 
-describe("the account page's order", () => {
-  it("draws every section, in the one order, by default", () => {
-    assert.deepEqual(names(accountSteps({}, {})), [...ACCOUNT_SECTIONS]);
-    assert.deepEqual(
-      [...ACCOUNT_SECTIONS],
-      ["profile", "sessionKey", "operator", "usage", "peers", "timezone", "theme", "build"],
-    );
+describe("the account page's groups", () => {
+  it("puts every built-in section in exactly one group, in the one order", () => {
+    const all = ACCOUNT_GROUPS.flatMap((g) => g.sections);
+    assert.deepEqual(all, ["profile", "theme", "timezone", "sessionKey", "usage", "peers", "operator", "build"]);
+    assert.equal(new Set(all).size, all.length);
   });
 
-  it("puts a site's panel right after the section it names", () => {
-    assert.deepEqual(names(accountSteps({}, { sessionKey: "X connection" })).slice(0, 4), [
-      "profile",
-      "sessionKey",
-      "+sessionKey",
-      "operator",
-    ]);
+  it("draws you, money and about for a patron, and operator only for the operator", () => {
+    assert.deepEqual(shape(accountGroups({}, {}, { operator: false })),
+      ["you:profile,theme,timezone,sessionKey", "money:usage,peers", "about:build"]);
+    assert.deepEqual(shape(accountGroups({}, {}, { operator: true })).map((s) => s.split(":")[0]),
+      ["you", "money", "operator", "about"]);
   });
 
-  it("keeps a site's panel in place when the section before it is hidden", () => {
-    const steps = names(accountSteps({ theme: false }, { theme: "own theme" }));
-    assert.deepEqual(steps.slice(-3), ["timezone", "+theme", "build"]);
+  it("draws the site group only when the site gives it panels", () => {
+    assert.ok(shape(accountGroups({}, { site: "calendar" }, { operator: false })).includes("site:+"));
+    assert.ok(!shape(accountGroups({}, { site: false }, { operator: false })).some((s) => s.startsWith("site")));
   });
 
-  it("skips hidden sections and empty slots", () => {
-    const steps = names(accountSteps({ usage: false, peers: false, build: false }, { theme: null, timezone: false }));
-    assert.deepEqual(steps, ["profile", "sessionKey", "operator", "timezone", "theme"]);
+  it("marks a group the site adds to, and drops a group left empty", () => {
+    const plan = shape(accountGroups({ usage: false, peers: false, build: false }, { money: "wallet" }, { operator: false }));
+    assert.deepEqual(plan, ["you:profile,theme,timezone,sessionKey", "money:+"]);
+  });
+
+  it("keeps the you group for Log out even with every section of it hidden", () => {
+    const hidden = { profile: false, theme: false, timezone: false, sessionKey: false };
+    assert.equal(shape(accountGroups(hidden, {}, { operator: false, signOut: true }))[0], "you:");
+    assert.ok(!shape(accountGroups(hidden, {}, { operator: false })).some((s) => s.startsWith("you")));
   });
 });
