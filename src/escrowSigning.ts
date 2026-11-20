@@ -140,7 +140,11 @@ export function checkedEscrowMessage(item: EscrowSignable, npub: string, most: n
   if (!Array.isArray(parts.inputs) || !Array.isArray(parts.outputs) || typeof parts.quote !== "string") {
     return { why: "The message to sign is incomplete." };
   }
-  if (!parts.outputs.length || !parts.outputs.every((o) => isAmount(o.amount) && POINT.test(o.B_))) {
+  // A payout's outputs are NUT-08 blanks, amount 0, for the fee reserve's change; there may be none.
+  const blank = parts.kind === "melt";
+  const outputOk = (o: { amount: number; B_: string }) =>
+    (blank ? o.amount === 0 : isAmount(o.amount)) && POINT.test(o.B_);
+  if ((!blank && !parts.outputs.length) || !parts.outputs.every(outputOk)) {
     return { why: "The message pays out to something that is not a Cashu output." };
   }
   const out = parts.outputs.reduce((n, o) => n + o.amount, 0);
