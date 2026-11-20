@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.16.0] — 2026-11-19
+
+### Added
+
+- `termsOfUse()` writes the sections every site shares (your key, fees, the Good Brew café, the DPYC™ marks) after a site's own. `TermsOfUse` draws the page. `NpubGate`'s `termsHref` adds "By signing in, you accept the Terms of use" to the card, in six languages.
+
 ## [3.15.1] — 2026-11-19
 
 ### Changed
