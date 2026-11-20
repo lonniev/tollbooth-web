@@ -28,9 +28,11 @@ export interface OperatorPropertiesProps {
   /** Default "Operator"; null for none. */
   heading?: ReactNode;
   classNames?: OperatorPropertiesClassNames;
+  /** Properties the site edits in a panel of its own, left out here. */
+  omit?: string[];
 }
 
-export default function OperatorProperties({ heading: headingProp, classNames: c = {} }: OperatorPropertiesProps) {
+export default function OperatorProperties({ heading: headingProp, classNames: c = {}, omit }: OperatorPropertiesProps) {
   const t = useT();
   const heading = headingProp === undefined ? t("operator.heading") : headingProp;
   const [props, setProps] = useState<PropertyInfo[] | null>(null);
@@ -61,11 +63,12 @@ export default function OperatorProperties({ heading: headingProp, classNames: c
       : p)) ?? null);
   }, [t]);
 
-  if (!props) return null;
+  const shown = props?.filter((p) => !omit?.includes(p.name)) ?? [];
+  if (!shown.length) return null;
   return (
     <section className={c.root}>
       {heading != null && <h2 className={c.heading}>{heading}</h2>}
-      {props.map((p) => (
+      {shown.map((p) => (
         <Row key={p.name} p={p} c={c} save={save} />
       ))}
       {error && <p role="alert" className={c.error ?? errBox}>{error}</p>}

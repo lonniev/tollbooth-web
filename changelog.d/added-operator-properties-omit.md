@@ -1,0 +1,1 @@
+- `OperatorProperties` (and `AccountPage`'s `operator` option) take `omit`: properties a site edits in a panel of its own, left out of the generic list.
