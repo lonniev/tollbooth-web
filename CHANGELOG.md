@@ -2,6 +2,16 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [3.17.0] — 2026-11-20
+
+### Added
+
+- `OperatorProperties` (and `AccountPage`'s `operator` option) take `omit`: properties a site edits in a panel of its own, left out of the generic list.
+
+### Fixed
+
+- Signing an escrow payout in the browser works: the check takes the NUT-08 blank outputs (amount 0) a Cashu melt carries for its fee change, or none, and still refuses a payout output that carries sats. It used to refuse every real payout.
+
 ## [3.16.0] — 2026-11-19
 
 ### Added
