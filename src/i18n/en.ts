@@ -74,6 +74,7 @@ export const en = {
   "signin.links.oxchat": "A Nostr client for iPhone, Android and desktop. It holds your key and answers the sign-in message.",
   "signin.links.pricingStudio": "Where operators price their tools, live. Available on the App Store.",
   "signin.links.credit": "App Store is a trademark of Apple Inc., registered in the U.S. and other countries. 0xchat is a trademark of its owner.",
+  "signin.terms": "By signing in, you accept the <terms>Terms of use</terms>.",
   // claiming the session key
   "sessionKey.eyebrow": "Session key",
   "sessionKey.intro": "This browser is holding the secret key that signs you in. Take a copy before you clear site data or switch devices — without it, this identity is gone.",

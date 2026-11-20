@@ -534,6 +534,26 @@ them after:
 :root { --tb-accent: #4cc38a; }
 ```
 
+## Terms of use: the shared sections, and the page
+
+A site's terms of use are between each person and its operator. Every site says the same about keys, fees, the Good Brew café and the DPYC™ marks, so `termsOfUse` writes those sections once. A site brings only its own sections:
+
+```ts
+import { termsOfUse } from "@tollbooth-dpyc/web";
+import { TermsOfUse } from "@tollbooth-dpyc/web/react";
+
+const SECTIONS = termsOfUse({
+  name: "FieldData",
+  own: [{ title: "The service", says: ["FieldData returns readings…", "It is provided as is…"] }],
+  cafe: true,                                   // adds "The Catalog"
+  marks: ["Ecowitt is a trademark of its owner, and no affiliation is implied."],
+});
+
+<TermsOfUse heading={t("termsOfUse.title")} sections={SECTIONS} classNames={{ section: "card p-5", title: "text-lg" }} />
+```
+
+The page comes back in this order: the site's sections, then "Your key to the account", "Fees", "The Catalog" (when `cafe` is set), and "Marks". The terms stay in English; only the heading is translated. `NpubGate` takes `termsHref="/terms-of-use"` (through `AppShell`'s `gateOptions`) and then says, in the reader's language, that signing in accepts them.
+
 ## Markdown: show it, and a big editor to write it
 
 `@tollbooth-dpyc/web/markdown` is its own entry point, so a site that shows no

@@ -53,6 +53,8 @@ export interface NpubGateClassNames {
   steps?: SignInStepsClassNames;
   /** The tools list's parts; the gate's defaults apply where unset. */
   links?: SignInLinksClassNames;
+  /** The line saying that signing in accepts the terms of use. */
+  terms?: string;
 }
 
 export interface NpubGateProps {
@@ -71,6 +73,8 @@ export interface NpubGateProps {
   links?: boolean;
   /** The trademark credit under the links. Default true; false when the page's footer carries it. */
   linksCredit?: boolean;
+  /** Where the site's terms of use are. Given, the card says that signing in accepts them. */
+  termsHref?: string;
   classNames?: NpubGateClassNames;
 }
 
@@ -109,6 +113,7 @@ export default function NpubGate({
   steps = true,
   links = true,
   linksCredit = true,
+  termsHref,
   classNames: c = {},
 }: NpubGateProps) {
   const { appName } = tollboothConfig();
@@ -376,6 +381,11 @@ export default function NpubGate({
 
         {error && <Trouble raw={error} appName={appName} />}
         {note && <div className={`text-xs text-center italic ${muted}`}>{note}</div>}
+        {termsHref && (
+          <p className={c.terms ?? `text-xs text-center ${muted}`}>
+            <Tx k="signin.terms" components={{ terms: <a href={termsHref} className="underline" /> }} />
+          </p>
+        )}
       </div>
 
       {steps && <SignInSteps stage={gateStage(stage, busy)} classNames={{ ...STEPS_LOOK, ...c.steps }} />}

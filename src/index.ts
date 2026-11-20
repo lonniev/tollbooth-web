@@ -95,6 +95,7 @@ export * from "./funding.ts";
 export { errorReport } from "./errorReport.ts";
 export { loadQuotes, peekQuotes, shuffle, validQuotes, type Quote } from "./quotes.ts";
 export { DWELL_MAX_MS, DWELL_MIN_MS, dwellMs } from "./dwell.ts";
+export { termsOfUse, type TermsOfUseOptions, type TermsSection } from "./termsOfUse.ts";
 export {
   CAFE_HANDLE,
   CAFE_URL,

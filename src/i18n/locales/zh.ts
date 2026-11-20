@@ -62,6 +62,7 @@ const zh: Translation = {
   "signin.links.oxchat": "一个 Nostr 客户端，支持 iPhone、Android 和电脑。它保管你的密钥，并回复登录消息。",
   "signin.links.pricingStudio": "服务商在这里实时给自己的工具定价。可在 App Store 下载。",
   "signin.links.credit": "App Store 是 Apple Inc. 在美国及其他国家和地区注册的商标。0xchat 是其所有者的商标。",
+  "signin.terms": "登录即表示你接受<terms>使用条款</terms>。",
   "sessionKey.eyebrow": "会话密钥",
   "sessionKey.intro": "这个浏览器保管着让你登录的私钥。在清除网站数据或换设备之前，请先备份一份。没有它，这个身份就找不回来了。",
   "sessionKey.claim": "领取你的会话密钥",
