@@ -70,6 +70,7 @@ const ja: Translation = {
   "signin.links.oxchat": "iPhone、Android、パソコンで使える Nostr クライアントです。キーを持ち、サインインのメッセージに答えます。",
   "signin.links.pricingStudio": "オペレーターがツールの料金をその場で決めるアプリです。App Store で入手できます。",
   "signin.links.credit": "App Store は、米国およびその他の国で登録された Apple Inc. の商標です。0xchat はその所有者の商標です。",
+  "signin.terms": "サインインすると、<terms>利用規約</terms>に同意したことになります。",
   // claiming the session key
   "sessionKey.eyebrow": "セッションキー",
   "sessionKey.intro": "このブラウザには、あなたをサインインさせる秘密のキーが入っています。サイトのデータを消したり端末を替えたりする前に、控えを取っておいてください。控えがないと、この ID は失われます。",

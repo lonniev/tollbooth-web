@@ -1,0 +1,1 @@
+- `termsOfUse()` writes the sections every site shares (your key, fees, the Good Brew café, the DPYC™ marks) after a site's own. `TermsOfUse` draws the page. `NpubGate`'s `termsHref` adds "By signing in, you accept the Terms of use" to the card, in six languages.

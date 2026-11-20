@@ -67,6 +67,7 @@ const fr: Translation = {
   "signin.links.oxchat": "Un client Nostr pour iPhone, Android et ordinateur. Il garde ta clé et répond au message de connexion.",
   "signin.links.pricingStudio": "L'app où les opérateurs fixent le prix de leurs outils, en direct. Disponible sur l'App Store.",
   "signin.links.credit": "App Store est une marque d'Apple Inc., déposée aux États-Unis et dans d'autres pays. 0xchat est une marque de son propriétaire.",
+  "signin.terms": "En te connectant, tu acceptes les <terms>Conditions d'utilisation</terms>.",
   "sessionKey.eyebrow": "Clé de session",
   "sessionKey.intro": "Ce navigateur garde la clé secrète qui te connecte. Fais-en une copie avant d'effacer les données du site ou de changer d'appareil : sans elle, cette identité est perdue.",
   "sessionKey.claim": "Récupérer ta clé de session",
