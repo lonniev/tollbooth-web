@@ -37,6 +37,8 @@ export interface PropertyInfo {
   minimum?: number;
   maximum?: number;
   suggestions?: string[];
+  /** What a number counts, shown beside its value: "%", "days", "commissions". */
+  unit?: string;
   value: unknown;
   is_default: boolean;
   updated_at: string;
@@ -199,4 +201,11 @@ export async function syncProperties(npub: string): Promise<void> {
   }
   writeStored(`prop-synced:${npub}`, new Date().toISOString());
   syncedFor = npub;
+}
+
+/** A value with its unit: "75" and "%" read "75%", "3" and "commissions" read "3 commissions". */
+export function withUnit(value: string | undefined, unit?: string): string {
+  if (value == null || value === "") return "";
+  if (!unit) return value;
+  return unit === "%" ? `${value}%` : `${value} ${unit}`;
 }

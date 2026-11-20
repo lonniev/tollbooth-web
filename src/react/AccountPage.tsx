@@ -1,23 +1,20 @@
 /**
- * The Profile page every site composed for itself, in one order for all of
- * them: Nostr profile, session key, the operator's properties (for the
- * operator alone), usage, peers, time zone, theme, build.
+ * The Profile page every site composed for itself, in one grouping for all of
+ * them: You, Money, This site, Operator, About. Each group is a `<details>`
+ * that folds open and shut, its body a grid of panels.
  *
- * Each section is on by default; `false` turns it off and an object passes it
- * its own props (headings, words, `classNames`). A site's own panels go in
- * `before`, `after`, or `between` — `between.sessionKey` is drawn right after
- * the session key, and keeps that place even when the section is off (a site
- * with its own panel puts it in `between`).
- *
- * Mechanics only: the time zone and theme controls sit in a `<section>` with a
- * heading and a line of intro (`classNames.section` …); every other panel draws
- * itself. Log out is a chip at the end when `onSignOut` is given.
+ * Each built-in section is on by default; `false` turns it off and an object
+ * passes it its own props. A site's own panels go in `panels.<group>`, after
+ * that group's built-in sections. The operator group is drawn for the operator
+ * alone. Log out closes the You group when `onSignOut` is given.
  */
 
-import { Fragment, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { isOperator } from "../funding.ts";
+import { sessionStatus } from "../standardTools.ts";
 import type { Kind0 } from "../standardTools.ts";
 import type { TimezonePref } from "../timezone.ts";
-import { accountSteps, type AccountSection } from "./accountSections.ts";
+import { accountGroups, type AccountGroup, type AccountSection } from "./accountSections.ts";
 import BuildInfoPanel, { type BuildInfoPanelProps } from "./BuildInfoPanel.tsx";
 import NostrProfilePanel from "./NostrProfilePanel.tsx";
 import OperatorProperties, { type OperatorPropertiesProps } from "./OperatorProperties.tsx";
@@ -45,6 +42,10 @@ export interface AccountThemeProps extends ThemeToggleProps, AccountSectionText 
 export interface AccountPageClassNames {
   root?: string;
   heading?: string;
+  /** Each group: the `<details>`, its `<summary>`, and the grid of panels inside. */
+  group?: string;
+  groupSummary?: string;
+  groupBody?: string;
   /** The time-zone and theme sections: box, heading, intro, note. */
   section?: string;
   sectionHeading?: string;
@@ -69,15 +70,28 @@ export interface AccountPageProps {
   timezone?: boolean | AccountTimezoneProps;
   theme?: boolean | AccountThemeProps;
   build?: boolean | BuildInfoPanelProps;
-  before?: ReactNode;
-  /** A site's panel after the named section. */
-  between?: Partial<Record<AccountSection, ReactNode>>;
-  after?: ReactNode;
+  /** The site's own panels, each after its group's built-in sections. */
+  panels?: Partial<Record<Exclude<AccountGroup, "about">, ReactNode>>;
   onSignOut?: () => void;
   /** Default "Log out". */
   signOutLabel?: ReactNode;
   classNames?: AccountPageClassNames;
 }
+
+/** A group's panels side by side where they fit, one column on a phone. Never CSS columns: they split cards. */
+const GRID = {
+  display: "grid", gap: "0.75rem", alignItems: "start",
+  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 26rem), 1fr))",
+} as const;
+
+/** Each group's title, named key by key so every key is found where it is asked for. */
+const GROUP_TITLE = {
+  you: "account.group.you",
+  money: "account.group.money",
+  site: "account.group.site",
+  operator: "account.group.operator",
+  about: "account.group.about",
+} as const;
 
 const opts = <T extends object>(v: boolean | T | undefined): T => (typeof v === "object" ? v : ({} as T));
 
@@ -92,15 +106,20 @@ export default function AccountPage({
   timezone,
   theme,
   build,
-  before,
-  between = {},
-  after,
+  panels = {},
   onSignOut,
   signOutLabel: signOutLabelProp,
   classNames: c = {},
 }: AccountPageProps) {
   const t = useT();
   const [tzPref, tzZone] = useTimezone();
+  // The operator group is the operator's alone, gated as OperatorProperties gates itself.
+  const [operatorHere, setOperatorHere] = useState(false);
+  useEffect(() => {
+    let live = true;
+    sessionStatus().then((s) => live && setOperatorHere(isOperator(npub, s))).catch(() => undefined);
+    return () => { live = false; };
+  }, [npub]);
   const heading = headingProp === undefined ? t("account.heading") : headingProp;
   const signOutLabel = signOutLabelProp === undefined ? t("account.signOut") : signOutLabelProp;
   const shown = {
@@ -122,7 +141,7 @@ export default function AccountPage({
         // Keyed by npub so a revealed key never carries across a sign-in.
         return <SessionKeyClaim key={npub} npub={npub} {...opts(sessionKey)} />;
       case "operator":
-        return <OperatorProperties {...opts(operator)} />;
+        return <OperatorProperties heading={null} {...opts(operator)} />;
       case "usage":
         return <UsageSummary {...opts(usage)} />;
       case "peers":
@@ -153,23 +172,26 @@ export default function AccountPage({
     }
   };
 
+  const plan = accountGroups(shown, panels, { operator: operatorHere, signOut: Boolean(onSignOut) });
   return (
     <div className={c.root}>
       {heading != null && <h1 className={c.heading}>{heading}</h1>}
-      {before}
-      {accountSteps(shown, between).map((step) => (
-        <Fragment key={`${step.kind}:${step.section}`}>
-          {step.kind === "section" ? section(step.section) : between[step.section]}
-        </Fragment>
+      {plan.map(({ group, sections, panels: given }) => (
+        <details key={group} open className={c.group} data-account-group={group}>
+          <summary className={c.groupSummary}>{t(GROUP_TITLE[group])}</summary>
+          <div className={c.groupBody} style={c.groupBody ? undefined : GRID}>
+            {sections.map((s) => <div key={s} style={{ display: "contents" }}>{section(s)}</div>)}
+            {given && group !== "about" && panels[group]}
+            {group === "you" && onSignOut && (
+              <div className={c.actions}>
+                <button type="button" onClick={onSignOut} className={c.signOut}>
+                  {signOutLabel}
+                </button>
+              </div>
+            )}
+          </div>
+        </details>
       ))}
-      {after}
-      {onSignOut && (
-        <div className={c.actions}>
-          <button type="button" onClick={onSignOut} className={c.signOut}>
-            {signOutLabel}
-          </button>
-        </div>
-      )}
     </div>
   );
 }

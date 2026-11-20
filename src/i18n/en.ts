@@ -332,6 +332,11 @@ export const en = {
   "account.signOut": "Log out",
   "account.timezoneHeading": "Display time zone",
   "account.appearanceHeading": "Appearance",
+  "account.group.you": "You",
+  "account.group.money": "Money",
+  "account.group.site": "This site",
+  "account.group.operator": "Operator",
+  "account.group.about": "About",
   // NostrProfilePanel
   "profile.field.displayName": "Display name",
   "profile.field.lightningAddress": "Lightning address (lud16)",

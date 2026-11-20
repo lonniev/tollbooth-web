@@ -44,6 +44,13 @@ function present(s: TourStep): boolean {
   return typeof s.target === "string" ? !!document.querySelector(selector(s.target)) : !!s.target();
 }
 
+/** Open every folded `<details>` around a step's control, so the tour can point at it. */
+function unfold(s: TourStep | undefined): void {
+  if (!s) return;
+  let el: Element | null = typeof s.target === "string" ? document.querySelector(selector(s.target)) : s.target();
+  for (; el; el = el.parentElement) if (el instanceof HTMLDetailsElement && !el.open) el.open = true;
+}
+
 export function buildTour(tour: Tour, hooks: TourHooks): TourRun {
   let silent = false;
   // The step at or after `from` that can be shown: its control is on the
@@ -98,12 +105,13 @@ export function buildTour(tour: Tour, hooks: TourHooks): TourRun {
       if (n < 0) { d.destroy(); return; }
       const next = tour.steps[n];
       if (next.before) await hooks.run(next.before);
+      unfold(next);
       d.moveTo(n);
     },
     onPrevClick() {
       const i = d.getActiveIndex() ?? 0;
       const b = showableBack(i - 1);
-      if (b >= 0) d.moveTo(b);
+      if (b >= 0) { unfold(tour.steps[b]); d.moveTo(b); }
     },
     onDestroyed() {
       if (!silent) hooks.onEnd();
@@ -115,8 +123,8 @@ export function buildTour(tour: Tour, hooks: TourHooks): TourRun {
       const i = showable(0);
       if (i < 0) { hooks.onEnd(); return; }
       const first = tour.steps[i];
-      if (first.before) void Promise.resolve(hooks.run(first.before)).then(() => d.drive(i));
-      else d.drive(i);
+      if (first.before) void Promise.resolve(hooks.run(first.before)).then(() => { unfold(first); d.drive(i); });
+      else { unfold(first); d.drive(i); }
     },
     stop(quiet = true) {
       silent = quiet;
