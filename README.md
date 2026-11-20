@@ -552,7 +552,7 @@ const SECTIONS = termsOfUse({
 <TermsOfUse heading={t("termsOfUse.title")} sections={SECTIONS} classNames={{ section: "card p-5", title: "text-lg" }} />
 ```
 
-The page comes back in this order: the site's sections, then "Your key to the account", "Fees", "The Catalog" (when `cafe` is set), and "Marks". The terms stay in English; only the heading is translated. `NpubGate` takes `termsHref="/terms-of-use"` and then says, in the reader's language, that signing in accepts them.
+The page comes back in this order: the site's sections, then "Your key to the account", "Fees", "The Catalog" (when `cafe` is set), and "Marks". The terms stay in English; only the heading is translated. `NpubGate` takes `termsHref="/terms-of-use"` (through `AppShell`'s `gateOptions`) and then says, in the reader's language, that signing in accepts them.
 
 ## Markdown: show it, and a big editor to write it
 

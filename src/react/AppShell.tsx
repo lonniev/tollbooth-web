@@ -77,9 +77,10 @@ export interface AppShellProps {
   startFresh?: boolean;
   /**
    * The gate's own words and look: the site's `welcome` above the card, whether
-   * the sequence strip and the tool links show, and their `classNames`.
+   * the sequence strip and the tool links show, where its terms of use are, and
+   * their `classNames`.
    */
-  gateOptions?: Pick<NpubGateProps, "welcome" | "steps" | "links" | "linksCredit" | "classNames">;
+  gateOptions?: Pick<NpubGateProps, "welcome" | "steps" | "links" | "linksCredit" | "termsHref" | "classNames">;
   classNames?: AppShellClassNames;
 }
 
