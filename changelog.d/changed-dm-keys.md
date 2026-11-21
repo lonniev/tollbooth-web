@@ -1,1 +1,0 @@
-- i18n: `sessionKey.dm.recipientMustBeNpub` and `sessionKey.dm.npubUnreadable` are now `dm.recipientMustBeNpub` and `dm.npubUnreadable`; `dm.noSigner` is new. `SESSION_KEY_DM_RELAYS` is now `DM_RELAYS` (in `nostrDm.ts`), and `sendSessionKeyDm` no longer takes `nsecBytes` or `relays`.
