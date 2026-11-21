@@ -2,6 +2,20 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [4.1.0] — 2026-11-20
+
+### Added
+
+- `sendDm` / `canSendDm` (`nostrDm.ts`): send a NIP-17 DM as the signed-in npub, signed by the session key or a NIP-07 extension that encrypts NIP-44, to the recipient's inbox relays and the shared `DM_RELAYS`, with a copy to the sender. `sendSessionKeyDm` now sends through it.
+
+### Changed
+
+- i18n: `sessionKey.dm.recipientMustBeNpub` and `sessionKey.dm.npubUnreadable` are now `dm.recipientMustBeNpub` and `dm.npubUnreadable`; `dm.noSigner` is new. `SESSION_KEY_DM_RELAYS` is now `DM_RELAYS` (in `nostrDm.ts`), and `sendSessionKeyDm` no longer takes `nsecBytes` or `relays`.
+
+### Fixed
+
+- `Term`: an open ⓘ panel slides back inside the screen when the side it opens to would run off it, so a ⓘ near a card's edge no longer spills out of view.
+
 ## [4.0.0] — 2026-11-20
 
 ### Changed

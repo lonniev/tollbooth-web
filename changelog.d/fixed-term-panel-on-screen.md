@@ -1,1 +1,0 @@
-- `Term`: an open ⓘ panel slides back inside the screen when the side it opens to would run off it, so a ⓘ near a card's edge no longer spills out of view.
