@@ -95,8 +95,9 @@ const es: Translation = {
   "sessionKey.dm.accepted": "{{ok}}/{{total}} relays aceptaron el DM cifrado. Ábrelo desde el cliente de Nostr del destinatario.",
   "sessionKey.dm.noRelay": "Ningún relay aceptó el DM cifrado. Inténtalo de nuevo en un momento.",
   "sessionKey.dm.failed": "No se pudo enviar el DM.",
-  "sessionKey.dm.recipientMustBeNpub": "El destinatario debe ser una dirección npub1…",
-  "sessionKey.dm.npubUnreadable": "No se pudo leer ese npub.",
+  "dm.recipientMustBeNpub": "El destinatario debe ser una dirección npub1…",
+  "dm.npubUnreadable": "No se pudo leer ese npub.",
+  "dm.noSigner": "Inicia sesión con una clave de sesión o una extensión NIP-07 para enviar un mensaje de Nostr.",
 
   // ── Wallet, top-up, coupons, price sheet, usage, funding ──────────────────
   "wallet.heading": "Billetera",

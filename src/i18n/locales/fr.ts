@@ -100,8 +100,9 @@ const fr: Translation = {
   "sessionKey.dm.accepted": "Message chiffré accepté par {{ok}}/{{total}} relais. Ouvre-le depuis le client Nostr du destinataire.",
   "sessionKey.dm.noRelay": "Aucun relais n'a accepté le message chiffré. Réessaie dans un instant.",
   "sessionKey.dm.failed": "Impossible d'envoyer le message.",
-  "sessionKey.dm.recipientMustBeNpub": "Le destinataire doit être une adresse npub1….",
-  "sessionKey.dm.npubUnreadable": "Impossible de lire cette npub.",
+  "dm.recipientMustBeNpub": "Le destinataire doit être une adresse npub1….",
+  "dm.npubUnreadable": "Impossible de lire cette npub.",
+  "dm.noSigner": "Connecte-toi avec une clé de session ou une extension NIP-07 pour envoyer un message Nostr.",
 
   // ── Wallet, top-up, coupons, price sheet, usage, funding ──────────────────
   "wallet.heading": "Portefeuille",

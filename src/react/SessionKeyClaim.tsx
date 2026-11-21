@@ -25,7 +25,6 @@ import {
 import { sendSessionKeyDm } from "../sessionKeyDm.ts";
 import {
   getSessionNsec,
-  getSessionNsecBytes,
   hasSessionNsec,
   sessionNsecNpub,
 } from "../sessionNsec.ts";
@@ -166,7 +165,6 @@ function SessionKeyClaimInner({ actionClass }: { actionClass?: string }) {
       }
       const result = await sendSessionKeyDm({
         appName,
-        nsecBytes: getSessionNsecBytes(),
         nsecBech32: nsec,
         recipientNpub: to,
       });

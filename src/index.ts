@@ -56,6 +56,7 @@ export { handOffMode, shareOrDownload, type ShareOutcome } from "./shareFile.ts"
 export { canSignFor, isProven, type Claim } from "./signedIn.ts";
 export { readSignInFailure, type Situation } from "./signInSituation.ts";
 export { canSignProfile, fetchProfile, publishProfile } from "./nostrProfile.ts";
+export { canSendDm, DM_RELAYS, sendDm, type DmResult } from "./nostrDm.ts";
 export * from "./avatar.ts";
 export { isTransportFailure } from "./networkError.ts";
 export * from "./wallet.ts";

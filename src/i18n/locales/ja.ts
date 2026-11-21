@@ -104,8 +104,9 @@ const ja: Translation = {
   "sessionKey.dm.accepted": "{{ok}}/{{total}} 個のリレーが暗号化 DM を受け取りました。宛先の Nostr クライアントで開いてください。",
   "sessionKey.dm.noRelay": "暗号化 DM を受け取ったリレーはありませんでした。少ししてからもう一度お試しください。",
   "sessionKey.dm.failed": "DM を送れませんでした。",
-  "sessionKey.dm.recipientMustBeNpub": "宛先は npub1… の形にしてください。",
-  "sessionKey.dm.npubUnreadable": "その npub を読み取れませんでした。",
+  "dm.recipientMustBeNpub": "宛先は npub1… の形にしてください。",
+  "dm.npubUnreadable": "その npub を読み取れませんでした。",
+  "dm.noSigner": "Nostr メッセージを送るには、セッションキーか NIP-07 拡張機能でサインインしてね。",
 
   // ── Wallet, top-up, coupons, price sheet, usage, funding ──────────────────
   // The wallet: balance, tranches, statement

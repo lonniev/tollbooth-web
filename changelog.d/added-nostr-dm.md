@@ -1,0 +1,1 @@
+- `sendDm` / `canSendDm` (`nostrDm.ts`): send a NIP-17 DM as the signed-in npub, signed by the session key or a NIP-07 extension that encrypts NIP-44, to the recipient's inbox relays and the shared `DM_RELAYS`, with a copy to the sender. `sendSessionKeyDm` now sends through it.

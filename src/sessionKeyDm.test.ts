@@ -3,11 +3,21 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { generateSecretKey, getPublicKey, nip19 } from "nostr-tools";
-import {
-  recipientPubkeyHex,
-  sendSessionKeyDm,
-  sessionKeyDmBody,
-} from "./sessionKeyDm.ts";
+import { configureTollbooth } from "./config.ts";
+import { recipientPubkeyHex } from "./nostrDm.ts";
+import { setSessionNsec } from "./sessionNsec.ts";
+import { sendSessionKeyDm, sessionKeyDmBody } from "./sessionKeyDm.ts";
+
+const kept = new Map<string, string>();
+Object.defineProperty(globalThis, "localStorage", {
+  configurable: true,
+  value: {
+    getItem: (k: string) => kept.get(k) ?? null,
+    setItem: (k: string, v: string) => void kept.set(k, String(v)),
+    removeItem: (k: string) => void kept.delete(k),
+  },
+});
+configureTollbooth({ slug: "ge", appName: "Good Earth", mcpUrl: "/mcp" });
 
 describe("sessionKeyDmBody", () => {
   it("includes the nsec and a short warning, nothing else sensitive-shaped", () => {
@@ -41,12 +51,12 @@ describe("sendSessionKeyDm", () => {
 
     let published: { kind?: number; content?: string; tags?: string[][] } | null =
       null;
+    setSessionNsec(nsec);
     const result = await sendSessionKeyDm({
       appName: "Good Earth",
-      nsecBytes: sender,
       nsecBech32: nsec,
       recipientNpub,
-      relays: ["wss://example.test"],
+      lookup: async () => [],
       publish: async (wrap) => {
         published = wrap as typeof published;
         // The publisher (and any log of it) must not see the plaintext nsec.
