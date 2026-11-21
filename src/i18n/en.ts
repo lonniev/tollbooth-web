@@ -108,8 +108,9 @@ export const en = {
   "sessionKey.dm.accepted": "Encrypted DM accepted by {{ok}}/{{total}} relays. Open it from the recipient’s Nostr client.",
   "sessionKey.dm.noRelay": "No relay accepted the encrypted DM. Try again in a moment.",
   "sessionKey.dm.failed": "Could not send the DM.",
-  "sessionKey.dm.recipientMustBeNpub": "Recipient must be an npub1… address.",
-  "sessionKey.dm.npubUnreadable": "Could not read that npub.",
+  "dm.recipientMustBeNpub": "Recipient must be an npub1… address.",
+  "dm.npubUnreadable": "Could not read that npub.",
+  "dm.noSigner": "Sign in with a session key or a NIP-07 extension to send a Nostr message.",
 
   // ── Wallet, top-up, coupons, price sheet, usage, funding ──────────────────
   // The wallet: balance, tranches, statement

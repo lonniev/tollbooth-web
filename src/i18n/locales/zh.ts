@@ -95,8 +95,9 @@ const zh: Translation = {
   "sessionKey.dm.accepted": "{{ok}}/{{total}} 个中继已接收这条加密私信。请在收件人的 Nostr 客户端里打开。",
   "sessionKey.dm.noRelay": "没有中继接收这条加密私信。请稍后再试。",
   "sessionKey.dm.failed": "私信没发出去。",
-  "sessionKey.dm.recipientMustBeNpub": "收件人必须是 npub1… 地址。",
-  "sessionKey.dm.npubUnreadable": "无法读取这个 npub。",
+  "dm.recipientMustBeNpub": "收件人必须是 npub1… 地址。",
+  "dm.npubUnreadable": "无法读取这个 npub。",
+  "dm.noSigner": "用会话密钥或 NIP-07 扩展登录，才能发送 Nostr 消息。",
 
   // ── Wallet, top-up, coupons, price sheet, usage, funding ──────────────────
   "wallet.heading": "钱包",

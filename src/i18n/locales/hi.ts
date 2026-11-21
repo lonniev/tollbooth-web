@@ -95,8 +95,9 @@ const hi: Translation = {
   "sessionKey.dm.accepted": "एन्क्रिप्टेड DM {{ok}}/{{total}} रिले ने स्वीकार किया। इसे पाने वाले के Nostr क्लाइंट में खोलो।",
   "sessionKey.dm.noRelay": "किसी रिले ने एन्क्रिप्टेड DM स्वीकार नहीं किया। थोड़ी देर बाद फिर कोशिश करो।",
   "sessionKey.dm.failed": "DM नहीं भेजा जा सका।",
-  "sessionKey.dm.recipientMustBeNpub": "पाने वाला npub1… पता होना चाहिए।",
-  "sessionKey.dm.npubUnreadable": "वह npub पढ़ा नहीं जा सका।",
+  "dm.recipientMustBeNpub": "पाने वाला npub1… पता होना चाहिए।",
+  "dm.npubUnreadable": "वह npub पढ़ा नहीं जा सका।",
+  "dm.noSigner": "Nostr संदेश भेजने के लिए सेशन कुंजी या NIP-07 एक्सटेंशन से साइन इन करो।",
 
   // ── Wallet, top-up, coupons, price sheet, usage, funding ──────────────────
   "wallet.heading": "वॉलेट",
