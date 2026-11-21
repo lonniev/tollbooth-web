@@ -20,11 +20,14 @@
  * Mechanics only. The site brings the definition (`said`, from its own
  * glossary in the reader's language) and every visual choice through
  * `classNames`. The package sets only what the disclosure needs to work: the
- * panel sits under the word, wraps, and is never wider than the screen.
+ * panel sits under the word, wraps, is never wider than the screen, and is
+ * slid back inside the screen when the side it opens to would run off it
+ * (2026-11-20: a ⓘ at a card's left edge opened off the iPad's left side).
  */
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { dwellMs } from "../dwell.ts";
+import { inside } from "./onScreen.ts";
 
 export interface TermClassNames {
   /** The box around the word and its panel. */
@@ -73,6 +76,15 @@ export default function Term({ label, said, children, align = "right", badgeLabe
   const panel = useRef<HTMLSpanElement>(null);
   /** A lift already toggled it, so the click that may follow must not undo it. */
   const lifted = useRef(false);
+  /** How far the open panel is slid to stay on screen. */
+  const [slide, setSlide] = useState(0);
+
+  // Measured as it opens, before it is painted; closed, it is back where `align` puts it.
+  useLayoutEffect(() => {
+    if (!open || !panel.current) return setSlide(0);
+    const r = panel.current.getBoundingClientRect();
+    setSlide(inside(r.left, r.right, document.documentElement.clientWidth));
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -119,7 +131,7 @@ export default function Term({ label, said, children, align = "right", badgeLabe
         {label ?? "i"}
       </button>
       {open && (
-        <span ref={panel} role="tooltip" className={classNames.panel} style={{ ...PANEL, [align === "left" ? "left" : "right"]: 0 }}>
+        <span ref={panel} role="tooltip" className={classNames.panel} style={{ ...PANEL, [align === "left" ? "left" : "right"]: 0, transform: slide ? `translateX(${slide}px)` : undefined }}>
           {said != null && <span style={{ display: "block" }}>{said}</span>}
           {children != null && <span className={classNames.extra} style={{ display: "block" }}>{children}</span>}
         </span>
