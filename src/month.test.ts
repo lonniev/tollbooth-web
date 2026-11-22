@@ -16,6 +16,13 @@ test("a month that starts late in the week pads back to its Sunday", () => {
   assert.equal(weeks[0]![0]!.key, "2026-07-26");
   assert.equal(weeks[0]![0]!.inMonth, false);
   assert.equal(weeks.flat().filter((d) => d.inMonth).length, 31);
+  assert.equal(weeks.length, 6);
+});
+
+test("a February that starts on a Sunday fills exactly four weeks", () => {
+  const feb = monthWeeks(2026, 1);
+  assert.equal(feb.length, 4);
+  assert.equal(feb.flat().filter((d) => d.inMonth).length, 28);
 });
 
 test("without a zone a day is the browser's own", () => {
