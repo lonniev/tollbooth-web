@@ -9,7 +9,7 @@
  * moved here, so their stylesheets apply unchanged.
  */
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { dayKey, eventsByDay, monthOf, monthWeeks, shiftMonth } from "../month.ts";
 import { cx } from "./cx.ts";
@@ -63,10 +63,12 @@ export interface MonthCalendarProps<E> {
   classNames?: MonthCalendarClassNames;
   /** The size of the month arrows. Default 20. */
   iconSize?: number;
+  /** Told the month shown, first and on every step, for a site that loads a month's events as it is shown. */
+  onMonth?: (shown: { year: number; month: number }) => void;
 }
 
 export default function MonthCalendar<E>({
-  events, at, now, timeZone, marks, dayLabel, dayClass, legend, footer, renderDay, words = {}, classNames = {}, iconSize = 20,
+  events, at, now, timeZone, marks, dayLabel, dayClass, legend, footer, renderDay, words = {}, classNames = {}, iconSize = 20, onMonth,
 }: MonthCalendarProps<E>) {
   const t = useT();
   const locale = useLanguageLocale();
@@ -76,6 +78,7 @@ export default function MonthCalendar<E>({
   const today = dayKey(now, timeZone);
   const [shown, setShown] = useState(() => monthOf(now, timeZone));
   const [picked, setPicked] = useState(today);
+  useEffect(() => { onMonth?.(shown); }, [shown, onMonth]);
   const days = eventsByDay(events, at, timeZone);
   const title = new Date(shown.year, shown.month, 1).toLocaleDateString(locale, { month: "long", year: "numeric" });
   const pickedEvents = days.get(picked) ?? [];
