@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [4.2.0] — 2026-11-22
+
+### Added
+
+- `MonthCalendar` (from `/react`): a month of a site's events, a day's marks, and the picked day's list. ChipIn and CommissionMarket each drew their own; now one component draws all of them. `dayKey`, `monthWeeks`, `shiftMonth`, `monthOf` and `eventsByDay` come with it, and `dayKey` takes an optional time zone so a day can be the patron's.
+
 ## [4.1.0] — 2026-11-20
 
 ### Added

@@ -1,1 +1,0 @@
-- `MonthCalendar` (from `/react`): a month of a site's events, a day's marks, and the picked day's list. ChipIn and CommissionMarket each drew their own; now one component draws all of them. `dayKey`, `monthWeeks`, `shiftMonth`, `monthOf` and `eventsByDay` come with it, and `dayKey` takes an optional time zone so a day can be the patron's.
