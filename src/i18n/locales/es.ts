@@ -551,6 +551,10 @@ const es: Translation = {
   "client.signInRequired": "Necesitas iniciar sesión.",
   "client.signInExpired": "Tu sesión venció.",
   // ── Markdown ──
+  "month.before": "El mes anterior",
+  "month.after": "El mes siguiente",
+  "month.key": "Qué significan las marcas",
+  "month.nothing": "Nada en este día.",
   "markdown.done": "Listo",
   "markdown.view": "Escribir o previsualizar",
   "markdown.write": "Escribir",

@@ -556,6 +556,10 @@ const fr: Translation = {
   "client.signInRequired": "Connexion requise.",
   "client.signInExpired": "Ta connexion a expiré.",
   // ── Markdown ──
+  "month.before": "Le mois précédent",
+  "month.after": "Le mois suivant",
+  "month.key": "Ce que signifient les repères",
+  "month.nothing": "Rien ce jour-là.",
   "markdown.done": "Terminé",
   "markdown.view": "Écrire ou prévisualiser",
   "markdown.write": "Écrire",

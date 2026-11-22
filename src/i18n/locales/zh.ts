@@ -540,6 +540,10 @@ const zh: Translation = {
   "client.signInRequired": "需要登录。",
   "client.signInExpired": "你的登录已过期。",
   // ── Markdown ──
+  "month.before": "上个月",
+  "month.after": "下个月",
+  "month.key": "标记说明",
+  "month.nothing": "这一天没有安排。",
   "markdown.done": "完成",
   "markdown.view": "编辑或预览",
   "markdown.write": "编辑",

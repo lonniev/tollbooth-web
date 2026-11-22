@@ -577,6 +577,10 @@ const ja: Translation = {
   "client.signInRequired": "サインインが必要です。",
   "client.signInExpired": "サインインの期限が切れました。",
   // ── Markdown ──
+  "month.before": "前の月",
+  "month.after": "次の月",
+  "month.key": "印の意味",
+  "month.nothing": "この日の予定はありません。",
   "markdown.done": "完了",
   "markdown.view": "編集またはプレビュー",
   "markdown.write": "編集",
