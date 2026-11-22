@@ -580,6 +580,12 @@ export const en = {
   "client.toolFailed": "Tool call failed",
   "client.signInRequired": "Sign-in required.",
   "client.signInExpired": "Your sign-in has expired.",
+  // ── A month calendar ──
+  "month.before": "The month before",
+  "month.after": "The month after",
+  "month.key": "What the marks mean",
+  "month.nothing": "Nothing on this day.",
+
   // ── Markdown: the editor sheet and its toolbar ──
   "markdown.done": "Done",
   "markdown.view": "Write or preview",

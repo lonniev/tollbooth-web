@@ -65,6 +65,7 @@ export * from "./table.ts";
 export * from "./theme.ts";
 export * from "./textSize.ts";
 export * from "./timezone.ts";
+export { dayKey, eventsByDay, monthOf, monthWeeks, shiftMonth, type MonthDay } from "./month.ts";
 export * from "./properties.ts";
 export { usageFacts, type ToolSpend, type UsageFacts } from "./usage.ts";
 export {

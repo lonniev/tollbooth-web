@@ -151,3 +151,9 @@ export {
   type UseTourOptions,
 } from "./useTour.tsx";
 export { buildTour, offerTour, OFFER_WORDS, type Offer, type OfferHooks, type OfferWords, type TourHooks, type TourRun } from "../tour/run.ts";
+export {
+  default as MonthCalendar,
+  type MonthCalendarClassNames,
+  type MonthCalendarProps,
+  type MonthCalendarWords,
+} from "./MonthCalendar.tsx";

@@ -540,6 +540,10 @@ const hi: Translation = {
   "client.signInRequired": "साइन इन ज़रूरी है।",
   "client.signInExpired": "तुम्हारा साइन इन खत्म हो गया है।",
   // ── Markdown ──
+  "month.before": "पिछला महीना",
+  "month.after": "अगला महीना",
+  "month.key": "चिह्नों का अर्थ",
+  "month.nothing": "इस दिन कुछ नहीं है।",
   "markdown.done": "हो गया",
   "markdown.view": "लिखो या झलक देखो",
   "markdown.write": "लिखो",
