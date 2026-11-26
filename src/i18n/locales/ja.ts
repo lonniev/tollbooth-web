@@ -17,7 +17,8 @@ const ja: Translation = {
   "signin.recent.leftHours": "残り {{hours}}時間{{minutes}}分",
   "signin.recent.leftMinutes": "残り {{minutes}}分",
   "signin.recent.forget": "この ID を削除",
-  "signin.field.label": "npub（安全）または nsec（手軽）を入力",
+  "signin.field.label": "npub または NIP-05 アドレス（安全）、または nsec（手軽）を入力",
+  "signin.field.placeholder": "npub1… · 名前@ドメイン · nsec1…",
   "signin.generated": "新しいキーを作りました。<b>この nsec を安全な場所に保存してください</b>。控えはこれひとつだけで、このブラウザの中にしかありません。",
   "signin.sending": "送信中…",
   "signin.sendMessage": "メッセージを送る",
@@ -40,7 +41,7 @@ const ja: Translation = {
   "signin.sessionLapsed": "離れている間にセッションが切れました。続けるにはもう一度サインインしてください。",
   // the gate's failures
   "signin.error.nsecUnreadable": "その nsec を読み取れませんでした：{{reason}}",
-  "signin.error.invalidNpub": "正しい npub1… キーを入力してください。",
+  "signin.error.invalidNpub": "正しい npub1… キーまたは NIP-05 アドレス（名前@ドメイン）を入力してください。",
   "signin.error.keyOnly": "このサイトはキーでサインインします。nsec を貼り付けるか、新しく作ってください。",
   "signin.error.noPhrase": "サービスからセッションフレーズが返ってきませんでした。もう一度お試しください。",
   "signin.error.proofNotKept": "サービスがこのページの証明を保持できませんでした。もう一度お試しください。",

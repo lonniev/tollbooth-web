@@ -21,7 +21,8 @@ export const en = {
   "signin.recent.leftHours": "{{hours}}h {{minutes}}m left",
   "signin.recent.leftMinutes": "{{minutes}}m left",
   "signin.recent.forget": "Forget this identity",
-  "signin.field.label": "Enter npub (secure) or nsec (convenient)",
+  "signin.field.label": "Enter npub or NIP-05 address (secure), or nsec (convenient)",
+  "signin.field.placeholder": "npub1… · name@domain · nsec1…",
   "signin.generated": "New key generated. <b>Save this nsec</b> somewhere safe — it's the only copy and it lives only in this browser.",
   "signin.sending": "Sending…",
   "signin.sendMessage": "Send message",
@@ -44,7 +45,7 @@ export const en = {
   "signin.sessionLapsed": "Your session lapsed while you were away. Sign in again to carry on.",
   // the gate's failures
   "signin.error.nsecUnreadable": "Couldn't read that nsec: {{reason}}",
-  "signin.error.invalidNpub": "Enter a valid npub1… key.",
+  "signin.error.invalidNpub": "Enter a valid npub1… key or NIP-05 address (name@domain).",
   "signin.error.keyOnly": "This site signs in with a key only — paste an nsec, or make one.",
   "signin.error.noPhrase": "The service did not return a session phrase. Try again.",
   "signin.error.proofNotKept": "The service did not keep the proof for this page. Try again.",
