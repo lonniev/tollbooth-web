@@ -1,1 +1,0 @@
-- The sign-in field's label and placeholder name all three things it takes: an npub, a NIP-05 address or an nsec.
