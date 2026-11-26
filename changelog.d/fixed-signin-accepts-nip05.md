@@ -1,1 +1,0 @@
-- Sign-in takes a NIP-05 address (name@domain) as well as an npub; the operator resolves it and sends the proof DM to the key it names.

@@ -2,6 +2,16 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [4.2.2] — 2026-11-26
+
+### Changed
+
+- The sign-in field's label and placeholder name all three things it takes: an npub, a NIP-05 address or an nsec.
+
+### Fixed
+
+- Sign-in takes a NIP-05 address (name@domain) as well as an npub; the operator resolves it and sends the proof DM to the key it names.
+
 ## [4.2.1] — 2026-11-25
 
 ### Changed
