@@ -317,7 +317,7 @@ export default function NpubGate({
                 if (isNsec) signInWithNsec();
                 else void begin();
               }}
-              placeholder="npub1…"
+              placeholder={t("signin.field.placeholder")}
               spellCheck={false}
               autoCapitalize="off"
               autoCorrect="off"
