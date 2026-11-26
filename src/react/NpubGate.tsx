@@ -141,7 +141,13 @@ export default function NpubGate({
   const trimmed = value.trim();
   const isNsec = trimmed.startsWith("nsec1") && trimmed.length > 8;
   const isNpub = trimmed.startsWith("npub1") && trimmed.length >= 60;
-  const valid = isNsec || isNpub;
+  // A NIP-05 address (name@domain) goes to the operator as typed; it resolves
+  // the address to its key and proves that key. The browser cannot read most
+  // nostr.json files itself — they send no CORS header.
+  const reading = npubFromInput(trimmed);
+  const isAddress = "address" in reading;
+  const asksProof = isNpub || isAddress;
+  const valid = isNsec || asksProof;
 
   function reuseRecent(entry: RecentLogin) {
     setStoredNpub(entry.npub);
@@ -179,7 +185,7 @@ export default function NpubGate({
 
   async function begin() {
     const npubToProve = trimmed;
-    if (!(npubToProve.startsWith("npub1") && npubToProve.length >= 60)) {
+    if (!asksProof) {
       setError(t("signin.error.invalidNpub"));
       return;
     }
@@ -317,7 +323,7 @@ export default function NpubGate({
               autoCorrect="off"
               className={input}
             />
-            {(() => { const r = isNpub ? npubFromInput(trimmed) : null; return r && "npub" in r ? <NpubChip npub={r.npub} /> : null; })()}
+            {isNpub && "npub" in reading && <NpubChip npub={reading.npub} />}
             {generatedHint && (
               <div className={warnBox}>
                 <Tx k="signin.generated" components={{ b: <b /> }} />
@@ -330,10 +336,10 @@ export default function NpubGate({
               className={primary}
               data-tour="tb.gate.send"
             >
-              {busy ? t("signin.sending") : isNpub ? t("signin.sendMessage") : t("signin.signIn")}
+              {busy ? t("signin.sending") : asksProof ? t("signin.sendMessage") : t("signin.signIn")}
             </button>
             {isNsec && <p className={`text-xs ${muted}`}>{t("signin.nsecStays")}</p>}
-            {isNpub && (
+            {asksProof && (
               <p className={`text-xs ${muted}`}>
                 {t("signin.npubExplain")}
               </p>
