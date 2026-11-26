@@ -74,12 +74,12 @@
     "access": "public"
   },
   "dependencies": {
-    "@noble/curves": "2.0.1",
-    "@noble/hashes": "2.0.1",
-    "driver.js": "1.12.1",
-    "i18next": "27.1.2",
+    "@noble/curves": "2.4.0",
+    "@noble/hashes": "2.4.0",
+    "driver.js": "1.14.0",
+    "i18next": "27.2.4",
     "qrcode-generator": "2.0.4",
-    "react-i18next": "18.0.1",
+    "react-i18next": "18.0.3",
     "react-markdown": "10.1.0",
     "remark-breaks": "4.0.0",
     "remark-gfm": "4.0.1"
