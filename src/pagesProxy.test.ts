@@ -105,11 +105,34 @@ test("the café proxy names the site, carries no browser header, and turns a sto
   assert.equal((await ok({ request: new Request("https://site.test/cafe/cart.json") })).status, 404);
 });
 
+function assetsServing(body: string | null, contentType: string, status = 200) {
+  return {
+    request: new Request("https://site.test/.well-known/oauth-protected-resource"),
+    env: { ASSETS: { fetch: async () => new Response(body, { status, headers: { "Content-Type": contentType } }) } },
+  };
+}
+
 test("a probed path the site does not serve is a plain 404, never the page", async () => {
-  const notFound = makeNotFound();
-  const r = await notFound();
+  const r = await makeNotFound()(assetsServing("<!doctype html><html></html>", "text/html; charset=utf-8"));
   assert.equal(r.status, 404);
   assert.match(r.headers.get("Content-Type") ?? "", /^text\/plain/);
   assert.equal(r.headers.get("Access-Control-Allow-Origin"), "*");
   assert.doesNotMatch(await r.text(), /<html/i);
+});
+
+test("a real file under a probed path is served as it was", async () => {
+  const r = await makeNotFound()(assetsServing('{"applinks":{}}', "application/json"));
+  assert.equal(r.status, 200);
+  assert.equal(await r.text(), '{"applinks":{}}');
+});
+
+test("a missing file the asset server already 404s stays a 404", async () => {
+  const r = await makeNotFound()(assetsServing("gone", "text/plain", 404));
+  assert.equal(r.status, 404);
+  assert.equal(await r.text(), "Not found");
+});
+
+test("a revalidated real file keeps its 304", async () => {
+  const r = await makeNotFound()(assetsServing(null, "application/json", 304));
+  assert.equal(r.status, 304);
 });

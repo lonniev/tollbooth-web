@@ -78,12 +78,24 @@ export function makeMcpProxy(upstream: string, fetchImpl: Fetch = fetch) {
  * site's `/mcp` only relays the page's own calls; agents connect to the
  * operator itself, so these paths are honestly absent here.
  *
+ * A real file still wins: a site that ships `/.well-known/ai-catalog.json` or
+ * `apple-app-site-association` serves it as before. Only the page standing in
+ * for a missing file becomes a 404.
+ *
  *   // functions/.well-known/[[path]].js, functions/sse.js, functions/health.js
  *   import { makeNotFound } from "@tollbooth-dpyc/web/pages-proxy";
  *   export const onRequest = makeNotFound();
  */
+type PagesAssetsContext = {
+  request: Request;
+  env: { ASSETS: { fetch: (request: Request) => Promise<Response> } };
+};
+
 export function makeNotFound() {
-  return async function onRequest(): Promise<Response> {
+  return async function onRequest(context: PagesAssetsContext): Promise<Response> {
+    const asset = await context.env.ASSETS.fetch(context.request);
+    const isPage = (asset.headers.get("Content-Type") ?? "").startsWith("text/html");
+    if (asset.status === 304 || (asset.ok && !isPage)) return asset;
     return new Response("Not found", {
       status: 404,
       headers: {
