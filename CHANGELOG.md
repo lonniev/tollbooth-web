@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [4.3.1] — 2026-11-28
+
+### Fixed
+
+- `makeNotFound()` now serves a real file under a probed path, such as `/.well-known/ai-catalog.json` or `apple-app-site-association`. It answers 404 only where Pages would have served the page.
+
 ## [4.3.0] — 2026-11-28
 
 ### Added
