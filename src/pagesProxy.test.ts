@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { makeMcpProxy } from "./pagesProxy.ts";
+import { makeMcpProxy, makeNotFound } from "./pagesProxy.ts";
 
 const UPSTREAM = "https://example-mcp.fastmcp.app/mcp";
 
@@ -103,4 +103,13 @@ test("the café proxy names the site, carries no browser header, and turns a sto
   const lost = makeCafeProxy("Site/1.0", (async () => new Response("", { status: 503 })) as typeof fetch);
   assert.equal((await lost({ request: new Request("https://site.test/cafe/collections.json") })).status, 502);
   assert.equal((await ok({ request: new Request("https://site.test/cafe/cart.json") })).status, 404);
+});
+
+test("a probed path the site does not serve is a plain 404, never the page", async () => {
+  const notFound = makeNotFound();
+  const r = await notFound();
+  assert.equal(r.status, 404);
+  assert.match(r.headers.get("Content-Type") ?? "", /^text\/plain/);
+  assert.equal(r.headers.get("Access-Control-Allow-Origin"), "*");
+  assert.doesNotMatch(await r.text(), /<html/i);
 });
