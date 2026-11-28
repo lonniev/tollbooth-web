@@ -68,6 +68,34 @@ export function makeMcpProxy(upstream: string, fetchImpl: Fetch = fetch) {
 }
 
 /**
+ * A Cloudflare Pages Function that answers 404 where Pages would serve the
+ * page instead.
+ *
+ * Pages answers any path it has no file for with `index.html` and a 200, so a
+ * client probing for an endpoint gets the page's HTML and reads it as a real
+ * answer. MCP clients probe `/.well-known/oauth-protected-resource` on their
+ * own, and others look for `/.well-known/mcp.json`, `/sse` and `/health`. The
+ * site's `/mcp` only relays the page's own calls; agents connect to the
+ * operator itself, so these paths are honestly absent here.
+ *
+ *   // functions/.well-known/[[path]].js, functions/sse.js, functions/health.js
+ *   import { makeNotFound } from "@tollbooth-dpyc/web/pages-proxy";
+ *   export const onRequest = makeNotFound();
+ */
+export function makeNotFound() {
+  return async function onRequest(): Promise<Response> {
+    return new Response("Not found", {
+      status: 404,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "public, max-age=3600",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
+  };
+}
+
+/**
  * A Cloudflare Pages Function that reads the Good Brew café's public catalog
  * for the site's shelf (see `../cafe.ts`). The store sends no CORS headers, so
  * the browser reads it through here.
