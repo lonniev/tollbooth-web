@@ -2,6 +2,12 @@
 
 Changes not yet released live in `changelog.d/`, one file per change — see the README there for why, and `scripts/changelog.py` for what folds them in at release time.
 
+## [4.3.0] — 2026-11-28
+
+### Added
+
+- `makeNotFound()` in `pages-proxy` answers 404 for paths a site does not serve, such as `/.well-known/*`, `/sse` and `/health`. Before, Pages served the page there with a 200.
+
 ## [4.2.2] — 2026-11-26
 
 ### Changed

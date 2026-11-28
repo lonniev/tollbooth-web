@@ -1,1 +1,0 @@
-- `makeNotFound()` in `pages-proxy` answers 404 for paths a site does not serve, such as `/.well-known/*`, `/sse` and `/health`. Before, Pages served the page there with a 200.
